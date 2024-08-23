@@ -1,53 +1,93 @@
 import { MongoDBAtlasVectorSearch } from '@langchain/mongodb';
 import { MongoClient, Collection, ObjectId } from 'mongodb';
-import { getAvailableEmbeddingModelProviders } from '../lib/providers';
-import logger from '../utils/logger';
+import { DocumentInterface } from "@langchain/core/documents";
 import { OpenAIEmbeddings } from '@langchain/openai';
+import logger from '../utils/logger';
 
-const DEFAULT_MONGODB_ATLAS_URI =
-  'mongodb://127.0.0.1:27018/?directConnection=true';
+/**
+ * Configuration for the VectorStore
+ */
+interface VectorStoreConfig {
+  mongoUri: string;
+  dbName: string;
+  collectionName: string;
+  openAIApiKey: string;
+}
 
-const uri = process.env.MONGODB_ATLAS_URI || DEFAULT_MONGODB_ATLAS_URI;
+/**
+ * VectorStore class for managing document storage and similarity search
+ */
+export class VectorStore {
+  private client: MongoClient;
+  public collection: Collection;
+  private vectorSearch: MongoDBAtlasVectorSearch;
 
-const client = new MongoClient(uri);
-const dbName = "langchain";
-const collectionName = "store";
-export const collection = client.db(dbName).collection(collectionName);
-
-class VectorStoreWrapper {
-  client: MongoClient;
-  collection: Collection;
-  vectorStore: MongoDBAtlasVectorSearch;
-
-  constructor(
+  private constructor(
     client: MongoClient,
     collection: Collection,
-    vectorStore: MongoDBAtlasVectorSearch,
+    vectorSearch: MongoDBAtlasVectorSearch
   ) {
     this.client = client;
     this.collection = collection;
-    this.vectorStore = vectorStore;
+    this.vectorSearch = vectorSearch;
   }
 
-  async connect() {
-    logger.info('Connecting to MongoDB from ' + uri);
-    await this.client.connect();
+  /**
+   * Initialize and connect to the VectorStore
+   * @param config - Configuration for the VectorStore
+   * @returns Promise<VectorStore>
+   */
+  static async initialize(config: VectorStoreConfig): Promise<VectorStore> {
+    const client = new MongoClient(config.mongoUri);
+    await client.connect();
+    logger.info('Connected to MongoDB');
+
+    const collection = client.db(config.dbName).collection(config.collectionName);
+
+    const embeddings = new OpenAIEmbeddings({
+      openAIApiKey: config.openAIApiKey,
+      batchSize: 512,
+      modelName: "text-embedding-3-large",
+      dimensions: 2048,
+    });
+
+    const vectorSearch = new MongoDBAtlasVectorSearch(embeddings, {
+      collection,
+      indexName: 'default',
+      textKey: 'content',
+      embeddingKey: 'embedding',
+    });
+
+    return new VectorStore(client, collection, vectorSearch);
   }
 
-  async disconnect() {
-    logger.info('Disconnecting from MongoDB');
-    await this.client.close();
+  /**
+   * Perform similarity search
+   * @param query - The query string
+   * @param k - Number of results to return
+   * @returns Promise<Document[]>
+   */
+  async similaritySearch(query: string, k: number = 5): Promise<DocumentInterface[]> {
+    return this.vectorSearch.similaritySearch(query, k);
   }
 
-  async addDocuments(documents: any[], uniqueIds?: string[]) {
-    logger.info(
-      'Adding: ' + documents.length + ' documents to the vector store',
-    );
-    logger.info('Documents: ', documents);
-    return this.vectorStore.addDocuments(documents, { ids: uniqueIds });
+  /**
+   * Add documents to the vector store
+   * @param documents - Array of documents to add
+   * @param uniqueIds - Optional array of unique IDs for the documents
+   * @returns Promise<void>
+   */
+  async addDocuments(documents: any[], uniqueIds?: string[]): Promise<void> {
+    logger.info(`Adding ${documents.length} documents to the vector store`);
+    await this.vectorSearch.addDocuments(documents, { ids: uniqueIds });
   }
 
-  async findBookChunk(name: string) {
+  /**
+   * Find a specific book chunk by name
+   * @param name - Name of the book chunk
+   * @returns Promise<Document | null>
+   */
+  async findBookChunk(name: string): Promise<DocumentInterface | null> {
     try {
       const match = await this.collection.findOne({
         _id: name as unknown as ObjectId,
@@ -58,20 +98,30 @@ class VectorStoreWrapper {
           pageContent: match.text,
         };
       }
+      return null;
     } catch (error) {
       logger.error('Error finding book chunk:', error);
       throw error;
     }
   }
 
-  async removeBookPages(uniqueIds: string[]) {
-    logger.info('Removing book pages with unique IDs ', uniqueIds);
+  /**
+   * Remove book pages by their unique IDs
+   * @param uniqueIds - Array of unique IDs to remove
+   * @returns Promise<void>
+   */
+  async removeBookPages(uniqueIds: string[]): Promise<void> {
+    logger.info('Removing book pages with unique IDs', uniqueIds);
     await this.collection.deleteMany({
       uniqueId: { $in: uniqueIds },
     });
   }
 
-  async getStoredBookPagesHashes() {
+  /**
+   * Get hashes of stored book pages
+   * @returns Promise<Array<{uniqueId: string, contentHash: string}>>
+   */
+  async getStoredBookPagesHashes(): Promise<Array<{uniqueId: string, contentHash: string}>> {
     const documents = await this.collection
       .find({}, { projection: { uniqueId: 1, contentHash: 1 } })
       .toArray();
@@ -81,55 +131,13 @@ class VectorStoreWrapper {
       contentHash: doc.contentHash,
     }));
   }
-}
 
-const initializeVectorStore = async (): Promise<VectorStoreWrapper> => {
-  try {
-    // //TODO: make these dynamic
-    // const embeddingModelProvider =
-    //   process.env.EMBEDDING_MODEL_PROVIDER || 'openai';
-    // const embeddingModel = process.env.EMBEDDING_MODEL || 'BGE Small';
-
-    // const embeddingProviders = await getAvailableEmbeddingModelProviders();
-    // logger.info('Available providers:', Object.keys(embeddingProviders));
-    // logger.info(
-    //   'Available models for requested provider:',
-    //   embeddingProviders[embeddingModelProvider]
-    //     ? Object.keys(embeddingProviders[embeddingModelProvider])
-    //     : 'None',
-    // );
-
-    // if (
-    //   !embeddingProviders[embeddingModelProvider] ||
-    //   !embeddingProviders[embeddingModelProvider][embeddingModel]
-    // ) {
-    //   throw new Error(
-    //     `Invalid embedding model provider or model: ${embeddingModelProvider}/${embeddingModel}`,
-    //   );
-    // }
-
-    // const embeddings =
-    //   embeddingProviders[embeddingModelProvider][embeddingModel];
-
-    // logger.info('Using embeddings: ', embeddings);
-
-    const vectorStore = new MongoDBAtlasVectorSearch(  new OpenAIEmbeddings({
-        openAIApiKey: process.env.OPENAI_API_KEY,
-        batchSize: 512,
-        modelName: "text-embedding-3-large",
-        dimensions: 2048,
-      }), {
-      collection,
-      indexName: 'default',
-      textKey: 'content',
-      embeddingKey: 'embedding',
-    });
-
-    return new VectorStoreWrapper(client, collection, vectorStore);
-  } catch (error) {
-    logger.error('Error initializing vector store:', error);
-    throw error;
+  /**
+   * Close the connection to the database
+   * @returns Promise<void>
+   */
+  async close(): Promise<void> {
+    logger.info('Disconnecting from MongoDB');
+    await this.client.close();
   }
-};
-
-export { initializeVectorStore };
+}

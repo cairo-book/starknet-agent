@@ -2,9 +2,8 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
-import { initializeVectorStore } from './vectorStore';
+import { VectorStore } from './vectorStore';
 import { Document } from 'langchain/document';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import logger from '../utils/logger';
 import { createHash } from 'crypto';
 
@@ -17,15 +16,12 @@ const config = {
   bookBaseUrl: 'https://book.cairo-lang.org',
 };
 
-export const ingestCairoBook = async () => {
+export const ingestCairoBook = async (vectorStore: VectorStore) => {
   try {
-    const vectorStoreWrapper = await initializeVectorStore();
-    await vectorStoreWrapper.connect();
     const pages = await downloadAndExtractBook();
     const chunks = await createChunks(pages);
 
-    const storedChunkHashes =
-      await vectorStoreWrapper.getStoredBookPagesHashes();
+    const storedChunkHashes = await vectorStore.getStoredBookPagesHashes();
     const { chunksToUpdate, chunksToRemove } = findChunksToUpdateAndRemove(
       chunks,
       storedChunkHashes,
@@ -35,10 +31,10 @@ export const ingestCairoBook = async () => {
     );
 
     if (chunksToRemove.length > 0) {
-      await vectorStoreWrapper.removeBookPages(chunksToRemove);
+      await vectorStore.removeBookPages(chunksToRemove);
     }
     if (chunksToUpdate.length > 0) {
-      await vectorStoreWrapper.addDocuments(
+      await vectorStore.addDocuments(
         chunksToUpdate,
         chunksToUpdate.map((chunk) => chunk.metadata.uniqueId),
       );
@@ -47,7 +43,6 @@ export const ingestCairoBook = async () => {
     logger.info(
       `Updated ${chunksToUpdate.length} chunks and removed ${chunksToRemove.length} chunks.`,
     );
-    await vectorStoreWrapper.disconnect();
   } catch (error) {
     console.error('Error processing Cairo Book:', error);
     if (error instanceof Error) {
@@ -112,34 +107,80 @@ async function processMarkdownFiles(directory: string): Promise<BookPageDto[]> {
   }
 }
 
-async function createChunks(pages: BookPageDto[]): Promise<Document[]> {
-  logger.info('Creating chunks from book pages');
-  const textSplitter = RecursiveCharacterTextSplitter.fromLanguage('markdown', {
-    chunkSize: config.chunkSize,
-    chunkOverlap: config.chunkOverlap,
-  });
+/**
+ * Interface representing a section of markdown content
+ */
+interface MarkdownSection {
+  title: string;
+  content: string;
+}
 
+/**
+ * Creates chunks from book pages based on markdown sections
+ * @param pages - Array of BookPageDto objects
+ * @returns Promise<Document[]> - Array of Document objects representing chunks
+ */
+export async function createChunks(pages: BookPageDto[]): Promise<Document[]> {
+  logger.info('Creating chunks from book pages based on markdown sections');
   const chunks: Document[] = [];
 
   for (const page of pages) {
-    const pageChunks = await textSplitter.createDocuments(
-      [page.content],
-      [{ name: page.name }],
-    );
+    const sections: MarkdownSection[] = splitMarkdownIntoSections(page.content);
 
-    pageChunks.forEach((chunk, index) => {
-      const hash = calculateHash(chunk.pageContent);
-      chunk.metadata = {
-        ...chunk.metadata,
-        chunkNumber: index,
-        contentHash: hash,
-        uniqueId: `${page.name}-${index}`,
-      };
+    sections.forEach((section: MarkdownSection, index: number) => {
+      const hash: string = calculateHash(section.content);
+      chunks.push(new Document({
+        pageContent: section.content,
+        metadata: {
+          name: page.name,
+          title: section.title,
+          chunkNumber: index,
+          contentHash: hash,
+          uniqueId: `${page.name}-${index}`,
+        },
+      }));
     });
-    chunks.push(...pageChunks);
   }
 
   return chunks;
+}
+
+/**
+ * Splits markdown content into sections based on headers
+ * @param content - The markdown content to split
+ * @returns MarkdownSection[] - Array of MarkdownSection objects
+ */
+export function splitMarkdownIntoSections(content: string): MarkdownSection[] {
+  const headerRegex: RegExp = /^(#{1,6})\s+(.+)$/gm;
+  const sections: MarkdownSection[] = [];
+  let lastIndex: number = 0;
+  let lastTitle: string = '';
+  let match: RegExpExecArray | null;
+
+  // Capture the first section if it starts with a header
+  if ((match = headerRegex.exec(content)) !== null) {
+    lastTitle = match[2];
+    lastIndex = 0;
+  }
+
+  while ((match = headerRegex.exec(content)) !== null) {
+    sections.push({
+      title: lastTitle,
+      content: content.slice(lastIndex, match.index).trim(),
+    });
+    lastTitle = match[2];
+    lastIndex = match.index;
+  }
+
+  // Add the last section
+  if (lastIndex < content.length) {
+    sections.push({
+      title: lastTitle,
+      content: content.slice(lastIndex).trim(),
+    });
+  }
+
+  return sections;
 }
 
 function calculateHash(content: string): string {
@@ -175,7 +216,7 @@ function findChunksToUpdateAndRemove(
   return { chunksToUpdate, chunksToRemove };
 }
 
-interface BookPageDto {
+export interface BookPageDto {
   name: string;
   content: string;
 }

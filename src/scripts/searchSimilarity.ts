@@ -1,21 +1,25 @@
-import { initializeVectorStore } from '../ingester/vectorStore';
+import { VectorStore } from '../ingester/vectorStore';
 import logger from '../utils/logger';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 async function testMongoDBRetrieval() {
+  let vectorStore: VectorStore | null = null;
   try {
     // Initialize the vector store
-    const vectorStoreWrapper = await initializeVectorStore();
-
-    // Connect to MongoDB
-    await vectorStoreWrapper.connect();
+    vectorStore = await VectorStore.initialize({
+      mongoUri: process.env.MONGODB_ATLAS_URI || 'mongodb://127.0.0.1:27018/?directConnection=true',
+      dbName: 'langchain',
+      collectionName: 'store',
+      openAIApiKey: process.env.OPENAI_API_KEY || '',
+    });
 
     // Show the content of the database
-    // Show how much docs the database has
-    logger.info('The database has ' + await vectorStoreWrapper.collection.countDocuments() + ' documents');
-    const dbContent = await vectorStoreWrapper.collection
-      .find({})
-      .limit(10)
-      .toArray();
+    const documentCount = await vectorStore.collection.countDocuments();
+    logger.info(`The database has ${documentCount} documents`);
+
+    const dbContent = await vectorStore.collection.find().limit(10).toArray();
     if (dbContent.length === 0) {
       logger.info('The database is empty.');
     } else {
@@ -23,17 +27,14 @@ async function testMongoDBRetrieval() {
         logger.info(`Document ${index + 1}:`);
         logger.info(`Name: ${doc.metadata?.name}`);
         logger.info(`ID: ${doc._id}`);
-        logger.info(`Content of length: ${doc.content?.length}`);
+        logger.info(`Content of length: ${doc.pageContent?.length}`);
         logger.info(`Metadata: ${JSON.stringify(doc.metadata || {})}\n`);
       });
     }
 
-    // Perform a similarity search for "Cairo programming language"
+    // Perform a similarity search for "Useful development tools"
     const query = 'Useful development tools';
-    const results = await vectorStoreWrapper.vectorStore.maxMarginalRelevanceSearch(
-      query,
-      {k: 10, fetchK: 10, lambda: 0.5},
-    );
+    const results = await vectorStore.similaritySearch(query, 10);
 
     // Log the results
     logger.info(`Search results for "${query}":`);
@@ -47,10 +48,13 @@ async function testMongoDBRetrieval() {
       });
     }
 
-    // Disconnect from MongoDB
-    await vectorStoreWrapper.disconnect();
   } catch (error) {
     logger.error('Error during MongoDB retrieval test:', error);
+  } finally {
+    // Close the connection if vectorStore was initialized
+    if (vectorStore) {
+      await vectorStore.close();
+    }
   }
 }
 

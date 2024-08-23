@@ -28,8 +28,8 @@ services:
     networks:
       - perplexica-network
     environment:
-      - MONGODB_ATLAS_URI=mongodb<API_KEY>
-      - OPENAI_API_KEY=sk-<API_KEY>
+      - MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     restart: unless-stopped
 
   perplexica-frontend:
@@ -66,8 +66,8 @@ services:
     networks:
       - perplexica-network
     environment:
-      - MONGODB_ATLAS_URI=mongodb<API_KEY>
-      - OPENAI_API_KEY=sk-<API_KEY>
+      - MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     restart: "no"
 
 networks:

@@ -1,3 +1,22 @@
+/**
+ * @file cairoBookSearchAgent.ts
+ * @description This file implements a search agent for the Cairo Book documentation.
+ * It uses LangChain to create a chain of operations for processing user queries,
+ * retrieving relevant information, and generating responses.
+ *
+ * Key components:
+ * - basicSearchRetrieverPrompt: Prompt for rephrasing user queries
+ * - basicCairoBookSearchResponsePrompt: System prompt for the AI assistant
+ * - createBasicCairoBookSearchRetrieverChain: Creates a chain for retrieving relevant documents
+ * - createBasicCairoBookSearchAnsweringChain: Creates the main chain for processing queries and generating responses
+ * - handleStream: Processes the stream of events from the chain
+ * - basicCairoBookSearch: Main function that sets up and runs the search process
+ * - handleCairoBookSearch: Wrapper function for basicCairoBookSearch
+ *
+ * The agent uses a vector store to perform similarity searches on the Cairo Book documentation,
+ * reranks the results, and generates responses based on the retrieved information.
+ */
+
 import { BaseMessage } from '@langchain/core/messages';
 import {
   PromptTemplate,
@@ -21,7 +40,7 @@ import logger from '../utils/logger';
 import LineListOutputParser from '../lib/outputParsers/listLineOutputParser';
 import { getDocumentsFromLinks } from '../lib/linkDocument';
 import LineOutputParser from '../lib/outputParsers/lineOutputParser';
-import { initializeVectorStore } from '../ingester/vectorStore';
+import { VectorStore } from '../ingester/vectorStore';
 
 const basicSearchRetrieverPrompt = `
 You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the Cairo Language documentation for information.
@@ -88,10 +107,16 @@ accuracy and relevance in your responses.
 
 const strParser = new StringOutputParser();
 
+/**
+ * Handles the stream of events from the LangChain chain.
+ * @param {AsyncGenerator<StreamEvent, any, unknown>} stream - The stream of events from the chain.
+ * @param {eventEmitter} emitter - The event emitter to send processed events.
+ * @returns {Promise<void>}
+ */
 const handleStream = async (
   stream: AsyncGenerator<StreamEvent, any, unknown>,
   emitter: eventEmitter,
-) => {
+): Promise<void> => {
   for await (const event of stream) {
     if (
       event.event === 'on_chain_end' &&
@@ -125,7 +150,37 @@ type BasicChainInput = {
   query: string;
 };
 
-const createBasicCairoBookSearchRetrieverChain = (llm: BaseChatModel) => {
+/**
+ * Creates a chain for retrieving relevant documents based on user queries.
+ *
+ * This function sets up a sequence of operations that process a user's query
+ * and retrieve relevant documents from the Cairo Book documentation.
+ *
+ * The sequence includes:
+ * 1. Formatting the query using a prompt template
+ * 2. Processing the formatted query with a language model
+ * 3. Parsing the language model's output
+ * 4. Performing a similarity search in a vector store
+ *
+ * @param {BaseChatModel} llm - The language model to use for query processing.
+ * @param {VectorStore} vectorStore - The vector store to use for similarity search.
+ * @returns {RunnableSequence} A runnable sequence that, when executed:
+ *   - Refines the input query
+ *   - Searches for relevant documents
+ *   - Returns an object with the original query and retrieved documents
+ *
+ * @example
+ * const llm = new ChatOpenAI();
+ * const vectorStore = await VectorStore.initialize({
+ *   mongoUri: process.env.MONGODB_ATLAS_URI || 'mongodb://127.0.0.1:27018/?directConnection=true',
+ *   dbName: 'langchain',
+ *   collectionName: 'store',
+ *   openAIApiKey: process.env.OPENAI_API_KEY || '',
+ * });
+ * const retrieverChain = createBasicCairoBookSearchRetrieverChain(llm, vectorStore);
+ * const result = await retrieverChain.invoke({ query: "What is Cairo?", chat_history: [] });
+ */
+const createBasicCairoBookSearchRetrieverChain = (llm: BaseChatModel, vectorStore: VectorStore): RunnableSequence => {
   return RunnableSequence.from([
     PromptTemplate.fromTemplate(basicSearchRetrieverPrompt),
     llm,
@@ -135,14 +190,8 @@ const createBasicCairoBookSearchRetrieverChain = (llm: BaseChatModel) => {
         return { query: '', docs: [] };
       }
 
-      // Perform similarity search in the MongoDB vector store
-      const vectorStoreWrapper = await initializeVectorStore();
-      await vectorStoreWrapper.connect();
-      const documents = await vectorStoreWrapper.vectorStore.similaritySearch(
-        input,
-        5,
-      );
-      await vectorStoreWrapper.disconnect();
+      // Perform similarity search using the VectorStore
+      const documents = await vectorStore.similaritySearch(input, 5);
       logger.info(
         `Found ${documents.length} documents from the Cairo Book: ${documents}`,
       );
@@ -153,39 +202,64 @@ const createBasicCairoBookSearchRetrieverChain = (llm: BaseChatModel) => {
   ]);
 };
 
+/**
+ * Creates the main chain for processing queries and generating responses.
+ * @param {BaseChatModel} llm - The language model to use for response generation.
+ * @param {Embeddings} embeddings - The embeddings to use for document similarity.
+ * @param {VectorStore} vectorStore - The vector store to use for similarity search.
+ * @returns {RunnableSequence} The created answering chain.
+ */
 const createBasicCairoBookSearchAnsweringChain = (
   llm: BaseChatModel,
   embeddings: Embeddings,
+  vectorStore: VectorStore
 ) => {
   const basicCairoBookSearchRetrieverChain =
-    createBasicCairoBookSearchRetrieverChain(llm);
+    createBasicCairoBookSearchRetrieverChain(llm, vectorStore);
 
-    const attachSources = async (docs: Document[]) => {
-      return docs.map((doc, index) => {
-        return {
-          pageContent: doc.pageContent,
-          metadata: {
-            ...doc.metadata,
-            title: doc.metadata.name, // Use the 'name' field as the title
-            url: `https://book.cairo-lang.org/${doc.metadata.name}.html` // Construct a URL based on the name
-          }
-        };
-      })
-    }
+  /**
+   * Attaches source metadata to documents.
+   * @param {Document[]} docs - The documents to process.
+   * @returns {Promise<Document[]>} The documents with attached source metadata.
+   */
+  const attachSources = async (docs: Document[]): Promise<Document[]> => {
+    return docs.map((doc, index) => {
+      return {
+        pageContent: doc.pageContent,
+        metadata: {
+          ...doc.metadata,
+          title: doc.metadata.name, // Use the 'name' field as the title
+          url: `https://book.cairo-lang.org/${doc.metadata.name}.html` // Construct a URL based on the name
+        }
+      };
+    })
+  }
 
-  const processDocs = async (docs: Document[]) => {
+  /**
+   * Processes documents into a string format.
+   * @param {Document[]} docs - The documents to process.
+   * @returns {Promise<string>} The processed documents as a string.
+   */
+  const processDocs = async (docs: Document[]): Promise<string> => {
     return docs
       .map((_, index) => `${index + 1}. ${docs[index].pageContent}`)
       .join('\n');
   };
 
+  /**
+   * Reranks documents based on similarity to the query.
+   * @param {Object} params - The parameters for reranking.
+   * @param {string} params.query - The user's query.
+   * @param {Document[]} params.docs - The documents to rerank.
+   * @returns {Promise<Document[]>} The reranked documents.
+   */
   const rerankDocs = async ({
     query,
     docs,
   }: {
     query: string;
     docs: Document[];
-  }) => {
+  }): Promise<Document[]> => {
     logger.info("Reranking docs: ")
     if (docs.length === 0) {
       return docs;
@@ -254,17 +328,27 @@ const createBasicCairoBookSearchAnsweringChain = (
   });
 };
 
+/**
+ * Main function that sets up and runs the search process.
+ * @param {string} query - The user's query.
+ * @param {BaseMessage[]} history - The chat history.
+ * @param {BaseChatModel} llm - The language model to use.
+ * @param {Embeddings} embeddings - The embeddings to use for document similarity.
+ * @param {VectorStore} vectorStore - The vector store to use for similarity search.
+ * @returns {eventEmitter} An event emitter for streaming the search results.
+ */
 const basicCairoBookSearch = (
   query: string,
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-) => {
+  vectorStore: VectorStore
+): eventEmitter => {
   const emitter = new eventEmitter();
 
   try {
     const basicCairoBookSearchAnsweringChain =
-      createBasicCairoBookSearchAnsweringChain(llm, embeddings);
+      createBasicCairoBookSearchAnsweringChain(llm, embeddings, vectorStore);
 
     const stream = basicCairoBookSearchAnsweringChain.streamEvents(
       {
@@ -288,13 +372,23 @@ const basicCairoBookSearch = (
   return emitter;
 };
 
+/**
+ * Wrapper function for basicCairoBookSearch.
+ * @param {string} message - The user's message.
+ * @param {BaseMessage[]} history - The chat history.
+ * @param {BaseChatModel} llm - The language model to use.
+ * @param {Embeddings} embeddings - The embeddings to use for document similarity.
+ * @param {VectorStore} vectorStore - The vector store to use for similarity search.
+ * @returns {eventEmitter} An event emitter for streaming the search results.
+ */
 const handleCairoBookSearch = (
   message: string,
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-) => {
-  const emitter = basicCairoBookSearch(message, history, llm, embeddings);
+  vectorStore: VectorStore
+): eventEmitter => {
+  const emitter = basicCairoBookSearch(message, history, llm, embeddings, vectorStore);
   return emitter;
 };
 
