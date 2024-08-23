@@ -30,6 +30,16 @@ export const ingestCairoBook = async (vectorStore: VectorStore) => {
       `Found ${chunksToUpdate.length} chunks to update and ${chunksToRemove.length} chunks to remove`,
     );
 
+    //TODO(remove) Randomly select 15 chunks to log
+    const sampleSize = Math.min(15, chunks.length);
+    const randomChunks = chunks
+      .sort(() => 0.5 - Math.random())
+      .slice(0, sampleSize);
+
+    randomChunks.forEach((chunk, index) => {
+      console.log(chunk);
+    });
+
     if (chunksToRemove.length > 0) {
       await vectorStore.removeBookPages(chunksToRemove);
     }
@@ -43,6 +53,11 @@ export const ingestCairoBook = async (vectorStore: VectorStore) => {
     logger.info(
       `Updated ${chunksToUpdate.length} chunks and removed ${chunksToRemove.length} chunks.`,
     );
+
+    // Delete the downloaded markdown files
+    const extractDir = path.join(__dirname, 'cairo-book');
+    await fs.rm(extractDir, { recursive: true, force: true });
+    logger.info(`Deleted downloaded markdown files from ${extractDir}`);
   } catch (error) {
     console.error('Error processing Cairo Book:', error);
     if (error instanceof Error) {
@@ -129,16 +144,18 @@ export async function createChunks(pages: BookPageDto[]): Promise<Document[]> {
 
     sections.forEach((section: MarkdownSection, index: number) => {
       const hash: string = calculateHash(section.content);
-      chunks.push(new Document({
-        pageContent: section.content,
-        metadata: {
-          name: page.name,
-          title: section.title,
-          chunkNumber: index,
-          contentHash: hash,
-          uniqueId: `${page.name}-${index}`,
-        },
-      }));
+      chunks.push(
+        new Document({
+          pageContent: section.content,
+          metadata: {
+            name: page.name,
+            title: section.title,
+            chunkNumber: index,
+            contentHash: hash,
+            uniqueId: `${page.name}-${index}`,
+          },
+        }),
+      );
     });
   }
 
@@ -151,25 +168,23 @@ export async function createChunks(pages: BookPageDto[]): Promise<Document[]> {
  * @returns MarkdownSection[] - Array of MarkdownSection objects
  */
 export function splitMarkdownIntoSections(content: string): MarkdownSection[] {
-  const headerRegex: RegExp = /^(#{1,6})\s+(.+)$/gm;
+  const headerRegex = /^(#{1,6})\s+(.+)$/gm;
   const sections: MarkdownSection[] = [];
-  let lastIndex: number = 0;
-  let lastTitle: string = '';
-  let match: RegExpExecArray | null;
-
-  // Capture the first section if it starts with a header
-  if ((match = headerRegex.exec(content)) !== null) {
-    lastTitle = match[2];
-    lastIndex = 0;
-  }
+  let lastIndex = 0;
+  let lastTitle = '';
+  let match;
 
   while ((match = headerRegex.exec(content)) !== null) {
-    sections.push({
-      title: lastTitle,
-      content: content.slice(lastIndex, match.index).trim(),
-    });
-    lastTitle = match[2];
-    lastIndex = match.index;
+    if (!isInsideCodeBlock(content, match.index)) {
+      if (lastIndex < match.index) {
+        sections.push({
+          title: lastTitle,
+          content: content.slice(lastIndex, match.index).trim(),
+        });
+      }
+      lastTitle = match[2];
+      lastIndex = match.index;
+    }
   }
 
   // Add the last section
@@ -183,11 +198,21 @@ export function splitMarkdownIntoSections(content: string): MarkdownSection[] {
   return sections;
 }
 
+export function isInsideCodeBlock(content: string, index: number): boolean {
+  const codeBlockRegex = /```[\s\S]*?```/g;
+  let match;
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    if (index >= match.index && index < match.index + match[0].length) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function calculateHash(content: string): string {
   return createHash('md5').update(content).digest('hex');
 }
-
-function findChunksToUpdateAndRemove(
+export function findChunksToUpdateAndRemove(
   freshChunks: Document<Record<string, any>>[],
   storedChunkHashes: { uniqueId: string; contentHash: string }[],
 ): {

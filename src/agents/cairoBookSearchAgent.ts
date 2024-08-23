@@ -42,6 +42,23 @@ import { getDocumentsFromLinks } from '../lib/linkDocument';
 import LineOutputParser from '../lib/outputParsers/lineOutputParser';
 import { VectorStore } from '../ingester/vectorStore';
 
+let vectorStore: VectorStore;
+
+(async function setupVectorStore() {
+  try {
+    vectorStore = await VectorStore.initialize({
+      mongoUri: process.env.MONGODB_ATLAS_URI || 'mongodb://127.0.0.1:27018/?directConnection=true',
+      dbName: 'langchain',
+      collectionName: 'store',
+      openAIApiKey: process.env.OPENAI_API_KEY || '',
+    });
+    logger.info('VectorStore initialized successfully');
+  } catch (error) {
+    logger.error('Failed to initialize VectorStore:', error);
+    throw error;
+  }
+})();
+
 const basicSearchRetrieverPrompt = `
 You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the Cairo Language documentation for information.
 If it is a writing task or a simple hi, hello rather than a question, you need to return \`not_needed\` as the response.
@@ -180,7 +197,7 @@ type BasicChainInput = {
  * const retrieverChain = createBasicCairoBookSearchRetrieverChain(llm, vectorStore);
  * const result = await retrieverChain.invoke({ query: "What is Cairo?", chat_history: [] });
  */
-const createBasicCairoBookSearchRetrieverChain = (llm: BaseChatModel, vectorStore: VectorStore): RunnableSequence => {
+const createBasicCairoBookSearchRetrieverChain = (llm: BaseChatModel): RunnableSequence => {
   return RunnableSequence.from([
     PromptTemplate.fromTemplate(basicSearchRetrieverPrompt),
     llm,
@@ -206,16 +223,14 @@ const createBasicCairoBookSearchRetrieverChain = (llm: BaseChatModel, vectorStor
  * Creates the main chain for processing queries and generating responses.
  * @param {BaseChatModel} llm - The language model to use for response generation.
  * @param {Embeddings} embeddings - The embeddings to use for document similarity.
- * @param {VectorStore} vectorStore - The vector store to use for similarity search.
  * @returns {RunnableSequence} The created answering chain.
  */
 const createBasicCairoBookSearchAnsweringChain = (
   llm: BaseChatModel,
   embeddings: Embeddings,
-  vectorStore: VectorStore
 ) => {
   const basicCairoBookSearchRetrieverChain =
-    createBasicCairoBookSearchRetrieverChain(llm, vectorStore);
+    createBasicCairoBookSearchRetrieverChain(llm);
 
   /**
    * Attaches source metadata to documents.
@@ -348,7 +363,7 @@ const basicCairoBookSearch = (
 
   try {
     const basicCairoBookSearchAnsweringChain =
-      createBasicCairoBookSearchAnsweringChain(llm, embeddings, vectorStore);
+      createBasicCairoBookSearchAnsweringChain(llm, embeddings);
 
     const stream = basicCairoBookSearchAnsweringChain.streamEvents(
       {

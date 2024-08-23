@@ -5,7 +5,7 @@
     "moduleResolution": "Node16",
     "target": "ESNext",
     "outDir": "dist",
-    "sourceMap": false,
+    "sourceMap": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

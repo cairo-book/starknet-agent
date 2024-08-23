@@ -19,7 +19,7 @@ interface VectorStoreConfig {
  */
 export class VectorStore {
   private client: MongoClient;
-  public collection: Collection;
+  collection: Collection;
   private vectorSearch: MongoDBAtlasVectorSearch;
 
   private constructor(
