@@ -41,6 +41,9 @@ import LineListOutputParser from '../lib/outputParsers/listLineOutputParser';
 import { getDocumentsFromLinks } from '../lib/linkDocument';
 import LineOutputParser from '../lib/outputParsers/lineOutputParser';
 import { VectorStore } from '../ingester/vectorStore';
+import { CairoBookChunk } from '../types/cairoBook';
+
+const BOOK_BASE_URL = 'https://book.cairo-lang.org';
 
 let vectorStore: VectorStore;
 
@@ -237,14 +240,16 @@ const createBasicCairoBookSearchAnsweringChain = (
    * @param {Document[]} docs - The documents to process.
    * @returns {Promise<Document[]>} The documents with attached source metadata.
    */
-  const attachSources = async (docs: Document[]): Promise<Document[]> => {
+  const attachSources = async (docs: Document<CairoBookChunk>[]): Promise<Document[]> => {
     return docs.map((doc, index) => {
+      const sourceLink = `${BOOK_BASE_URL}/${doc.metadata.name}.html#${doc.metadata.title?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')}`;
+      console.log(sourceLink)
       return {
         pageContent: doc.pageContent,
         metadata: {
           ...doc.metadata,
           title: doc.metadata.name, // Use the 'name' field as the title
-          url: `https://book.cairo-lang.org/${doc.metadata.name}.html` // Construct a URL based on the name
+          url: sourceLink
         }
       };
     })

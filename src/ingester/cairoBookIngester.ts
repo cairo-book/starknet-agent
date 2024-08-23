@@ -6,6 +6,7 @@ import { VectorStore } from './vectorStore';
 import { Document } from 'langchain/document';
 import logger from '../utils/logger';
 import { createHash } from 'crypto';
+import { CairoBookChunk } from '../types/cairoBook';
 
 const config = {
   repoOwner: 'cairo-book',
@@ -130,12 +131,13 @@ interface MarkdownSection {
   content: string;
 }
 
+
 /**
  * Creates chunks from book pages based on markdown sections
  * @param pages - Array of BookPageDto objects
  * @returns Promise<Document[]> - Array of Document objects representing chunks
  */
-export async function createChunks(pages: BookPageDto[]): Promise<Document[]> {
+export async function createChunks(pages: BookPageDto[]): Promise<Document<CairoBookChunk>[]> {
   logger.info('Creating chunks from book pages based on markdown sections');
   const chunks: Document[] = [];
 
@@ -145,7 +147,7 @@ export async function createChunks(pages: BookPageDto[]): Promise<Document[]> {
     sections.forEach((section: MarkdownSection, index: number) => {
       const hash: string = calculateHash(section.content);
       chunks.push(
-        new Document({
+        new Document<CairoBookChunk>({
           pageContent: section.content,
           metadata: {
             name: page.name,
@@ -159,7 +161,7 @@ export async function createChunks(pages: BookPageDto[]): Promise<Document[]> {
     });
   }
 
-  return chunks;
+  return chunks as Document<CairoBookChunk>[];
 }
 
 /**
