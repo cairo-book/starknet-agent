@@ -6,7 +6,9 @@ interface SearxngSearchOptions {
   engines?: string[];
   language?: string;
   pageno?: number;
+  siteSearch?: string; // New option for site-specific search
 }
+
 
 interface SearxngSearchResult {
   title: string;
@@ -26,7 +28,12 @@ export const searchSearxng = async (
   const searxngURL = getSearxngApiEndpoint();
 
   const url = new URL(`${searxngURL}/search?format=json`);
-  url.searchParams.append('q', query);
+
+    // Modify query if siteSearch is provided and Google is in the engines
+    if (opts?.siteSearch && opts.engines?.includes('google')) {
+      query = `${query}+site:${opts.siteSearch}`;
+    }
+    url.searchParams.append('q', query);
 
   if (opts) {
     Object.keys(opts).forEach((key) => {

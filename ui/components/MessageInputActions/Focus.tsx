@@ -5,6 +5,7 @@ import {
   Pencil,
   ScanEye,
   SwatchBook,
+  BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, Transition } from '@headlessui/react';
@@ -17,6 +18,12 @@ const focusModes = [
     title: 'All',
     description: 'Searches across all of the internet',
     icon: <Globe size={20} />,
+  },
+  {
+    key: 'cairoBookSearch',
+    title: 'Cairo Book',
+    description: 'Search in Cairo Book',
+    icon: <BookOpen size={20} />,
   },
   {
     key: 'academicSearch',

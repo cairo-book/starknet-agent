@@ -194,7 +194,7 @@ const createBasicWebSearchRetrieverChain = (llm: BaseChatModel) => {
         await Promise.all(
           docGroups.map(async (doc) => {
             const res = await llm.invoke(`
-            You are a text summarizer. You need to summarize the text provided inside the \`text\` XML block. 
+            You are a text summarizer. You need to summarize the text provided inside the \`text\` XML block.
             You need to summarize the text into 1 or 2 sentences capturing the main idea of the text.
             You need to make sure that you don't miss any point while summarizing the text.
             You will also be given a \`query\` XML block which will contain the query of the user. Try to answer the query in the summary from the text provided.
@@ -228,6 +228,9 @@ const createBasicWebSearchRetrieverChain = (llm: BaseChatModel) => {
       } else {
         const res = await searchSearxng(input, {
           language: 'en',
+          engines: [
+            'google',
+          ],
         });
 
         const documents = res.results.map(

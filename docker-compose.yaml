@@ -17,6 +17,8 @@ services:
         - SEARXNG_API_URL=http://searxng:8080
     depends_on:
       - searxng
+      - mongodb
+      - cairobook-ingest
     ports:
       - 3001:3001
     volumes:
@@ -25,6 +27,9 @@ services:
       - 'host.docker.internal:host-gateway'
     networks:
       - perplexica-network
+    environment:
+      - MONGODB_ATLAS_URI=mongodb<API_KEY>
+      - OPENAI_API_KEY=sk-<API_KEY>
     restart: unless-stopped
 
   perplexica-frontend:
@@ -42,8 +47,32 @@ services:
       - perplexica-network
     restart: unless-stopped
 
+  mongodb:
+    image: mongodb/mongodb-atlas-local
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - 27018:27017
+    networks:
+      - perplexica-network
+    restart: unless-stopped
+
+  cairobook-ingest:
+    build:
+      context: .
+      dockerfile: ingest.dockerfile
+    depends_on:
+      - mongodb
+    networks:
+      - perplexica-network
+    environment:
+      - MONGODB_ATLAS_URI=mongodb<API_KEY>
+      - OPENAI_API_KEY=sk-<API_KEY>
+    restart: "no"
+
 networks:
   perplexica-network:
 
 volumes:
   backend-dbstore:
+  mongodb-data:

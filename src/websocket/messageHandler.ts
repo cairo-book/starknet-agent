@@ -1,5 +1,6 @@
 import { EventEmitter, WebSocket } from 'ws';
 import { BaseMessage, AIMessage, HumanMessage } from '@langchain/core/messages';
+import handleCairoBookSearch from '../agents/cairoBookSearchAgent';
 import handleWebSearch from '../agents/webSearchAgent';
 import handleAcademicSearch from '../agents/academicSearchAgent';
 import handleWritingAssistant from '../agents/writingAssistant';
@@ -29,6 +30,7 @@ type WSMessage = {
 };
 
 const searchHandlers = {
+  cairoBookSearch: handleCairoBookSearch,
   webSearch: handleWebSearch,
   academicSearch: handleAcademicSearch,
   writingAssistant: handleWritingAssistant,
@@ -103,6 +105,7 @@ export const handleMessage = async (
   embeddings: Embeddings,
 ) => {
   try {
+    console.log('received message: ' + message);
     const parsedWSMessage = JSON.parse(message) as WSMessage;
     const parsedMessage = parsedWSMessage.message;
 
