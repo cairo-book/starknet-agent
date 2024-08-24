@@ -1,6 +1,6 @@
 import { MongoDBAtlasVectorSearch } from '@langchain/mongodb';
 import { MongoClient, Collection, ObjectId } from 'mongodb';
-import { DocumentInterface } from "@langchain/core/documents";
+import { DocumentInterface } from '@langchain/core/documents';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import logger from '../utils/logger';
 
@@ -25,7 +25,7 @@ export class VectorStore {
   private constructor(
     client: MongoClient,
     collection: Collection,
-    vectorSearch: MongoDBAtlasVectorSearch
+    vectorSearch: MongoDBAtlasVectorSearch,
   ) {
     this.client = client;
     this.collection = collection;
@@ -42,12 +42,15 @@ export class VectorStore {
     await client.connect();
     logger.info('Connected to MongoDB');
 
-    const collection = client.db(config.dbName).collection(config.collectionName);
+    const collection = client
+      .db(config.dbName)
+      .collection(config.collectionName);
 
+    //TODO: make this dynamic
     const embeddings = new OpenAIEmbeddings({
       openAIApiKey: config.openAIApiKey,
       batchSize: 512,
-      modelName: "text-embedding-3-large",
+      modelName: 'text-embedding-3-large',
       dimensions: 2048,
     });
 
@@ -67,7 +70,10 @@ export class VectorStore {
    * @param k - Number of results to return
    * @returns Promise<Document[]>
    */
-  async similaritySearch(query: string, k: number = 5): Promise<DocumentInterface[]> {
+  async similaritySearch(
+    query: string,
+    k: number = 5,
+  ): Promise<DocumentInterface[]> {
     return this.vectorSearch.similaritySearch(query, k);
   }
 
@@ -121,7 +127,9 @@ export class VectorStore {
    * Get hashes of stored book pages
    * @returns Promise<Array<{uniqueId: string, contentHash: string}>>
    */
-  async getStoredBookPagesHashes(): Promise<Array<{uniqueId: string, contentHash: string}>> {
+  async getStoredBookPagesHashes(): Promise<
+    Array<{ uniqueId: string; contentHash: string }>
+  > {
     const documents = await this.collection
       .find({}, { projection: { uniqueId: 1, contentHash: 1 } })
       .toArray();

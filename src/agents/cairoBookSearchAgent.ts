@@ -41,20 +41,14 @@ import LineListOutputParser from '../lib/outputParsers/listLineOutputParser';
 import { getDocumentsFromLinks } from '../lib/linkDocument';
 import LineOutputParser from '../lib/outputParsers/lineOutputParser';
 import { VectorStore } from '../ingester/vectorStore';
-import { CairoBookChunk } from '../types/cairoBook';
-
-const BOOK_BASE_URL = 'https://book.cairo-lang.org';
+import { BookChunk } from '../types/types';
+import { cairoBookStoreConfig } from '../config';
 
 let vectorStore: VectorStore;
 
 (async function setupVectorStore() {
   try {
-    vectorStore = await VectorStore.initialize({
-      mongoUri: process.env.MONGODB_ATLAS_URI || 'mongodb://127.0.0.1:27018/?directConnection=true',
-      dbName: 'langchain',
-      collectionName: 'store',
-      openAIApiKey: process.env.OPENAI_API_KEY || '',
-    });
+    vectorStore = await VectorStore.initialize(cairoBookStoreConfig);
     logger.info('VectorStore initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize VectorStore:', error);
@@ -200,7 +194,9 @@ type BasicChainInput = {
  * const retrieverChain = createBasicCairoBookSearchRetrieverChain(llm, vectorStore);
  * const result = await retrieverChain.invoke({ query: "What is Cairo?", chat_history: [] });
  */
-const createBasicCairoBookSearchRetrieverChain = (llm: BaseChatModel): RunnableSequence => {
+const createBasicCairoBookSearchRetrieverChain = (
+  llm: BaseChatModel,
+): RunnableSequence => {
   return RunnableSequence.from([
     PromptTemplate.fromTemplate(basicSearchRetrieverPrompt),
     llm,
@@ -210,12 +206,7 @@ const createBasicCairoBookSearchRetrieverChain = (llm: BaseChatModel): RunnableS
         return { query: '', docs: [] };
       }
 
-      // Perform similarity search using the VectorStore
       const documents = await vectorStore.similaritySearch(input, 5);
-      logger.info(
-        `Found ${documents.length} documents from the Cairo Book: ${documents}`,
-      );
-      logger.info(documents)
 
       return { query: input, docs: documents };
     }),
@@ -240,20 +231,20 @@ const createBasicCairoBookSearchAnsweringChain = (
    * @param {Document[]} docs - The documents to process.
    * @returns {Promise<Document[]>} The documents with attached source metadata.
    */
-  const attachSources = async (docs: Document<CairoBookChunk>[]): Promise<Document[]> => {
+  const attachSources = async (
+    docs: Document<BookChunk>[],
+  ): Promise<Document[]> => {
     return docs.map((doc, index) => {
-      const sourceLink = `${BOOK_BASE_URL}/${doc.metadata.name}.html#${doc.metadata.title?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')}`;
-      console.log(sourceLink)
       return {
         pageContent: doc.pageContent,
         metadata: {
           ...doc.metadata,
           title: doc.metadata.name, // Use the 'name' field as the title
-          url: sourceLink
-        }
+          url: doc.metadata.sourceLink,
+        },
       };
-    })
-  }
+    });
+  };
 
   /**
    * Processes documents into a string format.
@@ -280,7 +271,6 @@ const createBasicCairoBookSearchAnsweringChain = (
     query: string;
     docs: Document[];
   }): Promise<Document[]> => {
-    logger.info("Reranking docs: ")
     if (docs.length === 0) {
       return docs;
     }
@@ -293,7 +283,6 @@ const createBasicCairoBookSearchAnsweringChain = (
       (doc) => doc.pageContent && doc.pageContent.length > 0,
     );
 
-    logger.info("Reranking docs: ", docsWithContent)
 
     const [docEmbeddings, queryEmbedding] = await Promise.all([
       embeddings.embedDocuments(docsWithContent.map((doc) => doc.pageContent)),
@@ -362,7 +351,7 @@ const basicCairoBookSearch = (
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-  vectorStore: VectorStore
+  vectorStore: VectorStore,
 ): eventEmitter => {
   const emitter = new eventEmitter();
 
@@ -406,9 +395,15 @@ const handleCairoBookSearch = (
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-  vectorStore: VectorStore
+  vectorStore: VectorStore,
 ): eventEmitter => {
-  const emitter = basicCairoBookSearch(message, history, llm, embeddings, vectorStore);
+  const emitter = basicCairoBookSearch(
+    message,
+    history,
+    llm,
+    embeddings,
+    vectorStore,
+  );
   return emitter;
 };
 

@@ -6,7 +6,15 @@ import { VectorStore } from './vectorStore';
 import { Document } from 'langchain/document';
 import logger from '../utils/logger';
 import { BookChunk } from '../types/types';
-import { BookConfig, BookPageDto, findChunksToUpdateAndRemove, isInsideCodeBlock, MarkdownSection, processMarkdownFiles, calculateHash} from './shared';
+import {
+  BookConfig,
+  BookPageDto,
+  findChunksToUpdateAndRemove,
+  isInsideCodeBlock,
+  MarkdownSection,
+  processMarkdownFiles,
+  calculateHash,
+} from './shared';
 
 const config: BookConfig = {
   repoOwner: 'cairo-book',
@@ -99,15 +107,14 @@ async function downloadAndExtractCairoBook(): Promise<BookPageDto[]> {
   return pages;
 }
 
-
-
-
 /**
  * Creates chunks from book pages based on markdown sections
  * @param pages - Array of BookPageDto objects
  * @returns Promise<Document[]> - Array of Document objects representing chunks
  */
-export async function createChunks(pages: BookPageDto[]): Promise<Document<BookChunk>[]> {
+export async function createChunks(
+  pages: BookPageDto[],
+): Promise<Document<BookChunk>[]> {
   logger.info('Creating chunks from book pages based on markdown sections');
   const chunks: Document[] = [];
 
@@ -116,6 +123,13 @@ export async function createChunks(pages: BookPageDto[]): Promise<Document<BookC
 
     sections.forEach((section: MarkdownSection, index: number) => {
       const hash: string = calculateHash(section.content);
+      console.log(
+        'Source link: ',
+        `${config.baseUrl}/${page.name}.html#${section.title
+          ?.toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w-]+/g, '')}`,
+      );
       chunks.push(
         new Document<BookChunk>({
           pageContent: section.content,
@@ -125,7 +139,10 @@ export async function createChunks(pages: BookPageDto[]): Promise<Document<BookC
             chunkNumber: index,
             contentHash: hash,
             uniqueId: `${page.name}-${index}`,
-            sourceLink : `${config.baseUrl}/${page.name}.html#${section.title?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')}`
+            sourceLink: `${config.baseUrl}/${page.name}.html#${section.title
+              ?.toLowerCase()
+              .replace(/\s+/g, '-')
+              .replace(/[^\w-]+/g, '')}`,
           },
         }),
       );
