@@ -1,4 +1,5 @@
-import { splitMarkdownIntoSections, createChunks, BookPageDto, findChunksToUpdateAndRemove, isInsideCodeBlock } from '../cairoBookIngester';
+import { splitMarkdownIntoSections, createChunks } from '../cairoBookIngester';
+import { BookPageDto, findChunksToUpdateAndRemove, isInsideCodeBlock } from '../shared';
 import { Document } from '@langchain/core/documents';
 
 describe('splitMarkdownIntoSections', () => {

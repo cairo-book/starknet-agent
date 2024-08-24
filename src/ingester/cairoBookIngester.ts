@@ -5,21 +5,21 @@ import AdmZip from 'adm-zip';
 import { VectorStore } from './vectorStore';
 import { Document } from 'langchain/document';
 import logger from '../utils/logger';
-import { createHash } from 'crypto';
-import { CairoBookChunk } from '../types/cairoBook';
+import { BookChunk } from '../types/types';
+import { BookConfig, BookPageDto, findChunksToUpdateAndRemove, isInsideCodeBlock, MarkdownSection, processMarkdownFiles, calculateHash} from './shared';
 
-const config = {
+const config: BookConfig = {
   repoOwner: 'cairo-book',
   repoName: 'cairo-book',
-  mdFileExtension: '.md',
+  fileExtension: '.md',
   chunkSize: 4096,
   chunkOverlap: 512,
-  bookBaseUrl: 'https://book.cairo-lang.org',
+  baseUrl: 'https://book.cairo-lang.org',
 };
 
 export const ingestCairoBook = async (vectorStore: VectorStore) => {
   try {
-    const pages = await downloadAndExtractBook();
+    const pages = await downloadAndExtractCairoBook();
     const chunks = await createChunks(pages);
 
     const storedChunkHashes = await vectorStore.getStoredBookPagesHashes();
@@ -68,7 +68,7 @@ export const ingestCairoBook = async (vectorStore: VectorStore) => {
   }
 };
 
-async function downloadAndExtractBook(): Promise<BookPageDto[]> {
+async function downloadAndExtractCairoBook(): Promise<BookPageDto[]> {
   logger.info('Downloading and extracting Cairo Book');
   const latestReleaseUrl = `https://api.github.com/repos/${config.repoOwner}/${config.repoName}/releases/latest`;
   const response = await axios.get(latestReleaseUrl);
@@ -94,42 +94,12 @@ async function downloadAndExtractBook(): Promise<BookPageDto[]> {
   logger.info('ZIP file downloaded and extracted successfully.');
 
   const srcDir = path.join(extractDir, 'book/markdown');
-  const pages = await processMarkdownFiles(srcDir);
+  const pages = await processMarkdownFiles(config, srcDir);
 
   return pages;
 }
 
-async function processMarkdownFiles(directory: string): Promise<BookPageDto[]> {
-  try {
-    logger.info(`Processing markdown files in ${directory}`);
-    const files = await fs.readdir(directory);
-    const pages: BookPageDto[] = [];
 
-    for (const file of files) {
-      const filePath = path.join(directory, file);
-      if (path.extname(file).toLowerCase() === config.mdFileExtension) {
-        const content = await fs.readFile(filePath, 'utf8');
-        pages.push({
-          name: path.basename(file, config.mdFileExtension),
-          content,
-        });
-      }
-    }
-
-    return pages;
-  } catch (err) {
-    console.error('Error reading directory:', (err as Error).message);
-    throw new Error(`Failed to read directory: ${(err as Error).message}`);
-  }
-}
-
-/**
- * Interface representing a section of markdown content
- */
-interface MarkdownSection {
-  title: string;
-  content: string;
-}
 
 
 /**
@@ -137,7 +107,7 @@ interface MarkdownSection {
  * @param pages - Array of BookPageDto objects
  * @returns Promise<Document[]> - Array of Document objects representing chunks
  */
-export async function createChunks(pages: BookPageDto[]): Promise<Document<CairoBookChunk>[]> {
+export async function createChunks(pages: BookPageDto[]): Promise<Document<BookChunk>[]> {
   logger.info('Creating chunks from book pages based on markdown sections');
   const chunks: Document[] = [];
 
@@ -147,7 +117,7 @@ export async function createChunks(pages: BookPageDto[]): Promise<Document<Cairo
     sections.forEach((section: MarkdownSection, index: number) => {
       const hash: string = calculateHash(section.content);
       chunks.push(
-        new Document<CairoBookChunk>({
+        new Document<BookChunk>({
           pageContent: section.content,
           metadata: {
             name: page.name,
@@ -155,13 +125,14 @@ export async function createChunks(pages: BookPageDto[]): Promise<Document<Cairo
             chunkNumber: index,
             contentHash: hash,
             uniqueId: `${page.name}-${index}`,
+            sourceLink : `${config.baseUrl}/${page.name}.html#${section.title?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')}`
           },
         }),
       );
     });
   }
 
-  return chunks as Document<CairoBookChunk>[];
+  return chunks as Document<BookChunk>[];
 }
 
 /**
@@ -198,52 +169,4 @@ export function splitMarkdownIntoSections(content: string): MarkdownSection[] {
   }
 
   return sections;
-}
-
-export function isInsideCodeBlock(content: string, index: number): boolean {
-  const codeBlockRegex = /```[\s\S]*?```/g;
-  let match;
-  while ((match = codeBlockRegex.exec(content)) !== null) {
-    if (index >= match.index && index < match.index + match[0].length) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function calculateHash(content: string): string {
-  return createHash('md5').update(content).digest('hex');
-}
-export function findChunksToUpdateAndRemove(
-  freshChunks: Document<Record<string, any>>[],
-  storedChunkHashes: { uniqueId: string; contentHash: string }[],
-): {
-  chunksToUpdate: Document<Record<string, any>>[];
-  chunksToRemove: string[];
-} {
-  const storedHashesMap = new Map(
-    storedChunkHashes.map((chunk) => [chunk.uniqueId, chunk.contentHash]),
-  );
-  const freshChunksMap = new Map(
-    freshChunks.map((chunk) => [
-      chunk.metadata.uniqueId,
-      chunk.metadata.contentHash,
-    ]),
-  );
-
-  const chunksToUpdate = freshChunks.filter((chunk) => {
-    const storedHash = storedHashesMap.get(chunk.metadata.uniqueId);
-    return storedHash !== chunk.metadata.contentHash;
-  });
-
-  const chunksToRemove = storedChunkHashes
-    .filter((stored) => !freshChunksMap.has(stored.uniqueId))
-    .map((stored) => stored.uniqueId);
-
-  return { chunksToUpdate, chunksToRemove };
-}
-
-export interface BookPageDto {
-  name: string;
-  content: string;
 }

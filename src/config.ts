@@ -70,3 +70,17 @@ export const updateConfig = (config: RecursivePartial<Config>) => {
     toml.stringify(config),
   );
 };
+
+export const cairoBookStoreConfig = {
+  mongoUri: process.env.MONGODB_ATLAS_URI || 'mongodb://127.0.0.1:27018/?directConnection=true',
+  dbName: 'cairo-book',
+  collectionName: 'book-chunks',
+  openAIApiKey: process.env.OPENAI_API_KEY || '',
+}
+
+export const starknetDocsStoreConfig = {
+  mongoUri: process.env.MONGODB_ATLAS_URI || 'mongodb://127.0.0.1:27018/?directConnection=true',
+  dbName: 'starknet-docs',
+  collectionName: 'docs-chunks',
+  openAIApiKey: process.env.OPENAI_API_KEY || '',
+}
