@@ -29,30 +29,39 @@ export interface MarkdownSection {
 
 
 export async function processMarkdownFiles(config: BookConfig, directory: string): Promise<BookPageDto[]> {
-    try {
-      logger.info(`Processing markdown files in ${directory}`);
-      const files = await fs.readdir(directory);
-      const pages: BookPageDto[] = [];
+  try {
+    logger.info(`Processing markdown files in ${directory}`);
+    const pages: BookPageDto[] = [];
 
-      for (const file of files) {
-        const filePath = path.join(directory, file);
-        if (path.extname(file).toLowerCase() === config.fileExtension) {
-          const content = await fs.readFile(filePath, 'utf8');
+    async function processDirectory(dir: string) {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+
+        if (entry.isDirectory()) {
+          // Recursively process subdirectories
+          await processDirectory(fullPath);
+        } else if (entry.isFile() && path.extname(entry.name).toLowerCase() === config.fileExtension) {
+          // Process markdown files
+          const content = await fs.readFile(fullPath, 'utf8');
           pages.push({
-            name: path.basename(file, config.fileExtension),
+            name: path.relative(directory, fullPath).replace(config.fileExtension, ''),
             content,
           });
         }
       }
-
-      return pages;
-    } catch (err) {
-      console.error('Error reading directory:', (err as Error).message);
-      throw new Error(`Failed to read directory: ${(err as Error).message}`);
     }
-  }
 
-  export function isInsideCodeBlock(content: string, index: number): boolean {
+    await processDirectory(directory);
+    return pages;
+  } catch (err) {
+    console.error('Error processing directory:', (err as Error).message);
+    throw new Error(`Failed to process directory: ${(err as Error).message}`);
+  }
+}
+
+export function isInsideCodeBlock(content: string, index: number): boolean {
     const codeBlockRegex = /```[\s\S]*?```/g;
     let match;
     while ((match = codeBlockRegex.exec(content)) !== null) {
@@ -96,4 +105,21 @@ export function findChunksToUpdateAndRemove(
 
 export function calculateHash(content: string): string {
   return createHash('md5').update(content).digest('hex');
+}
+
+
+//TODO: ensure this works with stuff lke https://docs.starknet.io/starknet-versions/pathfinder-versions/#0_6_6_2023_07_10_latest if required
+export function createAnchor(title: string | undefined): string {
+  if (!title) return '';
+
+  return title
+    .toLowerCase()                      // Convert to lowercase
+    .replace(/[^\w\s-]/g, '')           // Remove non-word characters (except spaces and hyphens)
+    .replace(/\s+/g, '-')               // Convert spaces to hyphens
+    .replace(/-{2,}/g, '-')             // Replace multiple hyphens with single hyphen
+    .replace(/^-+|-+$/g, '');           // Remove leading and trailing hyphens
+}
+
+export function outputTitleAndLink(prettyPart: string, anchorLink: string): string {
+  return `[${prettyPart}]${anchorLink}  `;
 }

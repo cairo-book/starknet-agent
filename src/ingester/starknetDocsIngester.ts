@@ -10,6 +10,7 @@ import {
   BookConfig,
   BookPageDto,
   calculateHash,
+  createAnchor,
   findChunksToUpdateAndRemove,
   MarkdownSection,
   processMarkdownFiles,
@@ -23,7 +24,7 @@ const STARKNET_DOCS_CONFIG: BookConfig = {
   fileExtension: '.adoc',
   chunkSize: 4096,
   chunkOverlap: 512,
-  baseUrl: 'https://docs.starknet.io/',
+  baseUrl: 'https://docs.starknet.io',
 };
 
 // Main ingestion function
@@ -197,18 +198,9 @@ function createChunk(
       chunkNumber: index,
       contentHash: hash,
       uniqueId: `${page.name}-${index}`,
-      sourceLink: `${STARKNET_DOCS_CONFIG.baseUrl}/${page.name}.html#${createAnchor(section.title)}`,
+      sourceLink: `${STARKNET_DOCS_CONFIG.baseUrl}/${page.name}#${createAnchor(section.title)}`,
     },
   });
-}
-
-function createAnchor(title: string | undefined): string {
-  return title
-    ? title
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w-]+/g, '')
-    : '';
 }
 
 async function updateVectorStore(

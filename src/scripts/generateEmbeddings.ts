@@ -49,7 +49,12 @@ async function promptForTarget(): Promise<string> {
 }
 
 async function main() {
-  const target = await promptForTarget();
+  const target = await Promise.race([
+    promptForTarget(),
+    new Promise<string>(resolve => setTimeout(() => resolve('Both'), 7000))
+  ]);
+  console.log(`Selected target: ${target}`);
+
   try {
     if (target === 'Cairo Book' || target === 'Both') {
       await ingestCairoBookData();

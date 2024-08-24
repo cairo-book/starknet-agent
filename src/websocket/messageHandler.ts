@@ -14,6 +14,7 @@ import db from '../db';
 import { chats, messages } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
+import handlestarknetDocsSearch from '../agents/starknetDocsSearchAgent';
 
 type Message = {
   messageId: string;
@@ -31,6 +32,7 @@ type WSMessage = {
 
 const searchHandlers = {
   cairoBookSearch: handleCairoBookSearch,
+  starknetDocsSearch: handlestarknetDocsSearch,
   webSearch: handleWebSearch,
   academicSearch: handleAcademicSearch,
   writingAssistant: handleWritingAssistant,

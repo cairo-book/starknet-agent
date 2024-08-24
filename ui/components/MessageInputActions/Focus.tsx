@@ -26,6 +26,12 @@ const focusModes = [
     icon: <BookOpen size={20} />,
   },
   {
+    key: 'starknetDocsSearch',
+    title: 'Starknet Docs',
+    description: 'Search in Starknet Docs',
+    icon: <BookOpen size={20} />,
+  },
+  {
     key: 'academicSearch',
     title: 'Academic',
     description: 'Search in published academic papers',

@@ -59,8 +59,7 @@ let vectorStore: VectorStore;
 const basicSearchRetrieverPrompt = `
 You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the Cairo Language documentation for information.
 If it is a writing task or a simple hi, hello rather than a question, you need to return \`not_needed\` as the response.
-If the question contains some links and asks to answer from those links or even if they don't you need to return the links inside 'links' XML block and the question inside 'question' XML block. If there are no links then you need to return the question without any XML block.
-If the user asks to summarrize the content from some links you need to return \`Summarize\` as the question inside the 'question' XML block and the links inside the 'links' XML block.
+If the user asks to summarize the content from some links you need to return \`not_needed\` as the response.
 
 Example:
 1. Follow up question: What are smart contracts?
@@ -116,7 +115,7 @@ find specific information about that in the Cairo Book. Could you rephrase your 
 about a related topic in Cairo or Starknet development?"
 
 Remember, your knowledge is based solely on the provided Cairo Book documentation. Always strive for
-accuracy and relevance in your responses.
+accuracy and relevance in your responses. Today's date is ${new Date().toISOString()}
 `;
 
 const strParser = new StringOutputParser();

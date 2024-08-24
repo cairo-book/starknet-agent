@@ -14,6 +14,7 @@ import {
   MarkdownSection,
   processMarkdownFiles,
   calculateHash,
+  createAnchor,
 } from './shared';
 
 const config: BookConfig = {
@@ -123,13 +124,6 @@ export async function createChunks(
 
     sections.forEach((section: MarkdownSection, index: number) => {
       const hash: string = calculateHash(section.content);
-      console.log(
-        'Source link: ',
-        `${config.baseUrl}/${page.name}.html#${section.title
-          ?.toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^\w-]+/g, '')}`,
-      );
       chunks.push(
         new Document<BookChunk>({
           pageContent: section.content,
@@ -139,10 +133,7 @@ export async function createChunks(
             chunkNumber: index,
             contentHash: hash,
             uniqueId: `${page.name}-${index}`,
-            sourceLink: `${config.baseUrl}/${page.name}.html#${section.title
-              ?.toLowerCase()
-              .replace(/\s+/g, '-')
-              .replace(/[^\w-]+/g, '')}`,
+            sourceLink: `${config.baseUrl}/${page.name}.html#${createAnchor(section.title)}`,
           },
         }),
       );
@@ -153,7 +144,9 @@ export async function createChunks(
 }
 
 /**
- * Splits markdown content into sections based on headers
+ * Splits markdown content into sections based on headers and imposes a maximum section size
+ * The maximum section size is 20000 characters - this is to avoid embedding large sections, which is
+ * limited by OpenAI. The limit is 8192 tokens, therefore 20000 characters should be safe at 1token~=4 characters.
  * @param content - The markdown content to split
  * @returns MarkdownSection[] - Array of MarkdownSection objects
  */
@@ -163,14 +156,18 @@ export function splitMarkdownIntoSections(content: string): MarkdownSection[] {
   let lastIndex = 0;
   let lastTitle = '';
   let match;
+  const MAX_SECTION_SIZE = 20000;
 
   while ((match = headerRegex.exec(content)) !== null) {
     if (!isInsideCodeBlock(content, match.index)) {
       if (lastIndex < match.index) {
-        sections.push({
-          title: lastTitle,
-          content: content.slice(lastIndex, match.index).trim(),
-        });
+        const sectionContent = content.slice(lastIndex, match.index).trim();
+        addSectionWithSizeLimit(
+          sections,
+          lastTitle,
+          sectionContent,
+          MAX_SECTION_SIZE,
+        );
       }
       lastTitle = match[2];
       lastIndex = match.index;
@@ -179,11 +176,33 @@ export function splitMarkdownIntoSections(content: string): MarkdownSection[] {
 
   // Add the last section
   if (lastIndex < content.length) {
-    sections.push({
-      title: lastTitle,
-      content: content.slice(lastIndex).trim(),
-    });
+    const sectionContent = content.slice(lastIndex).trim();
+    addSectionWithSizeLimit(
+      sections,
+      lastTitle,
+      sectionContent,
+      MAX_SECTION_SIZE,
+    );
   }
 
   return sections;
+}
+
+function addSectionWithSizeLimit(
+  sections: MarkdownSection[],
+  title: string,
+  content: string,
+  maxSize: number,
+) {
+  if (content.length <= maxSize) {
+    sections.push({ title, content });
+  } else {
+    let startIndex = 0;
+    while (startIndex < content.length) {
+      const endIndex = startIndex + maxSize;
+      const chunk = content.slice(startIndex, endIndex);
+      sections.push({ title, content: chunk });
+      startIndex = endIndex;
+    }
+  }
 }

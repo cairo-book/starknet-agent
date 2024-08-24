@@ -1,3 +1,8 @@
+//TODO: simplify starknet / cairo book search agent
+// by introducing an RAG-Agent abstraction.
+// The only difference between the two is the source database of the documents
+// and the associated prompt.
+
 /**
  * @file starknetDocsSearchAgent.ts
  * @description This file implements a search agent for the Cairo Book documentation.
@@ -59,20 +64,19 @@ let vectorStore: VectorStore;
 })();
 
 const basicSearchRetrieverPrompt = `
-You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the Cairo Language documentation for information.
+You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the Starknet documentation for information.
 If it is a writing task or a simple hi, hello rather than a question, you need to return \`not_needed\` as the response.
-If the question contains some links and asks to answer from those links or even if they don't you need to return the links inside 'links' XML block and the question inside 'question' XML block. If there are no links then you need to return the question without any XML block.
-If the user asks to summarrize the content from some links you need to return \`Summarize\` as the question inside the 'question' XML block and the links inside the 'links' XML block.
+If the user asks to summarize the content from some links you need to return \`not_needed\` as the response.
 
 Example:
 1. Follow up question: What are smart contracts?
 Rephrased question: \`Smart Contracts\`
 
-2. Follow up question: How do I write a smart contract?
-Rephrased question: \`Building Smart Contracts\`
+2. Follow up question: What is SHARP?
+Rephrased question: \`SHARP\`
 
-3. Follow up question: What is Scarb?
-Rephrased question: \`What is Scarb\`
+3. Follow up question: How do I use Starkli?
+Rephrased question: \`Using Starkli\`
 
 4. Follow up question: How do I install Cairo?
 Rephrased question: \`Installing Cairo\`
@@ -85,11 +89,10 @@ Rephrased question:
 `;
 
 const basicstarknetDocsSearchResponsePrompt = `
-You are CairoGuide, an AI assistant specialized in searching and providing information from the
-Cairo Book documentation. Your primary role is to assist users with queries related to the Cairo
-programming language and Starknet development.
+You are StarknetGuide, an AI assistant specialized in searching and providing information from the
+Starknet documentation. Your primary role is to assist users with queries related to the Starknet ecosystem.
 
-Generate informative and relevant responses based on the provided context from the Cairo Book. Use a
+Generate informative and relevant responses based on the provided context from the Starknet Docs. Use a
 neutral and educational tone in your responses. Format your responses using Markdown for
 readability. Use code blocks for Cairo code examples. Provide medium to long responses that are
 comprehensive and informative.
@@ -98,15 +101,15 @@ You have to cite the answer using [number] notation. You must cite the sentences
 Place these citations at the end of that particular sentence. You can cite the same sentence multiple times if it is relevant to the user's query like [number1][number2].
 However you do not need to cite it using the same number. You can use different numbers to cite the same sentence multiple times. The number refers to the number of the search result (passed in the context) used to generate that part of the answer.
 
-Anything inside the following \`context\` HTML block provided below is for your knowledge taken from the Cairo Book and is not shared by the user. You have to answer question on the basis of it and cite the relevant information from it but you do not have to talk about the context in your response.
+Anything inside the following \`context\` HTML block provided below is for your knowledge taken from the Starknet Docs and is not shared by the user. You have to answer question on the basis of it and cite the relevant information from it but you do not have to talk about the context in your response.
 
 <context>
 {context}
 </context>
 
-If the user's query is not related to Cairo programming or Starknet, respond with: "I apologize, but
-I'm specifically designed to assist with Cairo programming and Starknet-related queries. This topic
-appears to be outside my area of expertise. Is there anything related to Cairo or Starknet that I
+If the user's query is not related to Starknet, respond with: "I apologize, but
+I'm specifically designed to assist with Starknet-related queries. This topic
+appears to be outside my area of expertise. Is there anything related to Starknet that I
 can help you with instead?"
 
 Do not tell the user to visit external websites or open links. Provide the information directly in
@@ -114,11 +117,11 @@ your response. If asked for specific documentation links, you may provide them i
 context.
 
 If you cannot find relevant information in the provided context, state: "I'm sorry, but I couldn't
-find specific information about that in the Cairo Book. Could you rephrase your question or ask
-about a related topic in Cairo or Starknet development?"
+find specific information about that in the Starknet Docs. Could you rephrase your question or ask
+about a related topic in Starknet?"
 
-Remember, your knowledge is based solely on the provided Cairo Book documentation. Always strive for
-accuracy and relevance in your responses.
+Remember, your knowledge is based solely on the provided Starknet documentation. Always strive for
+accuracy and relevance in your responses. Today's date is ${new Date().toISOString()}
 `;
 
 const strParser = new StringOutputParser();
@@ -170,7 +173,7 @@ type BasicChainInput = {
  * Creates a chain for retrieving relevant documents based on user queries.
  *
  * This function sets up a sequence of operations that process a user's query
- * and retrieve relevant documents from the Cairo Book documentation.
+ * and retrieve relevant documents from the Starknet documentation.
  *
  * The sequence includes:
  * 1. Formatting the query using a prompt template
@@ -196,7 +199,9 @@ type BasicChainInput = {
  * const retrieverChain = createBasicstarknetDocsSearchRetrieverChain(llm, vectorStore);
  * const result = await retrieverChain.invoke({ query: "What is Cairo?", chat_history: [] });
  */
-const createBasicstarknetDocsSearchRetrieverChain = (llm: BaseChatModel): RunnableSequence => {
+const createBasicstarknetDocsSearchRetrieverChain = (
+  llm: BaseChatModel,
+): RunnableSequence => {
   return RunnableSequence.from([
     PromptTemplate.fromTemplate(basicSearchRetrieverPrompt),
     llm,
@@ -209,9 +214,9 @@ const createBasicstarknetDocsSearchRetrieverChain = (llm: BaseChatModel): Runnab
       // Perform similarity search using the VectorStore
       const documents = await vectorStore.similaritySearch(input, 5);
       logger.info(
-        `Found ${documents.length} documents from the Cairo Book: ${documents}`,
+        `Found ${documents.length} documents from the Starknet Docs: ${documents}`,
       );
-      logger.info(documents)
+      logger.info(documents);
 
       return { query: input, docs: documents };
     }),
@@ -236,20 +241,20 @@ const createBasicstarknetDocsSearchAnsweringChain = (
    * @param {Document[]} docs - The documents to process.
    * @returns {Promise<Document[]>} The documents with attached source metadata.
    */
-  const attachSources = async (docs: Document<BookChunk>[]): Promise<Document[]> => {
+  const attachSources = async (
+    docs: Document<BookChunk>[],
+  ): Promise<Document[]> => {
     return docs.map((doc, index) => {
-      const sourceLink = `${DOCS_BASE_URL}/${doc.metadata.name}.html#${doc.metadata.title?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')}`;
-      console.log(sourceLink)
       return {
         pageContent: doc.pageContent,
         metadata: {
           ...doc.metadata,
           title: doc.metadata.name, // Use the 'name' field as the title
-          url: sourceLink
-        }
+          url: doc.metadata.sourceLink,
+        },
       };
-    })
-  }
+    });
+  };
 
   /**
    * Processes documents into a string format.
@@ -276,7 +281,7 @@ const createBasicstarknetDocsSearchAnsweringChain = (
     query: string;
     docs: Document[];
   }): Promise<Document[]> => {
-    logger.info("Reranking docs: ")
+    logger.info('Reranking docs: ');
     if (docs.length === 0) {
       return docs;
     }
@@ -289,7 +294,6 @@ const createBasicstarknetDocsSearchAnsweringChain = (
       (doc) => doc.pageContent && doc.pageContent.length > 0,
     );
 
-    logger.info("Reranking docs: ", docsWithContent)
 
     const [docEmbeddings, queryEmbedding] = await Promise.all([
       embeddings.embedDocuments(docsWithContent.map((doc) => doc.pageContent)),
@@ -358,7 +362,7 @@ const basicstarknetDocsSearch = (
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-  vectorStore: VectorStore
+  vectorStore: VectorStore,
 ): eventEmitter => {
   const emitter = new eventEmitter();
 
@@ -402,9 +406,15 @@ const handlestarknetDocsSearch = (
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-  vectorStore: VectorStore
+  vectorStore: VectorStore,
 ): eventEmitter => {
-  const emitter = basicstarknetDocsSearch(message, history, llm, embeddings, vectorStore);
+  const emitter = basicstarknetDocsSearch(
+    message,
+    history,
+    llm,
+    embeddings,
+    vectorStore,
+  );
   return emitter;
 };
 

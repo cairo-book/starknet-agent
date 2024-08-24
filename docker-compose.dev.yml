@@ -38,16 +38,21 @@ services:
   perplexica-frontend:
     build:
       context: .
-      dockerfile: app.dockerfile
+      dockerfile: app.dev.dockerfile
       args:
         - NEXT_PUBLIC_API_URL=http://127.0.0.1:3001/api
         - NEXT_PUBLIC_WS_URL=ws://127.0.0.1:3001
+    volumes:
+      - ./ui:/home/perplexica
+      - /home/perplexica/node_modules
     depends_on:
       - perplexica-backend
     ports:
       - 3000:3000
     networks:
       - perplexica-network
+    environment:
+      - CHOKIDAR_USEPOLLING=true
     restart: unless-stopped
 
   cairobook-ingest:
