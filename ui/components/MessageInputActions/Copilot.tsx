@@ -1,15 +1,21 @@
 import { cn } from '@/lib/utils';
 import { Switch } from '@headlessui/react';
 
-const CopilotToggle = ({
-  copilotEnabled,
-  setCopilotEnabled,
-}: {
+interface CopilotToggleProps {
   copilotEnabled: boolean;
   setCopilotEnabled: (enabled: boolean) => void;
+  className?: string;
+}
+
+const CopilotToggle: React.FC<CopilotToggleProps> = ({
+  copilotEnabled,
+  setCopilotEnabled,
+  className,
 }) => {
   return (
-    <div className="group flex flex-row items-center space-x-1 active:scale-95 duration-200 transition cursor-pointer">
+    <div
+      className={`group flex flex-row items-center space-x-1 active:scale-95 duration-200 transition cursor-pointer ${className}`}
+    >
       <Switch
         checked={copilotEnabled}
         onChange={setCopilotEnabled}

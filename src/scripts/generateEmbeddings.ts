@@ -1,23 +1,44 @@
-import { getCairoDbConfig, getStarknetDbConfig } from '../config';
+import {
+  getCairoDbConfig,
+  getStarknetDbConfig,
+  VectorStoreConfig,
+} from '../config';
 import { loadOpenAIEmbeddingsModels } from '../lib/providers/openai';
 import { ingestCairoBook } from '../ingester/cairoBookIngester';
 import { ingestStarknetDocs } from '../ingester/starknetDocsIngester';
 import { VectorStore } from '../db/vectorStore';
 import dotenv from 'dotenv';
 import { createInterface } from 'readline';
+import logger from '../utils/logger';
 
 dotenv.config();
+
+let vectorStore: VectorStore | null = null;
+
+async function setupVectorStore(
+  dbConfig: VectorStoreConfig,
+): Promise<VectorStore> {
+  if (vectorStore) {
+    return vectorStore;
+  }
+  try {
+    const embeddingModels = await loadOpenAIEmbeddingsModels();
+    const textEmbedding3Large = embeddingModels['Text embedding 3 large'];
+    vectorStore = await VectorStore.initialize(dbConfig, textEmbedding3Large);
+    logger.info('VectorStore initialized successfully');
+    return vectorStore;
+  } catch (error) {
+    logger.error('Failed to initialize VectorStore:', error);
+    throw error;
+  }
+}
 
 async function ingestCairoBookData() {
   console.log('Starting Cairo Book ingestion process...');
   try {
-    const vectorStore = await VectorStore.initialize(
-      getCairoDbConfig(),
-      await loadOpenAIEmbeddingsModels()['Text embedding 3 large'],
-    );
-    await ingestCairoBook(vectorStore);
+    const store = await setupVectorStore(getCairoDbConfig());
+    await ingestCairoBook(store);
     console.log('Cairo Book ingestion completed successfully.');
-    await vectorStore.close();
   } catch (error) {
     console.error('Error during Cairo Book ingestion:', error);
     throw error;
@@ -27,13 +48,9 @@ async function ingestCairoBookData() {
 async function ingestStarknetDocsData() {
   console.log('Starting Starknet Docs ingestion process...');
   try {
-    const vectorStore = await VectorStore.initialize(
-      getStarknetDbConfig(),
-      await loadOpenAIEmbeddingsModels()['Text embedding 3 large'],
-    );
-    await ingestStarknetDocs(vectorStore);
+    const store = await setupVectorStore(getStarknetDbConfig());
+    await ingestStarknetDocs(store);
     console.log('Starknet Docs ingestion completed successfully.');
-    await vectorStore.close();
   } catch (error) {
     console.error('Error during Starknet Docs ingestion:', error);
     throw error;
@@ -77,7 +94,10 @@ async function main() {
     console.log('All specified ingestion processes completed successfully.');
   } catch (error) {
     console.error('An error occurred during the ingestion process:', error);
-    process.exit(1);
+  } finally {
+    if (vectorStore) {
+      await vectorStore.close();
+    }
   }
 }
 

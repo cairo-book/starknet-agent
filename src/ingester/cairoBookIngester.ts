@@ -46,10 +46,6 @@ export const ingestCairoBook = async (vectorStore: VectorStore) => {
       .sort(() => 0.5 - Math.random())
       .slice(0, sampleSize);
 
-    randomChunks.forEach((chunk, index) => {
-      console.log(chunk);
-    });
-
     if (chunksToRemove.length > 0) {
       await vectorStore.removeBookPages(chunksToRemove);
     }

@@ -64,10 +64,21 @@ const EmptyChatMessageInput = ({
             {/* <Attach /> */}
           </div>
           <div className="flex flex-row items-center space-x-4 -mx-2">
-            <CopilotToggle
+            {/* <CopilotToggle
               copilotEnabled={copilotEnabled}
               setCopilotEnabled={setCopilotEnabled}
-            />
+            /> */}
+            <div className="relative group">
+              {/* TODO: disable copilot */}
+              <CopilotToggle
+                copilotEnabled={false}
+                setCopilotEnabled={() => {}}
+                className="opacity-50 cursor-not-allowed"
+              />
+              <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-100 text-gray-600 text-xs rounded py-1 px-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-200">
+                Coming Soon...
+              </span>
+            </div>
             <button
               disabled={message.trim().length === 0}
               className="bg-[#24A0ED] text-white disabled:text-black/50 dark:disabled:text-white/50 disabled:bg-[#e0e0dc] dark:disabled:bg-[#ececec21] hover:bg-opacity-85 transition duration-100 rounded-full p-2"
