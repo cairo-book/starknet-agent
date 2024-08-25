@@ -1,6 +1,5 @@
 import { EventEmitter, WebSocket } from 'ws';
 import { BaseMessage, AIMessage, HumanMessage } from '@langchain/core/messages';
-import handleCairoBookSearch from '../agents/cairoBookSearchAgent';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
 import logger from '../utils/logger';
@@ -8,9 +7,15 @@ import db from '../db';
 import { chats, messages } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
-import handlestarknetDocsSearch from '../agents/starknetDocsSearchAgent';
-import { getCairoDbConfig, getStarknetDbConfig, VectorStoreConfig } from '../config';
+import {
+  getCairoDbConfig,
+  getStarknetDbConfig,
+  VectorStoreConfig,
+} from '../config';
 import { VectorStore } from '../ingester/vectorStore';
+import handleCairoBookSearch from '../agents/ragSearchAgents/cairoBookSearchAgent';
+import { HandlerOptions, SearchHandler } from '../types/types';
+import handleStarknetDocsSearch from '../agents/ragSearchAgents/starknetDocsSearchAgent';
 
 type Message = {
   messageId: string;
@@ -26,9 +31,9 @@ type WSMessage = {
   history: Array<[string, string]>;
 };
 
-const searchHandlers = {
+const searchHandlers: Record<string, SearchHandler> = {
   cairoBookSearch: handleCairoBookSearch,
-  starknetDocsSearch: handlestarknetDocsSearch,
+  starknetDocsSearch: handleStarknetDocsSearch,
 };
 
 const searchDatabases: Record<string, () => VectorStoreConfig> = {
@@ -130,26 +135,39 @@ export const handleMessage = async (
 
     if (parsedWSMessage.type === 'message') {
       const handler = searchHandlers[parsedWSMessage.focusMode];
-      const dbConfig = searchDatabases[parsedWSMessage.focusMode]();
-
-      let vectorStore: VectorStore | undefined;
-      if (dbConfig) {
-        try {
-          vectorStore = await VectorStore.initialize(dbConfig, embeddings);
-          logger.info('VectorStore initialized successfully');
-        } catch (error) {
-          logger.error('Failed to initialize VectorStore:', error);
-          throw error;
-        }
-      }
+      const dbConfigGetter = searchDatabases[parsedWSMessage.focusMode];
 
       if (handler) {
+        let handlerOptions: HandlerOptions = {};
+
+        if (dbConfigGetter) {
+          const dbConfig = dbConfigGetter();
+          try {
+            const vectorStore = await VectorStore.initialize(
+              dbConfig,
+              embeddings,
+            );
+            logger.info('VectorStore initialized successfully');
+            handlerOptions.vectorStore = vectorStore;
+          } catch (error) {
+            logger.error('Failed to initialize VectorStore:', error);
+            ws.send(
+              JSON.stringify({
+                type: 'error',
+                data: 'Failed to initialize VectorStore',
+                key: 'VECTOR_STORE_ERROR',
+              }),
+            );
+            return; // Stop execution if there's an error
+          }
+        }
+
         const emitter = handler(
           parsedMessage.content,
           history,
           llm,
           embeddings,
-          { vectorStore },
+          handlerOptions,
         );
 
         handleEmitterEvents(emitter, ws, id, parsedMessage.chatId);
