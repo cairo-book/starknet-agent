@@ -1,7 +1,6 @@
-
 import eventEmitter from 'events';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { VectorStore } from '../ingester/vectorStore';
+import { VectorStore } from '../db/vectorStore';
 import { BaseMessage } from '@langchain/core/messages';
 import { Embeddings } from '@langchain/core/embeddings';
 
@@ -14,7 +13,7 @@ export type SearchHandler = (
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-  options: HandlerOptions
+  options: HandlerOptions,
 ) => eventEmitter;
 
 export type BookChunk = {

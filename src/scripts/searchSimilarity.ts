@@ -1,5 +1,5 @@
 import { getCairoDbConfig } from '../config';
-import { VectorStore } from '../ingester/vectorStore';
+import { VectorStore } from '../db/vectorStore';
 import { loadOpenAIEmbeddingsModels } from '../lib/providers/openai';
 import logger from '../utils/logger';
 import dotenv from 'dotenv';
@@ -10,7 +10,10 @@ let vectorStore: VectorStore;
 
 async function setupVectorStore() {
   try {
-    vectorStore = await VectorStore.initialize(getCairoDbConfig(), await loadOpenAIEmbeddingsModels()['Text embedding 3 large']);
+    vectorStore = await VectorStore.initialize(
+      getCairoDbConfig(),
+      await loadOpenAIEmbeddingsModels()['Text embedding 3 large'],
+    );
     logger.info('VectorStore initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize VectorStore:', error);

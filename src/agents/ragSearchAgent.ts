@@ -18,7 +18,7 @@ import formatChatHistoryAsString from '../utils/formatHistory';
 import eventEmitter from 'events';
 import computeSimilarity from '../utils/computeSimilarity';
 import logger from '../utils/logger';
-import { VectorStore } from '../ingester/vectorStore';
+import { VectorStore } from '../db/vectorStore';
 import { BookChunk } from '../types/types';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
 
@@ -64,7 +64,7 @@ export const handleStream = async (
 export const createBasicSearchRetrieverChain = (
   llm: BaseChatModel,
   vectorStore: VectorStore,
-  searchRetrieverPrompt: string
+  searchRetrieverPrompt: string,
 ): RunnableSequence => {
   return RunnableSequence.from([
     PromptTemplate.fromTemplate(searchRetrieverPrompt),
@@ -102,49 +102,51 @@ export const processDocs = async (docs: Document[]): Promise<string> => {
     .join('\n');
 };
 
-export const rerankDocs = (embeddings: Embeddings) => async ({
-  query,
-  docs,
-}: {
-  query: string;
-  docs: Document[];
-}): Promise<Document[]> => {
-  if (docs.length === 0 || query === 'Summarize') {
-    return docs;
-  }
+export const rerankDocs =
+  (embeddings: Embeddings) =>
+  async ({
+    query,
+    docs,
+  }: {
+    query: string;
+    docs: Document[];
+  }): Promise<Document[]> => {
+    if (docs.length === 0 || query === 'Summarize') {
+      return docs;
+    }
 
-  const docsWithContent = docs.filter(
-    (doc) => doc.pageContent && doc.pageContent.length > 0,
-  );
+    const docsWithContent = docs.filter(
+      (doc) => doc.pageContent && doc.pageContent.length > 0,
+    );
 
-  const [docEmbeddings, queryEmbedding] = await Promise.all([
-    embeddings.embedDocuments(docsWithContent.map((doc) => doc.pageContent)),
-    embeddings.embedQuery(query),
-  ]);
+    const [docEmbeddings, queryEmbedding] = await Promise.all([
+      embeddings.embedDocuments(docsWithContent.map((doc) => doc.pageContent)),
+      embeddings.embedQuery(query),
+    ]);
 
-  const similarity = docEmbeddings.map((docEmbedding, i) => ({
-    index: i,
-    similarity: computeSimilarity(queryEmbedding, docEmbedding),
-  }));
+    const similarity = docEmbeddings.map((docEmbedding, i) => ({
+      index: i,
+      similarity: computeSimilarity(queryEmbedding, docEmbedding),
+    }));
 
-  return similarity
-    .filter((sim) => sim.similarity > 0.5)
-    .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, 15)
-    .map((sim) => docsWithContent[sim.index]);
-};
+    return similarity
+      .filter((sim) => sim.similarity > 0.5)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, 15)
+      .map((sim) => docsWithContent[sim.index]);
+  };
 
 export const createBasicSearchAnsweringChain = (
   llm: BaseChatModel,
   embeddings: Embeddings,
   vectorStore: VectorStore,
   searchRetrieverPrompt: string,
-  searchResponsePrompt: string
+  searchResponsePrompt: string,
 ) => {
   const basicSearchRetrieverChain = createBasicSearchRetrieverChain(
     llm,
     vectorStore,
-    searchRetrieverPrompt
+    searchRetrieverPrompt,
   );
 
   return RunnableSequence.from([
@@ -184,7 +186,7 @@ export const basicRagSearch = (
   embeddings: Embeddings,
   vectorStore: VectorStore,
   searchRetrieverPrompt: string,
-  searchResponsePrompt: string
+  searchResponsePrompt: string,
 ): eventEmitter => {
   const emitter = new eventEmitter();
 
@@ -194,7 +196,7 @@ export const basicRagSearch = (
       embeddings,
       vectorStore,
       searchRetrieverPrompt,
-      searchResponsePrompt
+      searchResponsePrompt,
     );
 
     const stream = basicSearchAnsweringChain.streamEvents(

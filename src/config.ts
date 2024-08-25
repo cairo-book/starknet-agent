@@ -10,7 +10,6 @@ export interface VectorStoreConfig {
   COLLECTION_NAME: string;
 }
 
-
 interface Config {
   GENERAL: {
     PORT: number;

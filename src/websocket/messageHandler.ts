@@ -12,7 +12,7 @@ import {
   getStarknetDbConfig,
   VectorStoreConfig,
 } from '../config';
-import { VectorStore } from '../ingester/vectorStore';
+import { VectorStore } from '../db/vectorStore';
 import handleCairoBookSearch from '../agents/ragSearchAgents/cairoBookSearchAgent';
 import { HandlerOptions, SearchHandler } from '../types/types';
 import handleStarknetDocsSearch from '../agents/ragSearchAgents/starknetDocsSearchAgent';

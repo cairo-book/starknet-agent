@@ -20,7 +20,7 @@
 import { BaseMessage } from '@langchain/core/messages';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
-import { VectorStore } from '../../ingester/vectorStore';
+import { VectorStore } from '../../db/vectorStore';
 import eventEmitter from 'events';
 import { basicRagSearch } from '../ragSearchAgent';
 
@@ -100,7 +100,7 @@ const handleCairoBookSearch = (
     embeddings,
     additionalParams.vectorStore,
     basicSearchRetrieverPrompt,
-    basicCairoBookSearchResponsePrompt
+    basicCairoBookSearchResponsePrompt,
   );
 };
 

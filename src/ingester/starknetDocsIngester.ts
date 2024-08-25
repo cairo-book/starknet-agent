@@ -2,7 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
-import { VectorStore } from './vectorStore';
+import { VectorStore } from '../db/vectorStore';
 import { Document } from 'langchain/document';
 import logger from '../utils/logger';
 import { BookChunk } from '../types/types';

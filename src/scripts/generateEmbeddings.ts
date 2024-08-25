@@ -2,7 +2,7 @@ import { getCairoDbConfig, getStarknetDbConfig } from '../config';
 import { loadOpenAIEmbeddingsModels } from '../lib/providers/openai';
 import { ingestCairoBook } from '../ingester/cairoBookIngester';
 import { ingestStarknetDocs } from '../ingester/starknetDocsIngester';
-import { VectorStore } from '../ingester/vectorStore';
+import { VectorStore } from '../db/vectorStore';
 import dotenv from 'dotenv';
 import { createInterface } from 'readline';
 
@@ -11,7 +11,10 @@ dotenv.config();
 async function ingestCairoBookData() {
   console.log('Starting Cairo Book ingestion process...');
   try {
-    const vectorStore = await VectorStore.initialize(getCairoDbConfig(), await loadOpenAIEmbeddingsModels()['Text embedding 3 large']);
+    const vectorStore = await VectorStore.initialize(
+      getCairoDbConfig(),
+      await loadOpenAIEmbeddingsModels()['Text embedding 3 large'],
+    );
     await ingestCairoBook(vectorStore);
     console.log('Cairo Book ingestion completed successfully.');
     await vectorStore.close();
@@ -24,7 +27,10 @@ async function ingestCairoBookData() {
 async function ingestStarknetDocsData() {
   console.log('Starting Starknet Docs ingestion process...');
   try {
-    const vectorStore = await VectorStore.initialize(getStarknetDbConfig(), await loadOpenAIEmbeddingsModels()['Text embedding 3 large']);
+    const vectorStore = await VectorStore.initialize(
+      getStarknetDbConfig(),
+      await loadOpenAIEmbeddingsModels()['Text embedding 3 large'],
+    );
     await ingestStarknetDocs(vectorStore);
     console.log('Starknet Docs ingestion completed successfully.');
     await vectorStore.close();
