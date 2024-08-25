@@ -16,8 +16,6 @@ import Markdown from 'markdown-to-jsx';
 import Copy from './MessageActions/Copy';
 import Rewrite from './MessageActions/Rewrite';
 import MessageSources from './MessageSources';
-import SearchImages from './SearchImages';
-import SearchVideos from './SearchVideos';
 import { useSpeech } from 'react-text-to-speech';
 
 const MessageBox = ({
@@ -182,16 +180,6 @@ const MessageBox = ({
                   </>
                 )}
             </div>
-          </div>
-          <div className="lg:sticky lg:top-20 flex flex-col items-center space-y-3 w-full lg:w-3/12 z-30 h-full pb-4">
-            <SearchImages
-              query={history[messageIndex - 1].content}
-              chat_history={history.slice(0, messageIndex - 1)}
-            />
-            <SearchVideos
-              chat_history={history.slice(0, messageIndex - 1)}
-              query={history[messageIndex - 1].content}
-            />
           </div>
         </div>
       )}

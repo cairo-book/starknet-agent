@@ -1,12 +1,6 @@
 import { EventEmitter, WebSocket } from 'ws';
 import { BaseMessage, AIMessage, HumanMessage } from '@langchain/core/messages';
 import handleCairoBookSearch from '../agents/cairoBookSearchAgent';
-import handleWebSearch from '../agents/webSearchAgent';
-import handleAcademicSearch from '../agents/academicSearchAgent';
-import handleWritingAssistant from '../agents/writingAssistant';
-import handleWolframAlphaSearch from '../agents/wolframAlphaSearchAgent';
-import handleYoutubeSearch from '../agents/youtubeSearchAgent';
-import handleRedditSearch from '../agents/redditSearchAgent';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
 import logger from '../utils/logger';
@@ -33,12 +27,6 @@ type WSMessage = {
 const searchHandlers = {
   cairoBookSearch: handleCairoBookSearch,
   starknetDocsSearch: handlestarknetDocsSearch,
-  webSearch: handleWebSearch,
-  academicSearch: handleAcademicSearch,
-  writingAssistant: handleWritingAssistant,
-  wolframAlphaSearch: handleWolframAlphaSearch,
-  youtubeSearch: handleYoutubeSearch,
-  redditSearch: handleRedditSearch,
 };
 
 const handleEmitterEvents = (

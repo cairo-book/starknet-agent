@@ -282,7 +282,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const [focusMode, setFocusMode] = useState('webSearch');
+  const [focusMode, setFocusMode] = useState('cairoBookSearch');
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
