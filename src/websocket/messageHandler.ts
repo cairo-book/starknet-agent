@@ -9,6 +9,8 @@ import { chats, messages } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 import handlestarknetDocsSearch from '../agents/starknetDocsSearchAgent';
+import { getCairoDbConfig, getStarknetDbConfig, VectorStoreConfig } from '../config';
+import { VectorStore } from '../ingester/vectorStore';
 
 type Message = {
   messageId: string;
@@ -27,6 +29,11 @@ type WSMessage = {
 const searchHandlers = {
   cairoBookSearch: handleCairoBookSearch,
   starknetDocsSearch: handlestarknetDocsSearch,
+};
+
+const searchDatabases: Record<string, () => VectorStoreConfig> = {
+  cairoBookSearch: getCairoDbConfig,
+  starknetDocsSearch: getStarknetDbConfig,
 };
 
 const handleEmitterEvents = (
@@ -123,6 +130,18 @@ export const handleMessage = async (
 
     if (parsedWSMessage.type === 'message') {
       const handler = searchHandlers[parsedWSMessage.focusMode];
+      const dbConfig = searchDatabases[parsedWSMessage.focusMode]();
+
+      let vectorStore: VectorStore | undefined;
+      if (dbConfig) {
+        try {
+          vectorStore = await VectorStore.initialize(dbConfig, embeddings);
+          logger.info('VectorStore initialized successfully');
+        } catch (error) {
+          logger.error('Failed to initialize VectorStore:', error);
+          throw error;
+        }
+      }
 
       if (handler) {
         const emitter = handler(
@@ -130,6 +149,7 @@ export const handleMessage = async (
           history,
           llm,
           embeddings,
+          { vectorStore },
         );
 
         handleEmitterEvents(emitter, ws, id, parsedMessage.chatId);

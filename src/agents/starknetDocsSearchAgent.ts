@@ -47,22 +47,10 @@ import { getDocumentsFromLinks } from '../lib/linkDocument';
 import LineOutputParser from '../lib/outputParsers/lineOutputParser';
 import { VectorStore } from '../ingester/vectorStore';
 import { BookChunk } from '../types/types';
-import { starknetDocsStoreConfig } from '../config';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
+import { getStarknetDbConfig } from '../config';
 
 const DOCS_BASE_URL = 'https://docs.starknet.io/';
-
-let vectorStore: VectorStore;
-
-(async function setupVectorStore() {
-  try {
-    vectorStore = await VectorStore.initialize(starknetDocsStoreConfig);
-    logger.info('VectorStore initialized successfully');
-  } catch (error) {
-    logger.error('Failed to initialize VectorStore:', error);
-    throw error;
-  }
-})();
 
 const basicSearchRetrieverPrompt = `
 You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the Starknet documentation for information.
@@ -202,6 +190,7 @@ type BasicChainInput = {
  */
 const createBasicstarknetDocsSearchRetrieverChain = (
   llm: BaseChatModel,
+  vectorStore: VectorStore,
 ): RunnableSequence => {
   return RunnableSequence.from([
     PromptTemplate.fromTemplate(basicSearchRetrieverPrompt),
@@ -218,6 +207,8 @@ const createBasicstarknetDocsSearchRetrieverChain = (
         `Found ${documents.length} documents from the Starknet Docs: ${documents}`,
       );
       logger.info(documents);
+      // Close the vector store after it's used because it's opened in each query.
+      vectorStore.close();
 
       return { query: input, docs: documents };
     }),
@@ -233,9 +224,10 @@ const createBasicstarknetDocsSearchRetrieverChain = (
 const createBasicstarknetDocsSearchAnsweringChain = (
   llm: BaseChatModel,
   embeddings: Embeddings,
+  vectorStore: VectorStore,
 ) => {
   const basicstarknetDocsSearchRetrieverChain =
-    createBasicstarknetDocsSearchRetrieverChain(llm);
+    createBasicstarknetDocsSearchRetrieverChain(llm, vectorStore);
 
   /**
    * Attaches source metadata to documents.
@@ -368,7 +360,7 @@ const basicstarknetDocsSearch = (
 
   try {
     const basicstarknetDocsSearchAnsweringChain =
-      createBasicstarknetDocsSearchAnsweringChain(llm, embeddings);
+      createBasicstarknetDocsSearchAnsweringChain(llm, embeddings, vectorStore);
 
     const stream = basicstarknetDocsSearchAnsweringChain.streamEvents(
       {
@@ -406,14 +398,14 @@ const handlestarknetDocsSearch = (
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-  vectorStore: VectorStore,
+  additionalParams: { vectorStore: VectorStore },
 ): eventEmitter => {
   const emitter = basicstarknetDocsSearch(
     message,
     history,
     llm,
     embeddings,
-    vectorStore,
+    additionalParams.vectorStore,
   );
   return emitter;
 };

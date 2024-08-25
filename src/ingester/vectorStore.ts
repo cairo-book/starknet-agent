@@ -3,16 +3,8 @@ import { MongoClient, Collection, ObjectId } from 'mongodb';
 import { DocumentInterface } from '@langchain/core/documents';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import logger from '../utils/logger';
-
-/**
- * Configuration for the VectorStore
- */
-interface VectorStoreConfig {
-  mongoUri: string;
-  dbName: string;
-  collectionName: string;
-  openAIApiKey: string;
-}
+import {  VectorStoreConfig } from '../config';
+import { Embeddings } from '@langchain/core/embeddings';
 
 /**
  * VectorStore class for managing document storage and similarity search
@@ -37,22 +29,17 @@ export class VectorStore {
    * @param config - Configuration for the VectorStore
    * @returns Promise<VectorStore>
    */
-  static async initialize(config: VectorStoreConfig): Promise<VectorStore> {
-    const client = new MongoClient(config.mongoUri);
+  static async initialize(
+    config: VectorStoreConfig,
+    embeddings: Embeddings,
+  ): Promise<VectorStore> {
+    const client = new MongoClient(config.MONGODB_URI);
     await client.connect();
     logger.info('Connected to MongoDB');
 
     const collection = client
-      .db(config.dbName)
-      .collection(config.collectionName);
-
-    //TODO: make this dynamic
-    const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: config.openAIApiKey,
-      batchSize: 512,
-      modelName: 'text-embedding-3-large',
-      dimensions: 2048,
-    });
+      .db(config.DB_NAME)
+      .collection(config.COLLECTION_NAME);
 
     const vectorSearch = new MongoDBAtlasVectorSearch(embeddings, {
       collection,

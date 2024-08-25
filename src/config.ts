@@ -4,11 +4,20 @@ import toml from '@iarna/toml';
 
 const configFileName = 'config.toml';
 
+export interface VectorStoreConfig {
+  MONGODB_URI: string;
+  DB_NAME: string;
+  COLLECTION_NAME: string;
+}
+
+
 interface Config {
   GENERAL: {
     PORT: number;
     SIMILARITY_MEASURE: string;
   };
+  CAIRO_DB: VectorStoreConfig;
+  STARKNET_DB: VectorStoreConfig;
   API_KEYS: {
     OPENAI: string;
     GROQ: string;
@@ -44,6 +53,10 @@ export const getSearxngApiEndpoint = () => loadConfig().API_ENDPOINTS.SEARXNG;
 
 export const getOllamaApiEndpoint = () => loadConfig().API_ENDPOINTS.OLLAMA;
 
+export const getCairoDbConfig = () => loadConfig().CAIRO_DB;
+
+export const getStarknetDbConfig = () => loadConfig().STARKNET_DB;
+
 export const updateConfig = (config: RecursivePartial<Config>) => {
   const currentConfig = loadConfig();
 
@@ -69,22 +82,4 @@ export const updateConfig = (config: RecursivePartial<Config>) => {
     path.join(__dirname, `../${configFileName}`),
     toml.stringify(config),
   );
-};
-
-export const cairoBookStoreConfig = {
-  mongoUri:
-    process.env.MONGODB_ATLAS_URI ||
-    'mongodb://127.0.0.1:27018/?directConnection=true',
-  dbName: 'cairo-book',
-  collectionName: 'book-chunks',
-  openAIApiKey: process.env.OPENAI_API_KEY || '',
-};
-
-export const starknetDocsStoreConfig = {
-  mongoUri:
-    process.env.MONGODB_ATLAS_URI ||
-    'mongodb://127.0.0.1:27018/?directConnection=true',
-  dbName: 'starknet-docs',
-  collectionName: 'docs-chunks',
-  openAIApiKey: process.env.OPENAI_API_KEY || '',
 };

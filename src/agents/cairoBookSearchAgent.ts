@@ -42,20 +42,11 @@ import { getDocumentsFromLinks } from '../lib/linkDocument';
 import LineOutputParser from '../lib/outputParsers/lineOutputParser';
 import { VectorStore } from '../ingester/vectorStore';
 import { BookChunk } from '../types/types';
-import { cairoBookStoreConfig } from '../config';
+import { getCairoDbConfig } from '../config';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
 
 let vectorStore: VectorStore;
 
-(async function setupVectorStore() {
-  try {
-    vectorStore = await VectorStore.initialize(cairoBookStoreConfig);
-    logger.info('VectorStore initialized successfully');
-  } catch (error) {
-    logger.error('Failed to initialize VectorStore:', error);
-    throw error;
-  }
-})();
 
 const basicSearchRetrieverPrompt = `
 You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the Cairo Language documentation for information.
@@ -196,6 +187,7 @@ type BasicChainInput = {
  */
 const createBasicCairoBookSearchRetrieverChain = (
   llm: BaseChatModel,
+  vectorStore: VectorStore,
 ): RunnableSequence => {
   return RunnableSequence.from([
     PromptTemplate.fromTemplate(basicSearchRetrieverPrompt),
@@ -207,6 +199,8 @@ const createBasicCairoBookSearchRetrieverChain = (
       }
 
       const documents = await vectorStore.similaritySearch(input, 5);
+      // Close the vector store after it's used because it's opened in each query.
+      vectorStore.close();
 
       return { query: input, docs: documents };
     }),
@@ -222,9 +216,10 @@ const createBasicCairoBookSearchRetrieverChain = (
 const createBasicCairoBookSearchAnsweringChain = (
   llm: BaseChatModel,
   embeddings: Embeddings,
+  vectorStore: VectorStore,
 ) => {
   const basicCairoBookSearchRetrieverChain =
-    createBasicCairoBookSearchRetrieverChain(llm);
+    createBasicCairoBookSearchRetrieverChain(llm, vectorStore);
 
   /**
    * Attaches source metadata to documents.
@@ -356,7 +351,7 @@ const basicCairoBookSearch = (
 
   try {
     const basicCairoBookSearchAnsweringChain =
-      createBasicCairoBookSearchAnsweringChain(llm, embeddings);
+      createBasicCairoBookSearchAnsweringChain(llm, embeddings, vectorStore);
 
     const stream = basicCairoBookSearchAnsweringChain.streamEvents(
       {
@@ -394,14 +389,14 @@ const handleCairoBookSearch = (
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-  vectorStore: VectorStore,
+  additionalParams: { vectorStore: VectorStore },
 ): eventEmitter => {
   const emitter = basicCairoBookSearch(
     message,
     history,
     llm,
     embeddings,
-    vectorStore,
+    additionalParams.vectorStore,
   );
   return emitter;
 };
