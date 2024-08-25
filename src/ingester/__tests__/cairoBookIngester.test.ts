@@ -1,5 +1,9 @@
 import { splitMarkdownIntoSections, createChunks } from '../cairoBookIngester';
-import { BookPageDto, findChunksToUpdateAndRemove, isInsideCodeBlock } from '../shared';
+import {
+  BookPageDto,
+  findChunksToUpdateAndRemove,
+  isInsideCodeBlock,
+} from '../shared';
 import { Document } from '@langchain/core/documents';
 
 describe('splitMarkdownIntoSections', () => {
@@ -23,13 +27,17 @@ Even more content`;
   it('should handle content with no headers', () => {
     const content = 'Just some plain text without headers.';
     const result = splitMarkdownIntoSections(content);
-    expect(result).toEqual([{ title: '', content: 'Just some plain text without headers.' }]);
+    expect(result).toEqual([
+      { title: '', content: 'Just some plain text without headers.' },
+    ]);
   });
 
   it('should handle content with only one header', () => {
     const content = '# Single Header\nWith some content';
     const result = splitMarkdownIntoSections(content);
-    expect(result).toEqual([{ title: 'Single Header', content: '# Single Header\nWith some content' }]);
+    expect(result).toEqual([
+      { title: 'Single Header', content: '# Single Header\nWith some content' },
+    ]);
   });
 
   it('should handle empty content', () => {
@@ -76,7 +84,7 @@ Some content
 # This is not a header
 code line 1
 code line 2
-\`\`\``
+\`\`\``,
       },
       {
         title: 'Real Subtitle',
@@ -85,13 +93,13 @@ More content
 \`\`\`
 # println!("This is a hidden line");
 # println!("This is a visible line");
-\`\`\``
+\`\`\``,
       },
       {
         title: 'Another Section',
         content: `### Another Section
-Final content`
-      }
+Final content`,
+      },
     ]);
   });
 });
@@ -133,9 +141,7 @@ describe('createChunks', () => {
   });
 
   it('should handle empty pages', async () => {
-    const pages: BookPageDto[] = [
-      { name: 'empty', content: '' },
-    ];
+    const pages: BookPageDto[] = [{ name: 'empty', content: '' }];
 
     const result = await createChunks(pages);
 
@@ -146,9 +152,18 @@ describe('createChunks', () => {
 describe('findChunksToUpdateAndRemove', () => {
   it('should correctly identify chunks to update and remove', () => {
     const freshChunks: Document<Record<string, any>>[] = [
-      { metadata: { uniqueId: '1', contentHash: 'hash1' }, pageContent: 'Some Content 1' },
-      { metadata: { uniqueId: '2', contentHash: 'hash2_updated' }, pageContent: 'Some Content 2' },
-      { metadata: { uniqueId: '4', contentHash: 'hash4' }, pageContent: 'Some Content 3' },
+      {
+        metadata: { uniqueId: '1', contentHash: 'hash1' },
+        pageContent: 'Some Content 1',
+      },
+      {
+        metadata: { uniqueId: '2', contentHash: 'hash2_updated' },
+        pageContent: 'Some Content 2',
+      },
+      {
+        metadata: { uniqueId: '4', contentHash: 'hash4' },
+        pageContent: 'Some Content 3',
+      },
     ];
 
     const storedChunkHashes = [
@@ -160,16 +175,28 @@ describe('findChunksToUpdateAndRemove', () => {
     const result = findChunksToUpdateAndRemove(freshChunks, storedChunkHashes);
 
     expect(result.chunksToUpdate).toEqual([
-      { metadata: { uniqueId: '2', contentHash: 'hash2_updated' }, pageContent: 'Some Content 2' },
-      { metadata: { uniqueId: '4', contentHash: 'hash4' }, pageContent: 'Some Content 3' },
+      {
+        metadata: { uniqueId: '2', contentHash: 'hash2_updated' },
+        pageContent: 'Some Content 2',
+      },
+      {
+        metadata: { uniqueId: '4', contentHash: 'hash4' },
+        pageContent: 'Some Content 3',
+      },
     ]);
     expect(result.chunksToRemove).toEqual(['3']);
   });
 
   it('should return empty arrays when no updates or removals are needed', () => {
     const freshChunks: Document<Record<string, any>>[] = [
-      { metadata: { uniqueId: '1', contentHash: 'hash1' }, pageContent: 'Some Content 1' },
-      { metadata: { uniqueId: '2', contentHash: 'hash2' }, pageContent: 'Some Content 2' },
+      {
+        metadata: { uniqueId: '1', contentHash: 'hash1' },
+        pageContent: 'Some Content 1',
+      },
+      {
+        metadata: { uniqueId: '2', contentHash: 'hash2' },
+        pageContent: 'Some Content 2',
+      },
     ];
 
     const storedChunkHashes = [
@@ -214,23 +241,45 @@ Final text
 `;
 
   it('should return true for indices inside code blocks', () => {
-    expect(isInsideCodeBlock(testContent, testContent.indexOf('code block'))).toBe(true);
-    expect(isInsideCodeBlock(testContent, testContent.indexOf('multi-line'))).toBe(true);
-    expect(isInsideCodeBlock(testContent, testContent.indexOf('function example'))).toBe(true);
+    expect(
+      isInsideCodeBlock(testContent, testContent.indexOf('code block')),
+    ).toBe(true);
+    expect(
+      isInsideCodeBlock(testContent, testContent.indexOf('multi-line')),
+    ).toBe(true);
+    expect(
+      isInsideCodeBlock(testContent, testContent.indexOf('function example')),
+    ).toBe(true);
   });
 
   it('should return false for indices outside code blocks', () => {
-    expect(isInsideCodeBlock(testContent, testContent.indexOf('# Header'))).toBe(false);
-    expect(isInsideCodeBlock(testContent, testContent.indexOf('Some text'))).toBe(false);
-    expect(isInsideCodeBlock(testContent, testContent.indexOf('More text'))).toBe(false);
-    expect(isInsideCodeBlock(testContent, testContent.indexOf('Final text'))).toBe(false);
+    expect(
+      isInsideCodeBlock(testContent, testContent.indexOf('# Header')),
+    ).toBe(false);
+    expect(
+      isInsideCodeBlock(testContent, testContent.indexOf('Some text')),
+    ).toBe(false);
+    expect(
+      isInsideCodeBlock(testContent, testContent.indexOf('More text')),
+    ).toBe(false);
+    expect(
+      isInsideCodeBlock(testContent, testContent.indexOf('Final text')),
+    ).toBe(false);
   });
 
   it('should handle edge cases', () => {
     //@dev: we consider the backticks to be part of the code block
-    expect(isInsideCodeBlock(testContent, testContent.indexOf('```'))).toBe(true);
-    expect(isInsideCodeBlock(testContent, testContent.indexOf('```') + 1)).toBe(true);
-    expect(isInsideCodeBlock(testContent, testContent.lastIndexOf('```') - 1)).toBe(true);
-    expect(isInsideCodeBlock(testContent, testContent.lastIndexOf('```'))).toBe(true);
+    expect(isInsideCodeBlock(testContent, testContent.indexOf('```'))).toBe(
+      true,
+    );
+    expect(isInsideCodeBlock(testContent, testContent.indexOf('```') + 1)).toBe(
+      true,
+    );
+    expect(
+      isInsideCodeBlock(testContent, testContent.lastIndexOf('```') - 1),
+    ).toBe(true);
+    expect(isInsideCodeBlock(testContent, testContent.lastIndexOf('```'))).toBe(
+      true,
+    );
   });
 });

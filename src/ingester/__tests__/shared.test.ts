@@ -1,4 +1,4 @@
-import { createAnchor, } from '../shared';
+import { createAnchor } from '../shared';
 
 describe('createAnchor', () => {
   it('should handle undefined input', () => {
@@ -18,7 +18,9 @@ describe('createAnchor', () => {
   });
 
   it('should convert multiple spaces to single hyphen', () => {
-    expect(createAnchor('Text   with   multiple    spaces')).toBe('text-with-multiple-spaces');
+    expect(createAnchor('Text   with   multiple    spaces')).toBe(
+      'text-with-multiple-spaces',
+    );
   });
 
   it('should convert multiple hyphens to single hyphen', () => {
@@ -30,7 +32,8 @@ describe('createAnchor', () => {
   });
 
   it('should handle complex cases', () => {
-    expect(createAnchor('  Complex @#$% CASE   with 123  ')).toBe('complex-case-with-123');
+    expect(createAnchor('  Complex @#$% CASE   with 123  ')).toBe(
+      'complex-case-with-123',
+    );
   });
-
 });

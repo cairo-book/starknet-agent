@@ -5,7 +5,7 @@ import {
   Pencil,
   ScanEye,
   SwatchBook,
-  BookOpen
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, Transition } from '@headlessui/react';

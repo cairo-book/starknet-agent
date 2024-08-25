@@ -295,7 +295,6 @@ const createBasicstarknetDocsSearchAnsweringChain = (
       (doc) => doc.pageContent && doc.pageContent.length > 0,
     );
 
-
     const [docEmbeddings, queryEmbedding] = await Promise.all([
       embeddings.embedDocuments(docsWithContent.map((doc) => doc.pageContent)),
       embeddings.embedQuery(query),

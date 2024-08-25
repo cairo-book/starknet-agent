@@ -36,22 +36,25 @@ async function ingestStarknetDocsData() {
 async function promptForTarget(): Promise<string> {
   const rl = createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
   return new Promise((resolve) => {
-    rl.question('Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Both): ', (answer) => {
-      rl.close();
-      const targets = ["Cairo Book", "Starknet Docs", "Both"];
-      resolve(targets[parseInt(answer) - 1] || "Both");
-    });
+    rl.question(
+      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Both): ',
+      (answer) => {
+        rl.close();
+        const targets = ['Cairo Book', 'Starknet Docs', 'Both'];
+        resolve(targets[parseInt(answer) - 1] || 'Both');
+      },
+    );
   });
 }
 
 async function main() {
   const target = await Promise.race([
     promptForTarget(),
-    new Promise<string>(resolve => setTimeout(() => resolve('Both'), 7000))
+    new Promise<string>((resolve) => setTimeout(() => resolve('Both'), 7000)),
   ]);
   console.log(`Selected target: ${target}`);
 
