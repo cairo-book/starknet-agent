@@ -15,7 +15,6 @@ export const handleConnection = async (
   request: IncomingMessage,
 ) => {
   try {
-    logger.info('Received a new connection');
     const searchParams = new URL(request.url, `http://${request.headers.host}`)
       .searchParams;
 

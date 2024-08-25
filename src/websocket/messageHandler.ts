@@ -95,7 +95,6 @@ export const handleMessage = async (
   embeddings: Embeddings,
 ) => {
   try {
-    console.log('received message: ' + message);
     const parsedWSMessage = JSON.parse(message) as WSMessage;
     const parsedMessage = parsedWSMessage.message;
 

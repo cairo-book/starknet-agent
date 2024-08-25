@@ -48,6 +48,7 @@ import LineOutputParser from '../lib/outputParsers/lineOutputParser';
 import { VectorStore } from '../ingester/vectorStore';
 import { BookChunk } from '../types/types';
 import { starknetDocsStoreConfig } from '../config';
+import { IterableReadableStream } from '@langchain/core/utils/stream';
 
 const DOCS_BASE_URL = 'https://docs.starknet.io/';
 
@@ -133,7 +134,7 @@ const strParser = new StringOutputParser();
  * @returns {Promise<void>}
  */
 const handleStream = async (
-  stream: AsyncGenerator<StreamEvent, any, unknown>,
+  stream: IterableReadableStream<StreamEvent>,
   emitter: eventEmitter,
 ): Promise<void> => {
   for await (const event of stream) {

@@ -43,6 +43,7 @@ import LineOutputParser from '../lib/outputParsers/lineOutputParser';
 import { VectorStore } from '../ingester/vectorStore';
 import { BookChunk } from '../types/types';
 import { cairoBookStoreConfig } from '../config';
+import { IterableReadableStream } from '@langchain/core/utils/stream';
 
 let vectorStore: VectorStore;
 
@@ -127,7 +128,7 @@ const strParser = new StringOutputParser();
  * @returns {Promise<void>}
  */
 const handleStream = async (
-  stream: AsyncGenerator<StreamEvent, any, unknown>,
+  stream: IterableReadableStream<StreamEvent>,
   emitter: eventEmitter,
 ): Promise<void> => {
   for await (const event of stream) {
@@ -281,7 +282,6 @@ const createBasicCairoBookSearchAnsweringChain = (
     const docsWithContent = docs.filter(
       (doc) => doc.pageContent && doc.pageContent.length > 0,
     );
-
 
     const [docEmbeddings, queryEmbedding] = await Promise.all([
       embeddings.embedDocuments(docsWithContent.map((doc) => doc.pageContent)),
