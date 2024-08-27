@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npm run db:push && node dist/app.js",
     "build": "tsc",
-    "dev": "nodemon src/app.ts",
+    "dev": "yarn run db:push && nodemon src/app.ts",
     "db:push": "drizzle-kit push sqlite",
     "format": "prettier . --check",
     "format:write": "prettier . --write",
