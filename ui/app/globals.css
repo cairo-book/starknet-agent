@@ -11,14 +11,28 @@
     display: none;
   }
 }
+
+body {
+  position: relative;
+  min-height: 100vh;
+  background-color: #000; /* Set a dark background color */
+}
+
 .starry-background {
   position: fixed;
-  top: -50%;
-  left: -50%;
-  width: 350%;
-  height: 350%;
-  background: black;
-  overflow: hidden;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* Ensure it's behind other content */
+  pointer-events: none; /* Allow interaction with elements behind it */
+  overflow: hidden; /* Add this to prevent any overflow */
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 1; /* Ensure content is above the starry background */
+  min-height: 100vh;
 }
 
 .starry-background::before,
@@ -27,13 +41,10 @@
   position: absolute;
   top: -50%;
   left: -50%;
-  width: 500%;
+  width: 200%; /* Reduce this from 500% to 200% */
   height: 200%;
-  background-size:
-    350px 350px,
-    250px 250px,
-    150px 150px;
-  transform-origin: center;
+  background-repeat: repeat; /* Add this to ensure the background repeats */
+  animation: rotate 500s linear infinite; /* Add rotation animation */
 }
 
 .starry-background::before {
@@ -42,18 +53,26 @@
     rgba(255, 255, 255, 0.2) 2px,
     transparent 20px
   );
-  animation: scintillate1 3s infinite;
+  background-size: 350px 350px;
+  animation: rotate 500s linear infinite, scintillate1 3s infinite;
 }
 
 .starry-background::after {
-  background-image: radial-gradient(
-      white,
-      rgba(255, 255, 255, 0.15) 1px,
-      transparent 10px
-    ),
+  background-image:
+    radial-gradient(white, rgba(255, 255, 255, 0.15) 1px, transparent 10px),
     radial-gradient(white, rgba(255, 255, 255, 0.1) 2px, transparent 12px),
     radial-gradient(white, rgba(255, 255, 255, 0.05) 1px, transparent 8px);
-  animation: scintillate2 4s infinite;
+  background-size: 250px 250px, 150px 150px, 100px 100px;
+  animation: rotate 400s linear infinite, scintillate2 4s infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes scintillate1 {

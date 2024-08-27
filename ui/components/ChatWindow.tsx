@@ -269,7 +269,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [newChatCreated, setNewChatCreated] = useState(false);
 
   const [hasError, setHasError] = useState(false);
-  const [isReady, setIsReady] = useState(true);
+  const [isReady, setIsReady] = useState(false);
 
   const [isWSReady, setIsWSReady] = useState(false);
   const ws = useSocket(

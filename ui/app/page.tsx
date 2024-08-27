@@ -12,12 +12,14 @@ export const metadata: Metadata = {
 
 const Home = () => {
   return (
-    <div className="relative min-h-screen">
+    <>
       <div className="starry-background" />
-      <Suspense>
-        <ChatWindow />
-      </Suspense>
-    </div>
+      <div className="content-wrapper">
+        <Suspense>
+          <ChatWindow />
+        </Suspense>
+      </div>
+    </>
   );
 };
 
