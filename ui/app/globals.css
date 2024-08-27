@@ -11,3 +11,67 @@
     display: none;
   }
 }
+.starry-background {
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 350%;
+  height: 350%;
+  background: black;
+  overflow: hidden;
+}
+
+.starry-background::before,
+.starry-background::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 500%;
+  height: 200%;
+  background-size:
+    350px 350px,
+    250px 250px,
+    150px 150px;
+  transform-origin: center;
+}
+
+.starry-background::before {
+  background-image: radial-gradient(
+    white,
+    rgba(255, 255, 255, 0.2) 2px,
+    transparent 20px
+  );
+  animation: scintillate1 3s infinite;
+}
+
+.starry-background::after {
+  background-image: radial-gradient(
+      white,
+      rgba(255, 255, 255, 0.15) 1px,
+      transparent 10px
+    ),
+    radial-gradient(white, rgba(255, 255, 255, 0.1) 2px, transparent 12px),
+    radial-gradient(white, rgba(255, 255, 255, 0.05) 1px, transparent 8px);
+  animation: scintillate2 4s infinite;
+}
+
+@keyframes scintillate1 {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes scintillate2 {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}

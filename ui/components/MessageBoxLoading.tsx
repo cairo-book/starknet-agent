@@ -4,6 +4,7 @@ const MessageBoxLoading = () => {
       <div className="h-2 rounded-full w-full bg-light-secondary dark:bg-dark-secondary" />
       <div className="h-2 rounded-full w-9/12 bg-light-secondary dark:bg-dark-secondary" />
       <div className="h-2 rounded-full w-10/12 bg-light-secondary dark:bg-dark-secondary" />
+      qsd
     </div>
   );
 };

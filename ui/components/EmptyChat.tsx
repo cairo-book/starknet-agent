@@ -12,9 +12,12 @@ const EmptyChat = ({
   return (
     <div className="relative">
       <div className="flex flex-col items-center justify-center min-h-screen max-w-screen-sm mx-auto p-2 space-y-8">
-        <h2 className="text-black/70 dark:text-white/70 text-3xl font-medium -mt-8">
-          Your Starknet expertise begins here.
-        </h2>
+        <div className="flex flex-col items-center justify-center space-y-2 mb-10">
+          <p className="-mt-8">Welcome to the Starknet Agent</p>
+          <h2 className="text-black/70 dark:text-white/100 text-3xl font-medium">
+            Unlock your Starknet expertise.
+          </h2>
+        </div>
         <EmptyChatMessageInput
           sendMessage={sendMessage}
           focusMode={focusMode}

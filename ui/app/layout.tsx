@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { Montserrat } from 'next/font/google';
+import { IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import Sidebar from '@/components/Sidebar';
 import { Toaster } from 'sonner';
 import ThemeProvider from '@/components/theme/Provider';
 
-const montserrat = Montserrat({
+const ibmPlexSans = IBM_Plex_Sans({
   weight: ['300', '400', '500', '700'],
   subsets: ['latin'],
   display: 'swap',
@@ -14,9 +14,11 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: 'Perplexica - Chat with the internet',
-  description:
-    'Perplexica is an AI powered chatbot that is connected to the internet.',
+  title: 'The Starknet Agent - Unlock your Starknet expertise',
+  description: 'AI-powered assistant for Starknet and Cairo.',
+  icons: {
+    icon: '/cairo_logo.webp',
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html className="h-full" lang="en" suppressHydrationWarning>
-      <body className={cn('h-full', montserrat.className)}>
+      <body className={cn('h-full', ibmPlexSans.className)}>
         <ThemeProvider>
           <Sidebar>{children}</Sidebar>
           <Toaster
