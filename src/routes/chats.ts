@@ -3,10 +3,16 @@ import logger from '../utils/logger';
 import db from '../db/index';
 import { eq } from 'drizzle-orm';
 import { chats, messages } from '../db/schema';
+import { isHostedMode } from '../config';
 
 const router = express.Router();
 
 router.get('/', async (_, res) => {
+  if (isHostedMode()) {
+    return res
+      .status(403)
+      .json({ error: 'This route is disabled in hosted mode' });
+  }
   try {
     let chats = await db.query.chats.findMany();
 
@@ -20,6 +26,11 @@ router.get('/', async (_, res) => {
 });
 
 router.get('/:id', async (req, res) => {
+  if (isHostedMode()) {
+    return res
+      .status(403)
+      .json({ error: 'This route is disabled in hosted mode' });
+  }
   try {
     const chatExists = await db.query.chats.findFirst({
       where: eq(chats.id, req.params.id),
@@ -41,6 +52,11 @@ router.get('/:id', async (req, res) => {
 });
 
 router.delete(`/:id`, async (req, res) => {
+  if (isHostedMode()) {
+    return res
+      .status(403)
+      .json({ error: 'This route is disabled in hosted mode' });
+  }
   try {
     const chatExists = await db.query.chats.findFirst({
       where: eq(chats.id, req.params.id),

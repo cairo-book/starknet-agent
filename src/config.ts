@@ -26,6 +26,12 @@ interface Config {
     SEARXNG: string;
     OLLAMA: string;
   };
+  HOSTED_MODE?: {
+    DEFAULT_CHAT_PROVIDER: string;
+    DEFAULT_CHAT_MODEL: string;
+    DEFAULT_EMBEDDING_PROVIDER: string;
+    DEFAULT_EMBEDDING_MODEL: string;
+  };
 }
 
 type RecursivePartial<T> = {
@@ -36,6 +42,10 @@ const loadConfig = () =>
   toml.parse(
     fs.readFileSync(path.join(__dirname, `../${configFileName}`), 'utf-8'),
   ) as any as Config;
+
+export const isHostedMode = () => process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
+
+export const getHostedModeConfig = () => loadConfig().HOSTED_MODE;
 
 export const getPort = () => loadConfig().GENERAL.PORT;
 

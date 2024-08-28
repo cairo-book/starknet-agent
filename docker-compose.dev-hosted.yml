@@ -1,0 +1,76 @@
+services:
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    ports:
+      - 4000:8080
+    networks:
+      - perplexica-network
+    restart: unless-stopped
+
+  perplexica-backend:
+    build:
+      context: .
+      dockerfile: backend.dev.dockerfile
+      args:
+        - SEARXNG_API_URL=http://searxng:8080
+    volumes:
+      - ./src:/home/perplexica/src
+      - ./config.toml:/home/perplexica/config.toml
+      - backend-dbstore:/home/perplexica/data
+    ports:
+      - 3001:3001
+    depends_on:
+      - searxng
+      # - cairobook-ingest
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - perplexica-network
+    environment:
+      - MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NODE_ENV=development
+      - NEXT_PUBLIC_HOSTED_MODE=true
+    command: yarn run dev
+    restart: unless-stopped
+
+  perplexica-frontend:
+    build:
+      context: .
+      dockerfile: app.dev.dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://127.0.0.1:3001/api
+        - NEXT_PUBLIC_WS_URL=ws://127.0.0.1:3001
+        - NEXT_PUBLIC_HOSTED_MODE=true
+    volumes:
+      - ./ui:/home/perplexica
+      - /home/perplexica/node_modules
+    depends_on:
+      - perplexica-backend
+    ports:
+      - 3000:3000
+    networks:
+      - perplexica-network
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    restart: unless-stopped
+
+  # cairobook-ingest:
+  #   build:
+  #     context: .
+  #     dockerfile: ingest.dockerfile
+  #   networks:
+  #     - perplexica-network
+  #   environment:
+  #     - MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}
+  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
+  #   restart: 'no'
+
+networks:
+  perplexica-network:
+
+volumes:
+  backend-dbstore:
+  mongodb-data:

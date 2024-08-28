@@ -28,6 +28,8 @@ const useSocket = (
 ) => {
   const [ws, setWs] = useState<WebSocket | null>(null);
 
+  const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
+
   useEffect(() => {
     if (!ws) {
       const connectWs = async () => {
@@ -38,6 +40,10 @@ const useSocket = (
           'embeddingModelProvider',
         );
 
+        const wsURL = new URL(url);
+        const searchParams = new URLSearchParams({});
+
+        if (!isHostedMode){
         const providers = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/models`,
           {
@@ -138,10 +144,6 @@ const useSocket = (
             localStorage.setItem('embeddingModel', embeddingModel);
           }
         }
-
-        const wsURL = new URL(url);
-        const searchParams = new URLSearchParams({});
-
         searchParams.append('chatModel', chatModel!);
         searchParams.append('chatModelProvider', chatModelProvider);
 
@@ -158,6 +160,7 @@ const useSocket = (
 
         searchParams.append('embeddingModel', embeddingModel!);
         searchParams.append('embeddingModelProvider', embeddingModelProvider);
+      }
 
         wsURL.search = searchParams.toString();
 
@@ -261,6 +264,47 @@ const loadMessages = async (
   setIsMessagesLoaded(true);
 };
 
+export type StoredChat = {
+  id: string;
+  messages: Message[];
+  focusMode: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const saveMessagesToLocalStorage = (chatId: string, messages: Message[], focusMode: string) => {
+  const existingChats = JSON.parse(localStorage.getItem('chats') || '[]') as StoredChat[];
+  const chatIndex = existingChats.findIndex(chat => chat.id === chatId);
+
+  const updatedChat: StoredChat = {
+    id: chatId,
+    messages,
+    focusMode,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+  console.log('[DEBUG] saving messages to local storage', updatedChat);
+
+  if (chatIndex !== -1) {
+    existingChats[chatIndex] = updatedChat;
+  } else {
+    existingChats.push(updatedChat);
+  }
+
+  localStorage.setItem('chats', JSON.stringify(existingChats));
+};
+
+const loadMessagesFromLocalStorage = (chatId: string): { messages: Message[], focusMode: string } | null => {
+  const existingChats = JSON.parse(localStorage.getItem('chats') || '[]') as StoredChat[];
+  const chat = existingChats.find(chat => chat.id === chatId);
+
+  if (chat) {
+    return { messages: chat.messages, focusMode: chat.focusMode };
+  }
+
+  return null;
+};
+
 const ChatWindow = ({ id }: { id?: string }) => {
   const searchParams = useSearchParams();
   const initialMessage = searchParams.get('q');
@@ -290,21 +334,29 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
   const [notFound, setNotFound] = useState(false);
 
+  const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
+
   useEffect(() => {
-    if (
-      chatId &&
-      !newChatCreated &&
-      !isMessagesLoaded &&
-      messages.length === 0
-    ) {
-      loadMessages(
-        chatId,
-        setMessages,
-        setIsMessagesLoaded,
-        setChatHistory,
-        setFocusMode,
-        setNotFound,
-      );
+    if (chatId && !newChatCreated && !isMessagesLoaded && messages.length === 0) {
+      if (isHostedMode) {
+        const storedMessages = loadMessagesFromLocalStorage(chatId);
+        setMessages(storedMessages?.messages || []);
+        setFocusMode(storedMessages?.focusMode || 'cairoBookSearch');
+        const history = storedMessages?.messages.map((msg) => {
+          return [msg.role, msg.content];
+        }) as [string, string][];
+        setChatHistory(history);
+        setIsMessagesLoaded(true);
+      } else {
+        loadMessages(
+          chatId,
+          setMessages,
+          setIsMessagesLoaded,
+          setChatHistory,
+          setFocusMode,
+          setNotFound,
+        );
+      }
     } else if (!chatId) {
       setNewChatCreated(true);
       setIsMessagesLoaded(true);
@@ -424,8 +476,26 @@ const ChatWindow = ({ id }: { id?: string }) => {
           ['assistant', recievedMessage],
         ]);
 
+
         ws?.removeEventListener('message', messageHandler);
         setLoading(false);
+        if (isHostedMode) {
+          const humanMessage: Message = {
+            content: message,
+            messageId: messageId,
+            chatId: chatId!,
+            role: 'user',
+            createdAt: new Date(),
+          };
+          const assistantMessage: Message = {
+            content: recievedMessage,
+            messageId: data.messageId,
+            chatId: chatId!,
+            role: 'assistant',
+            createdAt: new Date(),
+          };
+          saveMessagesToLocalStorage(chatId!, [...messages, humanMessage, assistantMessage], focusMode);
+        }
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
 

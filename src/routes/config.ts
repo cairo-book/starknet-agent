@@ -9,11 +9,17 @@ import {
   getAnthropicApiKey,
   getOpenaiApiKey,
   updateConfig,
+  isHostedMode,
 } from '../config';
 
 const router = express.Router();
 
 router.get('/', async (_, res) => {
+  if (isHostedMode()) {
+    return res
+      .status(403)
+      .json({ error: 'This route is disabled in hosted mode' });
+  }
   const config = {};
 
   const [chatModelProviders, embeddingModelProviders] = await Promise.all([
@@ -45,6 +51,11 @@ router.get('/', async (_, res) => {
 });
 
 router.post('/', async (req, res) => {
+  if (isHostedMode()) {
+    return res
+      .status(403)
+      .json({ error: 'This route is disabled in hosted mode' });
+  }
   const config = req.body;
 
   const updatedConfig = {

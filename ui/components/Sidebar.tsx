@@ -8,6 +8,7 @@ import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, type ReactNode } from 'react';
 import Layout from './Layout';
 import SettingsDialog from './SettingsDialog';
+import HostedSettingsDialog from './HostedSettingsDialog';
 
 const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   return (
@@ -20,6 +21,8 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
+
   const navLinks = [
     {
       icon: SquarePen,
@@ -27,12 +30,6 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
       active: segments.length === 0 || segments.includes('c'),
       label: 'Home',
     },
-    // {
-    //   icon: Search,
-    //   href: '/discover',
-    //   active: segments.includes('discover'),
-    //   label: 'Discover',
-    // },
     {
       icon: BookOpenText,
       href: '/library',
@@ -73,10 +70,17 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
             className="cursor-pointer"
           />
 
-          <SettingsDialog
-            isOpen={isSettingsOpen}
-            setIsOpen={setIsSettingsOpen}
-          />
+          {isHostedMode ? (
+            <HostedSettingsDialog
+              isOpen={isSettingsOpen}
+              setIsOpen={setIsSettingsOpen}
+            />
+          ) : (
+            <SettingsDialog
+              isOpen={isSettingsOpen}
+              setIsOpen={setIsSettingsOpen}
+            />
+          )}
         </div>
       </div>
 

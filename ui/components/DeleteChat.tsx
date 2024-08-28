@@ -3,6 +3,14 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState } from 'react';
 import { toast } from 'sonner';
 import { Chat } from '@/app/library/page';
+import { StoredChat } from './ChatWindow';
+
+
+const deleteChatFromLocalStorage = (chatId: string) => {
+  const existingChats = JSON.parse(localStorage.getItem('chats') || '[]') as StoredChat[];
+  const newChats = existingChats.filter(chat => chat.id !== chatId);
+  localStorage.setItem('chats', JSON.stringify(newChats));
+};
 
 const DeleteChat = ({
   chatId,
@@ -17,6 +25,13 @@ const DeleteChat = ({
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
+    if (process.env.NEXT_PUBLIC_HOSTED_MODE === 'true') {
+      deleteChatFromLocalStorage(chatId);
+      const newChats = chats.filter((chat) => chat.id !== chatId);
+      setChats(newChats);
+      setConfirmationDialogOpen(false);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(

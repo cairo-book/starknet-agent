@@ -84,10 +84,27 @@ const SettingsDialog = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
+
   useEffect(() => {
     if (isOpen) {
       const fetchConfig = async () => {
         setIsLoading(true);
+        // In hosted mode, we don't need to fetch the config
+        if (isHostedMode) {
+          setConfig({
+            chatModelProviders: {},
+            embeddingModelProviders: {},
+            openaiApiKey: '',
+            groqApiKey: '',
+            anthropicApiKey: '',
+            ollamaApiUrl: '',
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Existing fetch logic for non-hosted mode
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/config`, {
           headers: {
             'Content-Type': 'application/json',
