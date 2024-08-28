@@ -29,8 +29,6 @@ services:
     networks:
       - perplexica-network
     environment:
-      - MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - NODE_ENV=development
     command: yarn run dev
     restart: unless-stopped
@@ -61,9 +59,6 @@ services:
   #     dockerfile: ingest.dockerfile
   #   networks:
   #     - perplexica-network
-  #   environment:
-  #     - MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}
-  #     - OPENAI_API_KEY=${OPENAI_API_KEY}
   #   restart: 'no'
 
 networks:

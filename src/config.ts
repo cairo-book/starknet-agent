@@ -43,7 +43,7 @@ const loadConfig = () =>
     fs.readFileSync(path.join(__dirname, `../${configFileName}`), 'utf-8'),
   ) as any as Config;
 
-export const isHostedMode = () => process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
+export const isHostedMode = () => loadConfig().HOSTED_MODE !== undefined;
 
 export const getHostedModeConfig = () => loadConfig().HOSTED_MODE;
 
