@@ -9,11 +9,6 @@ import { isHostedMode } from '../config';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  if (isHostedMode()) {
-    return res
-      .status(403)
-      .json({ error: 'This route is disabled in hosted mode' });
-  }
   try {
     const [chatModelProviders, embeddingModelProviders] = await Promise.all([
       getAvailableChatModelProviders(),
