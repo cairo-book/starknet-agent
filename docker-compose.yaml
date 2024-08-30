@@ -42,9 +42,6 @@ services:
         - NEXT_PUBLIC_API_URL=https://backend.chat.starknet.builders/api
         - NEXT_PUBLIC_WS_URL=wss://backend.chat.starknet.builders
         - NEXT_PUBLIC_HOSTED_MODE=true
-    volumes:
-      - ./ui:/home/perplexica
-      - /home/perplexica/node_modules
     depends_on:
       - perplexica-backend
     ports:
@@ -77,3 +74,4 @@ networks:
 
 volumes:
   backend-dbstore:
+  ssl_data:
