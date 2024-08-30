@@ -39,8 +39,8 @@ services:
       context: .
       dockerfile: app.dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=https://backend.chat.starknet.builders/api
-        - NEXT_PUBLIC_WS_URL=wss://backend.chat.starknet.builders
+        - NEXT_PUBLIC_API_URL=https://backend.agent.starknet.builders/api
+        - NEXT_PUBLIC_WS_URL=wss://backend.agent.starknet.builders
         - NEXT_PUBLIC_HOSTED_MODE=true
     depends_on:
       - perplexica-backend
@@ -61,8 +61,8 @@ services:
     volumes:
       - ssl_data:/etc/resty-auto-ssl
     environment:
-      ALLOWED_DOMAINS: '(backend.)?chat.starknet.builder'
-      SITES: 'backend.chat.starknet.builders=perplexica-backend:3001;chat.starknet.builders=perplexica-frontend:3000'
+      ALLOWED_DOMAINS: '(backend.)?agent.starknet.builder'
+      SITES: 'backend.agent.starknet.builders=perplexica-backend:3001;agent.starknet.builders=perplexica-frontend:3000'
     networks:
       - perplexica-network
     depends_on:
