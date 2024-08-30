@@ -66,4 +66,3 @@ networks:
 
 volumes:
   backend-dbstore:
-  mongodb-data:
