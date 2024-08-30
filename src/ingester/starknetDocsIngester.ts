@@ -29,6 +29,15 @@ const STARKNET_DOCS_CONFIG: BookConfig = {
   baseUrl: 'https://docs.starknet.io',
 };
 
+const DOCS_COMMON_CONFIG: BookConfig = {
+  repoOwner: 'starknet-io',
+  repoName: 'docs-common-content',
+  fileExtension: '.adoc',
+  chunkSize: 4096,
+  chunkOverlap: 512,
+  baseUrl: 'https://docs.starknet.io',
+};
+
 // Main ingestion function
 export const ingestStarknetDocs = async (vectorStore: VectorStore) => {
   try {
@@ -44,12 +53,37 @@ export const ingestStarknetDocs = async (vectorStore: VectorStore) => {
 // Helper functions
 async function downloadAndExtractStarknetDocs(): Promise<BookPageDto[]> {
   logger.info('Downloading and extracting Starknet Docs');
+  // 1. Starknet Docs
   const latestTag = await getLatestTag();
   const zipData = await downloadSourceCode(latestTag);
-  const extractDir = await extractZipContent(zipData, latestTag);
+  const extractPath = `starknet-docs-${latestTag.replace('v', '')}/components/Starknet/modules/`;
+  const extractDir = await extractZipContent(path.join(__dirname, 'starknet-docs'), extractPath, zipData);
   const targetDir = path.join(__dirname, 'starknet-docs-restructured');
   const restructuredDir = await restructureDocumentation(extractDir, targetDir);
-  return await processMarkdownFiles(STARKNET_DOCS_CONFIG, restructuredDir);
+
+  // 2. Docs Common Content
+  const docsCommonContentZipData = await downloadDocsCommonContent();
+  const docsCommonExtractPath = 'docs-common-content-main/modules';
+  const docsCommonContentExtractDir = await extractZipContent(path.join(__dirname, 'docs-common-content'), docsCommonExtractPath, docsCommonContentZipData);
+  const docsCommonContentTargetDir = path.join(__dirname, 'docs-common-content-restructured');
+  const docsCommonContentRestructuredDir = await restructureDocumentation(docsCommonContentExtractDir, docsCommonContentTargetDir);
+
+  // 3. Merge Docs Common Content into starknet-docs-restructured
+  const mergeDir = path.join(__dirname, 'starknet-docs-restructured');
+  await mergeDocsCommonContent(docsCommonContentRestructuredDir, mergeDir);
+  return await processMarkdownFiles(STARKNET_DOCS_CONFIG, mergeDir);
+}
+
+async function mergeDocsCommonContent(docsCommonContentDir: string, mergeDir: string) {
+  console.log('Merging Docs Common Content into Starknet Docs');
+  const entries = await fs.readdir(docsCommonContentDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const sourcePath = path.join(docsCommonContentDir, entry.name);
+      const targetPath = path.join(mergeDir, entry.name);
+      await fs.cp(sourcePath, targetPath, { recursive: true });
+    }
+  }
 }
 
 async function getLatestTag(): Promise<string> {
@@ -69,17 +103,26 @@ async function downloadSourceCode(latestTag: string): Promise<Buffer> {
   return zipResponse.data;
 }
 
+async function downloadDocsCommonContent(): Promise<Buffer> {
+  const sourceUrl = `https://github.com/${DOCS_COMMON_CONFIG.repoOwner}/${DOCS_COMMON_CONFIG.repoName}/archive/refs/heads/main.zip`;
+  logger.info(`Downloading source code from ${sourceUrl}`);
+  const zipResponse = await axios.get(sourceUrl, {
+    responseType: 'arraybuffer',
+  });
+  return zipResponse.data;
+}
+
 async function extractZipContent(
+  extractDir: string,
+  pathToExtract: string,
   zipData: Buffer,
-  latestTag: string,
+  latestTag?: string,
 ): Promise<string> {
   const zipFile = new AdmZip(zipData);
-  const extractDir = path.join(__dirname, 'starknet-docs');
   await fs.rm(extractDir, { recursive: true, force: true }).catch(() => {});
   await fs.mkdir(extractDir, { recursive: true });
 
-  const targetPath = `starknet-docs-${latestTag.replace('v', '')}/components/Starknet/modules/`;
-  await extractTargetContent(zipFile, targetPath, extractDir);
+  await extractTargetContent(zipFile, pathToExtract, extractDir);
 
   logger.info('Extracted Starknet modules content successfully.');
   return extractDir;
@@ -329,12 +372,20 @@ async function updateVectorStore(
 
 async function cleanupDownloadedFiles() {
   const extractDir = path.join(__dirname, 'starknet-docs');
-  // await fs.rm(extractDir, { recursive: true, force: true });
+  await fs.rm(extractDir, { recursive: true, force: true });
   logger.info(`Deleted downloaded markdown files from ${extractDir}`);
 
+  const extractDirCommon = path.join(__dirname, 'docs-common-content');
+  await fs.rm(extractDirCommon, { recursive: true, force: true });
+  logger.info(`Deleted downloaded markdown files from ${extractDirCommon}`);
+
   const extractDir2 = path.join(__dirname, 'starknet-docs-restructured');
-  // await fs.rm(extractDir2, { recursive: true, force: true });
+  await fs.rm(extractDir2, { recursive: true, force: true });
   logger.info(`Deleted restructured markdown files from ${extractDir2}`);
+
+  const extractDirCommon2 = path.join(__dirname, 'docs-common-content-restructured');
+  await fs.rm(extractDirCommon2, { recursive: true, force: true });
+  logger.info(`Deleted restructured markdown files from ${extractDirCommon2}`);
 }
 
 function handleError(error: unknown) {
