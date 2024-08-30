@@ -1,6 +1,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { restructureDocumentation } from '../starknetDocsIngester';
+import { convertCodeBlocks } from '../starknetDocsIngester';
+import { splitAsciiDocIntoSections } from '../starknetDocsIngester';
 import { Dirent } from 'fs';
 
 jest.mock('fs/promises');
@@ -342,5 +344,361 @@ describe('restructureDocumentation', () => {
 
     // Check total number of copyFile calls
     expect(mockFs.copyFile).toHaveBeenCalledTimes(3);
+  });
+});
+
+
+// ... existing imports and tests ...
+
+describe('splitAsciiDocIntoSections', () => {
+  it('should split content into sections based on headers', () => {
+    const content = `
+= Main Title
+
+Some content here.
+
+== Section 1
+
+Content of section 1.
+
+== Section 2
+
+Content of section 2.
+
+=== Subsection 2.1
+
+Content of subsection 2.1.
+`;
+
+    const result = splitAsciiDocIntoSections(content);
+
+    expect(result).toHaveLength(4);
+    expect(result[0].title).toBe('Main Title');
+    expect(result[1].title).toBe('Section 1');
+    expect(result[2].title).toBe('Section 2');
+    expect(result[3].title).toBe('Subsection 2.1');
+  });
+
+  it('should handle content without headers', () => {
+    const content = 'Just some content without any headers.';
+
+    const result = splitAsciiDocIntoSections(content);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe('');
+    expect(result[0].content).toBe(content);
+  });
+
+  it('should not split headers inside code blocks', () => {
+    const content = `
+= Real Header
+
+Some content.
+
+----
+= Fake Header in Code Block
+----
+
+== Another Real Header
+
+More content.
+`;
+
+    const result = splitAsciiDocIntoSections(content);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].title).toBe('Real Header');
+    expect(result[1].title).toBe('Another Real Header');
+  });
+
+  it('should handle empty content', () => {
+    const content = '';
+
+    const result = splitAsciiDocIntoSections(content);
+
+    expect(result).toHaveLength(0);
+  });
+
+  it('should split large sections', () => {
+    const largeContent = '= Large Section\n\n' + 'a'.repeat(25000);
+
+    const result = splitAsciiDocIntoSections(largeContent);
+
+    expect(result.length).toBeGreaterThan(1);
+    expect(result[0].content.length).toBeLessThanOrEqual(20000);
+  });
+
+  it('should handle multiple nested levels', () => {
+    const content = `
+= Level 1
+
+Content 1
+
+== Level 2
+
+Content 2
+
+=== Level 3
+
+Content 3
+
+==== Level 4
+
+Content 4
+
+== Another Level 2
+
+Content 5
+`;
+
+    const result = splitAsciiDocIntoSections(content);
+
+    expect(result).toHaveLength(5);
+    expect(result[0].title).toBe('Level 1');
+    expect(result[1].title).toBe('Level 2');
+    expect(result[2].title).toBe('Level 3');
+    expect(result[3].title).toBe('Level 4');
+    expect(result[4].title).toBe('Another Level 2');
+  });
+
+  it('should convert AsciiDoc code blocks to Markdown code blocks', () => {
+    const content = `
+= Code Blocks
+
+Here's a code block:
+
+----
+def hello_world():
+    print("Hello, World!")
+----
+
+And another with a language specified:
+
+[source,python]
+----
+def greet(name):
+    print(f"Hello, {name}!")
+----
+
+End of content.
+`;
+
+    const result = splitAsciiDocIntoSections(content);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe('Code Blocks');
+    expect(result[0].content).toContain('```\ndef hello_world():');
+    expect(result[0].content).toContain('```python\ndef greet(name):');
+    expect(result[0].content).not.toContain('----');
+  });
+
+  it('should handle custom anchors', () => {
+    const input = `
+[#why_are_economics_relevant]
+== Why are economics relevant?
+
+Content about economics.
+
+[#purpose_of_the_token]
+== The purpose of the STRK token
+
+Information about the STRK token.
+
+== Regular Section
+
+More content.
+`;
+
+    const result = splitAsciiDocIntoSections(input);
+    console.log(result);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].title).toBe('Why are economics relevant?');
+    expect(result[0].anchor).toBe('why_are_economics_relevant');
+    expect(result[1].title).toBe('The purpose of the STRK token');
+    expect(result[1].anchor).toBe('purpose_of_the_token');
+    expect(result[2].title).toBe('Regular Section');
+    expect(result[2].anchor).toBeUndefined();
+  });
+});
+
+
+describe('convertCodeBlocks', () => {
+  it('should convert basic code blocks', () => {
+    const input = `
+Some text before.
+
+----
+def hello_world():
+    print("Hello, World!")
+----
+
+Some text after.
+`;
+
+    const expected = `
+Some text before.
+
+\`\`\`
+def hello_world():
+    print("Hello, World!")
+\`\`\`
+
+Some text after.
+`;
+
+    expect(convertCodeBlocks(input)).toBe(expected);
+  });
+
+  it('should handle code blocks with language specification', () => {
+    const input = `
+[source,python]
+----
+def greet(name):
+    print(f"Hello, {name}!")
+----
+`;
+
+    const expected = `
+\`\`\`python
+def greet(name):
+    print(f"Hello, {name}!")
+\`\`\`
+`;
+
+    expect(convertCodeBlocks(input)).toBe(expected);
+  });
+
+  it('should handle multiple code blocks', () => {
+    const input = `
+First block:
+
+----
+console.log("Block 1");
+----
+
+Second block:
+
+[source,javascript]
+----
+function add(a, b) {
+  return a + b;
+}
+----
+`;
+
+    const expected = `
+First block:
+
+\`\`\`
+console.log("Block 1");
+\`\`\`
+
+Second block:
+
+\`\`\`javascript
+function add(a, b) {
+  return a + b;
+}
+\`\`\`
+`;
+
+    expect(convertCodeBlocks(input)).toBe(expected);
+  });
+
+  it('should handle empty code blocks', () => {
+    const input = `
+Empty block:
+
+----
+----
+
+End of content.
+`;
+
+    const expected = `
+Empty block:
+
+\`\`\`
+
+\`\`\`
+
+End of content.
+`;
+
+    expect(convertCodeBlocks(input)).toBe(expected);
+  });
+
+  it('should preserve indentation in code blocks', () => {
+    const input = `
+Indented code:
+
+----
+    function indentedFunction() {
+        console.log("This is indented");
+    }
+----
+`;
+
+    const expected = `
+Indented code:
+
+\`\`\`
+    function indentedFunction() {
+        console.log("This is indented");
+    }
+\`\`\`
+`;
+
+    expect(convertCodeBlocks(input)).toBe(expected);
+  });
+
+  it('should handle multiple code blocks with and without language specification', () => {
+    const input = `
+First block:
+
+----
+console.log("Block 1");
+----
+
+Second block:
+
+[source,javascript]
+----
+function add(a, b) {
+  return a + b;
+}
+----
+
+Third block:
+
+----
+Just plain text
+----
+`;
+
+    const expected = `
+First block:
+
+\`\`\`
+console.log("Block 1");
+\`\`\`
+
+Second block:
+
+\`\`\`javascript
+function add(a, b) {
+  return a + b;
+}
+\`\`\`
+
+Third block:
+
+\`\`\`
+Just plain text
+\`\`\`
+`;
+
+    expect(convertCodeBlocks(input)).toBe(expected);
   });
 });
