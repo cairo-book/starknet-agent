@@ -6,17 +6,17 @@ services:
     ports:
       - 4000:8080
     networks:
-      - perplexica-network
+      - starknet-agent-network
     restart: unless-stopped
 
-  perplexica-backend:
+  starknet-agent-backend:
     build:
       context: .
       dockerfile: backend.dockerfile
       args:
         - SEARXNG_API_URL=http://searxng:8080
     volumes:
-      - backend-dbstore:/home/perplexica/data
+      - backend-dbstore:/home/starknet-agent/data
     ports:
       - 3001:3001
     depends_on:
@@ -24,10 +24,10 @@ services:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     networks:
-      - perplexica-network
+      - starknet-agent-network
     restart: unless-stopped
 
-  perplexica-frontend:
+  starknet-agent-frontend:
     build:
       context: .
       dockerfile: app.dockerfile
@@ -36,15 +36,15 @@ services:
         - NEXT_PUBLIC_WS_URL=ws://127.0.0.1:3001
         - NEXT_PUBLIC_HOSTED_MODE=true
     depends_on:
-      - perplexica-backend
+      - starknet-agent-backend
     ports:
       - 3000:3000
     networks:
-      - perplexica-network
+      - starknet-agent-network
     restart: unless-stopped
 
 networks:
-  perplexica-network:
+  starknet-agent-network:
 
 volumes:
   backend-dbstore:
