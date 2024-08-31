@@ -42,6 +42,20 @@ Rephrased question: \`What is Scarb\`
 4. Follow up question: How do I install Cairo?
 Rephrased question: \`Installing Cairo\`
 
+
+You also need to reword the question to be specific on whether it applies to Smart Contracts or Cairo as a whole.
+If the user asks about "events", "storage", "Map", "LegacyMap" "storing", "interface", "abi", rephrase the question to include "Contracts".
+
+Example:
+1. Follow up question: How do I emit an event?
+Rephrased question: \`Emitting Events in Contracts\`
+
+2. Follow up question: How do I store an array?
+Rephrased question: \`Storing Arrays in Contracts\`
+
+3. Follow up question: What are interfaces?
+Rephrased question: \`Interfaces in Contracts\`
+
 Conversation:
 {chat_history}
 
