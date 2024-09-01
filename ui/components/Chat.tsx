@@ -39,14 +39,6 @@ const Chat = ({
     };
   });
 
-  useEffect(() => {
-    messageEnd.current?.scrollIntoView({ behavior: 'smooth' });
-
-    if (messages.length === 1) {
-      document.title = `${messages[0].content.substring(0, 30)} - Starknet Agent`;
-    }
-  }, [messages]);
-
   return (
     <div className="flex flex-col space-y-6 pt-8 pb-44 lg:pb-32 sm:mx-4 md:mx-8">
       {messages.map((msg, i) => {
@@ -74,10 +66,7 @@ const Chat = ({
       {loading && !messageAppeared && <MessageBoxLoading />}
       <div ref={messageEnd} className="h-0" />
       {dividerWidth > 0 && (
-        <div
-          className="bottom-24 lg:bottom-10 fixed z-40"
-          style={{ width: dividerWidth }}
-        >
+        <div className="bottom-0  fixed z-40" style={{ width: dividerWidth }}>
           <MessageInput loading={loading} sendMessage={sendMessage} />
         </div>
       )}

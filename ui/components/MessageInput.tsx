@@ -59,7 +59,7 @@ const MessageInput = ({
       }}
       className={cn(
         'bg-light-secondary dark:bg-dark-secondary p-4 flex items-center overflow-hidden border border-light-200 dark:border-dark-200',
-        mode === 'multi' ? 'flex-col rounded-lg' : 'flex-row rounded-full',
+        mode === 'multi' ? 'flex-col rounded-t-lg' : 'flex-row rounded-t-lg',
       )}
     >
       {mode === 'single' && <Attach />}

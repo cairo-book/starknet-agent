@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Document } from '@langchain/core/documents';
 import Navbar from './Navbar';
 import Chat from './Chat';
@@ -27,182 +27,214 @@ const useSocket = (
   setError: (error: boolean) => void,
 ) => {
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [reconnectStatus, setReconnectStatus] = useState<{
+    attempts: number;
+    isReconnecting: boolean;
+    maxAttempts: number;
+  }>({
+    attempts: 0,
+    isReconnecting: false,
+    maxAttempts: 5,
+  });
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
 
-  useEffect(() => {
-    if (!ws) {
-      const connectWs = async () => {
-        let chatModel = localStorage.getItem('chatModel');
-        let chatModelProvider = localStorage.getItem('chatModelProvider');
-        let embeddingModel = localStorage.getItem('embeddingModel');
-        let embeddingModelProvider = localStorage.getItem(
-          'embeddingModelProvider',
-        );
+  const connectWebSocket = useCallback(async () => {
+    let chatModel = localStorage.getItem('chatModel');
+    let chatModelProvider = localStorage.getItem('chatModelProvider');
+    let embeddingModel = localStorage.getItem('embeddingModel');
+    let embeddingModelProvider = localStorage.getItem('embeddingModelProvider');
 
-        const wsURL = new URL(url);
-        const searchParams = new URLSearchParams({});
+    const wsURL = new URL(url);
+    const searchParams = new URLSearchParams({});
 
-        if (!isHostedMode){
-        const providers = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/models`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
+    if (!isHostedMode) {
+      const providers = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/models`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
           },
-        ).then(async (res) => await res.json());
+        },
+      ).then(async (res) => await res.json());
+
+      if (
+        !chatModel ||
+        !chatModelProvider ||
+        !embeddingModel ||
+        !embeddingModelProvider
+      ) {
+        if (!chatModel || !chatModelProvider) {
+          const chatModelProviders = providers.chatModelProviders;
+
+          chatModelProvider = Object.keys(chatModelProviders)[0];
+
+          if (chatModelProvider === 'custom_openai') {
+            toast.error(
+              'Seems like you are using the custom OpenAI provider, please open the settings and configure the API key and base URL',
+            );
+            setError(true);
+            return;
+          } else {
+            chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
+            if (
+              !chatModelProviders ||
+              Object.keys(chatModelProviders).length === 0
+            )
+              return toast.error('No chat models available');
+          }
+        }
+
+        if (!embeddingModel || !embeddingModelProvider) {
+          const embeddingModelProviders = providers.embeddingModelProviders;
+
+          if (
+            !embeddingModelProviders ||
+            Object.keys(embeddingModelProviders).length === 0
+          )
+            return toast.error('No embedding models available');
+
+          embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
+          embeddingModel = Object.keys(
+            embeddingModelProviders[embeddingModelProvider],
+          )[0];
+        }
+
+        localStorage.setItem('chatModel', chatModel!);
+        localStorage.setItem('chatModelProvider', chatModelProvider);
+        localStorage.setItem('embeddingModel', embeddingModel!);
+        localStorage.setItem('embeddingModelProvider', embeddingModelProvider);
+      } else {
+        const chatModelProviders = providers.chatModelProviders;
+        const embeddingModelProviders = providers.embeddingModelProviders;
 
         if (
-          !chatModel ||
-          !chatModelProvider ||
-          !embeddingModel ||
-          !embeddingModelProvider
+          Object.keys(chatModelProviders).length > 0 &&
+          !chatModelProviders[chatModelProvider]
         ) {
-          if (!chatModel || !chatModelProvider) {
-            const chatModelProviders = providers.chatModelProviders;
-
-            chatModelProvider = Object.keys(chatModelProviders)[0];
-
-            if (chatModelProvider === 'custom_openai') {
-              toast.error(
-                'Seems like you are using the custom OpenAI provider, please open the settings and configure the API key and base URL',
-              );
-              setError(true);
-              return;
-            } else {
-              chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-              if (
-                !chatModelProviders ||
-                Object.keys(chatModelProviders).length === 0
-              )
-                return toast.error('No chat models available');
-            }
-          }
-
-          if (!embeddingModel || !embeddingModelProvider) {
-            const embeddingModelProviders = providers.embeddingModelProviders;
-
-            if (
-              !embeddingModelProviders ||
-              Object.keys(embeddingModelProviders).length === 0
-            )
-              return toast.error('No embedding models available');
-
-            embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
-            embeddingModel = Object.keys(
-              embeddingModelProviders[embeddingModelProvider],
-            )[0];
-          }
-
-          localStorage.setItem('chatModel', chatModel!);
+          chatModelProvider = Object.keys(chatModelProviders)[0];
           localStorage.setItem('chatModelProvider', chatModelProvider);
-          localStorage.setItem('embeddingModel', embeddingModel!);
+        }
+
+        if (
+          chatModelProvider &&
+          chatModelProvider != 'custom_openai' &&
+          !chatModelProviders[chatModelProvider][chatModel]
+        ) {
+          chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
+          localStorage.setItem('chatModel', chatModel);
+        }
+
+        if (
+          Object.keys(embeddingModelProviders).length > 0 &&
+          !embeddingModelProviders[embeddingModelProvider]
+        ) {
+          embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
           localStorage.setItem(
             'embeddingModelProvider',
             embeddingModelProvider,
           );
-        } else {
-          const chatModelProviders = providers.chatModelProviders;
-          const embeddingModelProviders = providers.embeddingModelProviders;
-
-          if (
-            Object.keys(chatModelProviders).length > 0 &&
-            !chatModelProviders[chatModelProvider]
-          ) {
-            chatModelProvider = Object.keys(chatModelProviders)[0];
-            localStorage.setItem('chatModelProvider', chatModelProvider);
-          }
-
-          if (
-            chatModelProvider &&
-            chatModelProvider != 'custom_openai' &&
-            !chatModelProviders[chatModelProvider][chatModel]
-          ) {
-            chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-            localStorage.setItem('chatModel', chatModel);
-          }
-
-          if (
-            Object.keys(embeddingModelProviders).length > 0 &&
-            !embeddingModelProviders[embeddingModelProvider]
-          ) {
-            embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
-            localStorage.setItem(
-              'embeddingModelProvider',
-              embeddingModelProvider,
-            );
-          }
-
-          if (
-            embeddingModelProvider &&
-            !embeddingModelProviders[embeddingModelProvider][embeddingModel]
-          ) {
-            embeddingModel = Object.keys(
-              embeddingModelProviders[embeddingModelProvider],
-            )[0];
-            localStorage.setItem('embeddingModel', embeddingModel);
-          }
-        }
-        searchParams.append('chatModel', chatModel!);
-        searchParams.append('chatModelProvider', chatModelProvider);
-
-        if (chatModelProvider === 'custom_openai') {
-          searchParams.append(
-            'openAIApiKey',
-            localStorage.getItem('openAIApiKey')!,
-          );
-          searchParams.append(
-            'openAIBaseURL',
-            localStorage.getItem('openAIBaseURL')!,
-          );
         }
 
-        searchParams.append('embeddingModel', embeddingModel!);
-        searchParams.append('embeddingModelProvider', embeddingModelProvider);
+        if (
+          embeddingModelProvider &&
+          !embeddingModelProviders[embeddingModelProvider][embeddingModel]
+        ) {
+          embeddingModel = Object.keys(
+            embeddingModelProviders[embeddingModelProvider],
+          )[0];
+          localStorage.setItem('embeddingModel', embeddingModel);
+        }
+      }
+      searchParams.append('chatModel', chatModel!);
+      searchParams.append('chatModelProvider', chatModelProvider);
+
+      if (chatModelProvider === 'custom_openai') {
+        searchParams.append(
+          'openAIApiKey',
+          localStorage.getItem('openAIApiKey')!,
+        );
+        searchParams.append(
+          'openAIBaseURL',
+          localStorage.getItem('openAIBaseURL')!,
+        );
       }
 
-        wsURL.search = searchParams.toString();
+      searchParams.append('embeddingModel', embeddingModel!);
+      searchParams.append('embeddingModelProvider', embeddingModelProvider);
+    }
 
-        const ws = new WebSocket(wsURL.toString());
+    wsURL.search = searchParams.toString();
 
-        const timeoutId = setTimeout(() => {
-          if (ws.readyState !== 1) {
-            toast.error(
-              'Failed to connect to the server. Please try again later.',
-            );
-          }
-        }, 10000);
+    const newWs = new WebSocket(wsURL.toString());
 
-        ws.onopen = () => {
-          console.log('[DEBUG] open');
-          clearTimeout(timeoutId);
-          setIsWSReady(true);
-        };
+    const timeoutId = setTimeout(() => {
+      if (newWs.readyState !== 1) {
+        toast.error('Failed to connect to the server. Please try again later.');
+      }
+    }, 10000);
 
-        ws.onerror = () => {
-          clearTimeout(timeoutId);
+    newWs.onopen = () => {
+      console.log('[DEBUG] open');
+      clearTimeout(timeoutId);
+      setIsWSReady(true);
+      setError(false);
+      setReconnectStatus((prev) => ({
+        ...prev,
+        attempts: 0,
+        isReconnecting: false,
+      }));
+    };
+
+    newWs.onerror = () => {
+      clearTimeout(timeoutId);
+      setError(true);
+      toast.error('WebSocket connection error.');
+    };
+
+    newWs.onclose = () => {
+      clearTimeout(timeoutId);
+      console.log('[DEBUG] closed');
+      setIsWSReady(false);
+
+      setReconnectStatus((prev) => {
+        const newAttempts = prev.attempts + 1;
+        if (newAttempts <= prev.maxAttempts) {
           setError(true);
-          toast.error('WebSocket connection error.');
-        };
+          console.log(`[DEBUG] reconnect attempt ${newAttempts}`);
 
-        ws.onclose = () => {
-          clearTimeout(timeoutId);
+          const delay = Math.min(1000 * 2 ** newAttempts, 30000);
+
+          reconnectTimeoutRef.current = setTimeout(() => {
+            console.log('[DEBUG] attempting to reconnect');
+            connectWebSocket();
+          }, delay);
+
+          return { ...prev, attempts: newAttempts, isReconnecting: true };
+        } else {
           setError(true);
-          console.log('[DEBUG] closed');
-        };
+          toast.error(
+            'Failed to connect after multiple attempts. Please try again later.',
+          );
+          return { ...prev, attempts: newAttempts, isReconnecting: false };
+        }
+      });
+    };
 
-        ws.addEventListener('message', (e) => {
-          const data = JSON.parse(e.data);
-          if (data.type === 'error') {
-            toast.error(data.data);
-          }
-        });
+    newWs.addEventListener('message', (e) => {
+      const data = JSON.parse(e.data);
+      if (data.type === 'error') {
+        toast.error(data.data);
+      }
+    });
 
-        setWs(ws);
-      };
+    setWs(newWs);
+  }, [url, isHostedMode, setError, setIsWSReady]);
 
-      connectWs();
+  useEffect(() => {
+    if (!ws) {
+      connectWebSocket();
     }
 
     return () => {
@@ -210,10 +242,13 @@ const useSocket = (
         ws?.close();
         console.log('[DEBUG] closed');
       }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
     };
-  }, [ws, url, setIsWSReady, setError]);
+  }, [ws, connectWebSocket]);
 
-  return ws;
+  return { ws, reconnectStatus };
 };
 
 const loadMessages = async (
@@ -272,16 +307,22 @@ export type StoredChat = {
   updatedAt: Date;
 };
 
-const saveMessagesToLocalStorage = (chatId: string, messages: Message[], focusMode: string) => {
-  const existingChats = JSON.parse(localStorage.getItem('chats') || '[]') as StoredChat[];
-  const chatIndex = existingChats.findIndex(chat => chat.id === chatId);
+const saveMessagesToLocalStorage = (
+  chatId: string,
+  messages: Message[],
+  focusMode: string,
+) => {
+  const existingChats = JSON.parse(
+    localStorage.getItem('chats') || '[]',
+  ) as StoredChat[];
+  const chatIndex = existingChats.findIndex((chat) => chat.id === chatId);
 
   const updatedChat: StoredChat = {
     id: chatId,
     messages,
     focusMode,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
   console.log('[DEBUG] saving messages to local storage', updatedChat);
 
@@ -294,9 +335,13 @@ const saveMessagesToLocalStorage = (chatId: string, messages: Message[], focusMo
   localStorage.setItem('chats', JSON.stringify(existingChats));
 };
 
-const loadMessagesFromLocalStorage = (chatId: string): { messages: Message[], focusMode: string } | null => {
-  const existingChats = JSON.parse(localStorage.getItem('chats') || '[]') as StoredChat[];
-  const chat = existingChats.find(chat => chat.id === chatId);
+const loadMessagesFromLocalStorage = (
+  chatId: string,
+): { messages: Message[]; focusMode: string } | null => {
+  const existingChats = JSON.parse(
+    localStorage.getItem('chats') || '[]',
+  ) as StoredChat[];
+  const chat = existingChats.find((chat) => chat.id === chatId);
 
   if (chat) {
     return { messages: chat.messages, focusMode: chat.focusMode };
@@ -316,7 +361,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [isReady, setIsReady] = useState(false);
 
   const [isWSReady, setIsWSReady] = useState(false);
-  const ws = useSocket(
+  const { ws, reconnectStatus } = useSocket(
     process.env.NEXT_PUBLIC_WS_URL!,
     setIsWSReady,
     setHasError,
@@ -337,7 +382,12 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
 
   useEffect(() => {
-    if (chatId && !newChatCreated && !isMessagesLoaded && messages.length === 0) {
+    if (
+      chatId &&
+      !newChatCreated &&
+      !isMessagesLoaded &&
+      messages.length === 0
+    ) {
       if (isHostedMode) {
         const storedMessages = loadMessagesFromLocalStorage(chatId);
         setMessages(storedMessages?.messages || []);
@@ -476,7 +526,6 @@ const ChatWindow = ({ id }: { id?: string }) => {
           ['assistant', recievedMessage],
         ]);
 
-
         ws?.removeEventListener('message', messageHandler);
         setLoading(false);
         if (isHostedMode) {
@@ -494,7 +543,11 @@ const ChatWindow = ({ id }: { id?: string }) => {
             role: 'assistant',
             createdAt: new Date(),
           };
-          saveMessagesToLocalStorage(chatId!, [...messages, humanMessage, assistantMessage], focusMode);
+          saveMessagesToLocalStorage(
+            chatId!,
+            [...messages, humanMessage, assistantMessage],
+            focusMode,
+          );
         }
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
@@ -549,7 +602,11 @@ const ChatWindow = ({ id }: { id?: string }) => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="dark:text-white/70 text-black/70 text-sm">
-          Failed to connect to the server. Please try again later.
+          {reconnectStatus.isReconnecting
+            ? `Failed to connect to the server. Attempting to reconnect... (Attempt ${reconnectStatus.attempts}/${reconnectStatus.maxAttempts})`
+            : reconnectStatus.attempts >= reconnectStatus.maxAttempts
+              ? 'Failed to connect after multiple attempts. Please try again later.'
+              : 'Failed to connect to the server. Please try again later.'}
         </p>
       </div>
     );

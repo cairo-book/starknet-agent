@@ -41,29 +41,39 @@ body {
   position: absolute;
   top: -50%;
   left: -50%;
-  width: 200%; /* Reduce this from 500% to 200% */
+  width: 200%;
   height: 200%;
-  background-repeat: repeat; /* Add this to ensure the background repeats */
-  animation: rotate 500s linear infinite; /* Add rotation animation */
+  background-repeat: repeat;
+  animation: rotate 800s linear infinite; /* Slow down rotation */
 }
 
 .starry-background::before {
   background-image: radial-gradient(
     white,
-    rgba(255, 255, 255, 0.2) 2px,
-    transparent 20px
+    rgba(255, 255, 255, 0.1) 2px,
+    /* Reduce star brightness */ transparent 15px
   );
-  background-size: 350px 350px;
-  animation: rotate 500s linear infinite, scintillate1 3s infinite;
+  background-size: 450px 450px; /* Increase space between stars */
+  animation:
+    rotate 800s linear infinite,
+    scintillate1 5s infinite; /* Slow down animations */
 }
 
 .starry-background::after {
-  background-image:
-    radial-gradient(white, rgba(255, 255, 255, 0.15) 1px, transparent 10px),
-    radial-gradient(white, rgba(255, 255, 255, 0.1) 2px, transparent 12px),
-    radial-gradient(white, rgba(255, 255, 255, 0.05) 1px, transparent 8px);
-  background-size: 250px 250px, 150px 150px, 100px 100px;
-  animation: rotate 400s linear infinite, scintillate2 4s infinite;
+  background-image: radial-gradient(
+      white,
+      rgba(255, 255, 255, 0.08) 1px,
+      transparent 8px
+    ),
+    radial-gradient(white, rgba(255, 255, 255, 0.05) 2px, transparent 10px),
+    radial-gradient(white, rgba(255, 255, 255, 0.03) 1px, transparent 6px);
+  background-size:
+    350px 350px,
+    250px 250px,
+    200px 200px; /* Increase space between stars */
+  animation:
+    rotate 700s linear infinite,
+    scintillate2 6s infinite; /* Slow down animations */
 }
 
 @keyframes rotate {
@@ -78,19 +88,19 @@ body {
 @keyframes scintillate1 {
   0%,
   100% {
-    opacity: 1;
+    opacity: 0.4;
   }
   50% {
-    opacity: 0.7;
+    opacity: 0.3;
   }
 }
 
 @keyframes scintillate2 {
   0%,
   100% {
-    opacity: 0.9;
+    opacity: 0.3;
   }
   50% {
-    opacity: 1;
+    opacity: 0.2;
   }
 }
