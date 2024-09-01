@@ -118,7 +118,8 @@ export async function createChunks(
   const chunks: Document[] = [];
 
   for (const page of pages) {
-    const sections: ParsedSection[] = splitMarkdownIntoSections(page.content);
+    const sanitizedContent = sanitizeCodeBlocks(page.content);
+    const sections: ParsedSection[] = splitMarkdownIntoSections(sanitizedContent);
 
     sections.forEach((section: ParsedSection, index: number) => {
       const hash: string = calculateHash(section.content);
@@ -139,6 +140,22 @@ export async function createChunks(
   }
 
   return chunks as Document<BookChunk>[];
+}
+
+export function sanitizeCodeBlocks(content: string): string {
+  const lines = content.split('\n');
+  let isInCodeBlock = false;
+  const sanitizedLines = lines.filter((line) => {
+    if (line.trim().startsWith('```')) {
+      isInCodeBlock = !isInCodeBlock;
+      return true;
+    }
+    if (isInCodeBlock) {
+      return !line.trim().startsWith('# ') && line.trim() !== '#';
+    }
+    return true;
+  });
+  return sanitizedLines.join('\n');
 }
 
 /**

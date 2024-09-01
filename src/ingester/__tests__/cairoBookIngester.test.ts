@@ -1,4 +1,4 @@
-import { splitMarkdownIntoSections, createChunks } from '../cairoBookIngester';
+import { splitMarkdownIntoSections, createChunks, sanitizeCodeBlocks } from '../cairoBookIngester';
 import {
   BookPageDto,
   findChunksToUpdateAndRemove,
@@ -281,5 +281,40 @@ Final text
     expect(isInsideCodeBlock(testContent, testContent.lastIndexOf('```'))).toBe(
       true,
     );
+  });
+});
+
+describe('sanitizeCodeBlocks', () => {
+  it('should remove hidden lines from code blocks', () => {
+    const input = `
+Some regular text
+
+\`\`\`rust
+# fn main() {
+#     let my_first_char = 'C';
+#     let my_first_char_in_hex = 0x43;
+#
+#     let my_first_string = 'Hello world';
+#     let my_first_string_in_hex = 0x48656C6C6F20776F726C64;
+#
+    let long_string: ByteArray = "this is a string which has more than 31 characters";
+# }
+\`\`\`
+
+More regular text
+`;
+
+    const expected = `
+Some regular text
+
+\`\`\`rust
+    let long_string: ByteArray = "this is a string which has more than 31 characters";
+\`\`\`
+
+More regular text
+`;
+
+    const result = sanitizeCodeBlocks(input);
+    expect(result).toBe(expected);
   });
 });
