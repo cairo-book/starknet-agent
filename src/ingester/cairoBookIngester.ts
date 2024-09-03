@@ -11,10 +11,12 @@ import {
   BookPageDto,
   findChunksToUpdateAndRemove,
   isInsideCodeBlock,
-  MarkdownSection,
+  ParsedSection,
   processMarkdownFiles,
   calculateHash,
   createAnchor,
+  addSectionWithSizeLimit,
+  MAX_SECTION_SIZE,
 } from './shared';
 
 const config: BookConfig = {
@@ -116,9 +118,10 @@ export async function createChunks(
   const chunks: Document[] = [];
 
   for (const page of pages) {
-    const sections: MarkdownSection[] = splitMarkdownIntoSections(page.content);
+    const sanitizedContent = sanitizeCodeBlocks(page.content);
+    const sections: ParsedSection[] = splitMarkdownIntoSections(sanitizedContent);
 
-    sections.forEach((section: MarkdownSection, index: number) => {
+    sections.forEach((section: ParsedSection, index: number) => {
       const hash: string = calculateHash(section.content);
       chunks.push(
         new Document<BookChunk>({
@@ -139,20 +142,35 @@ export async function createChunks(
   return chunks as Document<BookChunk>[];
 }
 
+export function sanitizeCodeBlocks(content: string): string {
+  const lines = content.split('\n');
+  let isInCodeBlock = false;
+  const sanitizedLines = lines.filter((line) => {
+    if (line.trim().startsWith('```')) {
+      isInCodeBlock = !isInCodeBlock;
+      return true;
+    }
+    if (isInCodeBlock) {
+      return !line.trim().startsWith('# ') && line.trim() !== '#';
+    }
+    return true;
+  });
+  return sanitizedLines.join('\n');
+}
+
 /**
  * Splits markdown content into sections based on headers and imposes a maximum section size
  * The maximum section size is 20000 characters - this is to avoid embedding large sections, which is
  * limited by OpenAI. The limit is 8192 tokens, therefore 20000 characters should be safe at 1token~=4 characters.
  * @param content - The markdown content to split
- * @returns MarkdownSection[] - Array of MarkdownSection objects
+ * @returns ParsedSection[] - Array of ParsedSection objects
  */
-export function splitMarkdownIntoSections(content: string): MarkdownSection[] {
+export function splitMarkdownIntoSections(content: string): ParsedSection[] {
   const headerRegex = /^(#{1,6})\s+(.+)$/gm;
-  const sections: MarkdownSection[] = [];
+  const sections: ParsedSection[] = [];
   let lastIndex = 0;
   let lastTitle = '';
   let match;
-  const MAX_SECTION_SIZE = 20000;
 
   while ((match = headerRegex.exec(content)) !== null) {
     if (!isInsideCodeBlock(content, match.index)) {
@@ -182,23 +200,4 @@ export function splitMarkdownIntoSections(content: string): MarkdownSection[] {
   }
 
   return sections;
-}
-
-function addSectionWithSizeLimit(
-  sections: MarkdownSection[],
-  title: string,
-  content: string,
-  maxSize: number,
-) {
-  if (content.length <= maxSize) {
-    sections.push({ title, content });
-  } else {
-    let startIndex = 0;
-    while (startIndex < content.length) {
-      const endIndex = startIndex + maxSize;
-      const chunk = content.slice(startIndex, endIndex);
-      sections.push({ title, content: chunk });
-      startIndex = endIndex;
-    }
-  }
 }

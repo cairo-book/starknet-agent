@@ -6,11 +6,10 @@ services:
     ports:
       - 4000:8080
     networks:
-      - perplexica-network
-    restart: always
+    restart: unless-stopped
 
-  perplexica-backend:
-    container_name: perplexica-backend
+  starknet-agent-backend:
+    container_name: starknet-agent-backend
     build:
       context: .
       dockerfile: backend.dockerfile
@@ -21,17 +20,17 @@ services:
     ports:
       - 3001:3001
     volumes:
-      - backend-dbstore:/home/perplexica/data
+      - backend-dbstore:/home/starknet-agent/data
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     networks:
       - perplexica-network
     environment:
       - NODE_ENV=production
-    restart: always
+    restart: unless-stopped
 
-  perplexica-frontend:
-    container_name: perplexica-frontend
+  starknet-agent-frontend:
+    container_name: starknet-agent-frontend
     build:
       context: .
       dockerfile: app.dockerfile
@@ -40,14 +39,34 @@ services:
         - NEXT_PUBLIC_WS_URL=wss://backend.agent.starknet.builders
         - NEXT_PUBLIC_HOSTED_MODE=true
     depends_on:
-      - perplexica-backend
+      - starknet-agent-backend
     ports:
       - 3000:3000
     networks:
       - perplexica-network
     environment:
       - CHOKIDAR_USEPOLLING=true
-    restart: always
+    restart: unless-stopped
+
+  mongodb:
+    image: mongodb/mongodb-atlas-local
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - 27018:27017
+    networks:
+      - starknet-agent-network
+    restart: unless-stopped
+
+  cairobook-ingest:
+    build:
+      context: .
+      dockerfile: ingest.dockerfile
+    depends_on:
+      - mongodb
+    networks:
+      - starknet-agent-network
+    restart: 'no'
 
   nginx:
     image: valian/docker-nginx-auto-ssl
@@ -61,13 +80,13 @@ services:
       ALLOWED_DOMAINS: '(backend.)?agent.starknet.builder'
       SITES: 'backend.agent.starknet.builders=perplexica-backend:3001;agent.starknet.builders=perplexica-frontend:3000'
     networks:
-      - perplexica-network
+      - starknet-agent-network
     depends_on:
-      - perplexica-backend
-      - perplexica-frontend
+      - starknet-agent-backend
+      - starknet-agent-frontend
 
 networks:
-  perplexica-network:
+  starknet-agent-network:
 
 volumes:
   backend-dbstore:

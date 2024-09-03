@@ -4,6 +4,8 @@ import logger from '../utils/logger';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
+export const MAX_SECTION_SIZE = 20000;
+
 export interface BookPageDto {
   name: string;
   content: string;
@@ -21,9 +23,10 @@ export type BookConfig = {
 /**
  * Interface representing a section of markdown content
  */
-export interface MarkdownSection {
+export interface ParsedSection {
   title: string;
   content: string;
+  anchor?: string;
 }
 
 export async function processMarkdownFiles(
@@ -128,4 +131,25 @@ export function outputTitleAndLink(
   anchorLink: string,
 ): string {
   return `[${prettyPart}]${anchorLink}  `;
+}
+
+
+export function addSectionWithSizeLimit(
+  sections: ParsedSection[],
+  title: string,
+  content: string,
+  maxSize: number,
+  anchor?: string
+) {
+  if (content.length <= maxSize) {
+    sections.push({ title, content, anchor });
+  } else {
+    let startIndex = 0;
+    while (startIndex < content.length) {
+      const endIndex = startIndex + maxSize;
+      const chunk = content.slice(startIndex, endIndex);
+      sections.push({ title, content: chunk, anchor });
+      startIndex = endIndex;
+    }
+  }
 }

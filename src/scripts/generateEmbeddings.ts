@@ -13,18 +13,19 @@ import logger from '../utils/logger';
 
 dotenv.config();
 
-let vectorStore: VectorStore | null = null;
+let vectorStores: {[key: string]: VectorStore} | {} = {};
 
 async function setupVectorStore(
   dbConfig: VectorStoreConfig,
 ): Promise<VectorStore> {
-  if (vectorStore) {
-    return vectorStore;
+  if (vectorStores && vectorStores[dbConfig.COLLECTION_NAME]) {
+    return vectorStores[dbConfig.COLLECTION_NAME];
   }
   try {
     const embeddingModels = await loadOpenAIEmbeddingsModels();
     const textEmbedding3Large = embeddingModels['Text embedding 3 large'];
-    vectorStore = await VectorStore.initialize(dbConfig, textEmbedding3Large);
+    const vectorStore = await VectorStore.initialize(dbConfig, textEmbedding3Large);
+    vectorStores[dbConfig.COLLECTION_NAME] = vectorStore;
     logger.info('VectorStore initialized successfully');
     return vectorStore;
   } catch (error) {
@@ -95,9 +96,12 @@ async function main() {
   } catch (error) {
     console.error('An error occurred during the ingestion process:', error);
   } finally {
-    if (vectorStore) {
-      await vectorStore.close();
+    if (vectorStores) {
+      for (const vectorStore of Object.values(vectorStores)) {
+        await vectorStore.close();
     }
+    process.exit(1);
+  }
   }
 }
 

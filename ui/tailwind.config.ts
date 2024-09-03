@@ -35,7 +35,8 @@ const config: Config = {
         return {
           dark: {
             primary: colorsDark[50],
-            secondary: colorsDark[100],
+            secondary: colorsDark[200],
+            tertiary: colorsDark[100],
             ...colorsDark,
           },
           light: {

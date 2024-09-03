@@ -1,8 +1,8 @@
 {
-  "name": "perplexica-backend",
-  "version": "1.9.0-rc1",
+  "name": "starknet-agent-backend",
+  "version": "1.0.0",
   "license": "MIT",
-  "author": "ItzCrazyKns",
+  "author": "enitrat",
   "scripts": {
     "start": "npm run db:push && node dist/app.js",
     "build": "tsc",

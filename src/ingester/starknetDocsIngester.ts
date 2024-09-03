@@ -7,12 +7,14 @@ import { Document } from 'langchain/document';
 import logger from '../utils/logger';
 import { BookChunk } from '../types/types';
 import {
+  addSectionWithSizeLimit,
   BookConfig,
   BookPageDto,
   calculateHash,
   createAnchor,
   findChunksToUpdateAndRemove,
-  MarkdownSection,
+  MAX_SECTION_SIZE,
+  ParsedSection,
   processMarkdownFiles,
 } from './shared';
 import { splitMarkdownIntoSections } from './cairoBookIngester';
@@ -21,6 +23,15 @@ import { splitMarkdownIntoSections } from './cairoBookIngester';
 const STARKNET_DOCS_CONFIG: BookConfig = {
   repoOwner: 'starknet-io',
   repoName: 'starknet-docs',
+  fileExtension: '.adoc',
+  chunkSize: 4096,
+  chunkOverlap: 512,
+  baseUrl: 'https://docs.starknet.io',
+};
+
+const DOCS_COMMON_CONFIG: BookConfig = {
+  repoOwner: 'starknet-io',
+  repoName: 'docs-common-content',
   fileExtension: '.adoc',
   chunkSize: 4096,
   chunkOverlap: 512,
@@ -42,12 +53,37 @@ export const ingestStarknetDocs = async (vectorStore: VectorStore) => {
 // Helper functions
 async function downloadAndExtractStarknetDocs(): Promise<BookPageDto[]> {
   logger.info('Downloading and extracting Starknet Docs');
+  // 1. Starknet Docs
   const latestTag = await getLatestTag();
   const zipData = await downloadSourceCode(latestTag);
-  const extractDir = await extractZipContent(zipData, latestTag);
+  const extractPath = `starknet-docs-${latestTag.replace('v', '')}/components/Starknet/modules/`;
+  const extractDir = await extractZipContent(path.join(__dirname, 'starknet-docs'), extractPath, zipData);
   const targetDir = path.join(__dirname, 'starknet-docs-restructured');
   const restructuredDir = await restructureDocumentation(extractDir, targetDir);
-  return await processMarkdownFiles(STARKNET_DOCS_CONFIG, restructuredDir);
+
+  // 2. Docs Common Content
+  const docsCommonContentZipData = await downloadDocsCommonContent();
+  const docsCommonExtractPath = 'docs-common-content-main/modules';
+  const docsCommonContentExtractDir = await extractZipContent(path.join(__dirname, 'docs-common-content'), docsCommonExtractPath, docsCommonContentZipData);
+  const docsCommonContentTargetDir = path.join(__dirname, 'docs-common-content-restructured');
+  const docsCommonContentRestructuredDir = await restructureDocumentation(docsCommonContentExtractDir, docsCommonContentTargetDir);
+
+  // 3. Merge Docs Common Content into starknet-docs-restructured
+  const mergeDir = path.join(__dirname, 'starknet-docs-restructured');
+  await mergeDocsCommonContent(docsCommonContentRestructuredDir, mergeDir);
+  return await processMarkdownFiles(STARKNET_DOCS_CONFIG, mergeDir);
+}
+
+async function mergeDocsCommonContent(docsCommonContentDir: string, mergeDir: string) {
+  console.log('Merging Docs Common Content into Starknet Docs');
+  const entries = await fs.readdir(docsCommonContentDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const sourcePath = path.join(docsCommonContentDir, entry.name);
+      const targetPath = path.join(mergeDir, entry.name);
+      await fs.cp(sourcePath, targetPath, { recursive: true });
+    }
+  }
 }
 
 async function getLatestTag(): Promise<string> {
@@ -67,17 +103,26 @@ async function downloadSourceCode(latestTag: string): Promise<Buffer> {
   return zipResponse.data;
 }
 
+async function downloadDocsCommonContent(): Promise<Buffer> {
+  const sourceUrl = `https://github.com/${DOCS_COMMON_CONFIG.repoOwner}/${DOCS_COMMON_CONFIG.repoName}/archive/refs/heads/main.zip`;
+  logger.info(`Downloading source code from ${sourceUrl}`);
+  const zipResponse = await axios.get(sourceUrl, {
+    responseType: 'arraybuffer',
+  });
+  return zipResponse.data;
+}
+
 async function extractZipContent(
+  extractDir: string,
+  pathToExtract: string,
   zipData: Buffer,
-  latestTag: string,
+  latestTag?: string,
 ): Promise<string> {
   const zipFile = new AdmZip(zipData);
-  const extractDir = path.join(__dirname, 'starknet-docs');
   await fs.rm(extractDir, { recursive: true, force: true }).catch(() => {});
   await fs.mkdir(extractDir, { recursive: true });
 
-  const targetPath = `starknet-docs-${latestTag.replace('v', '')}/components/Starknet/modules/`;
-  await extractTargetContent(zipFile, targetPath, extractDir);
+  await extractTargetContent(zipFile, pathToExtract, extractDir);
 
   logger.info('Extracted Starknet modules content successfully.');
   return extractDir;
@@ -173,12 +218,102 @@ async function restructureFiles(
   return hasRelevantFiles;
 }
 
+export function splitAsciiDocIntoSections(content: string): ParsedSection[] {
+  const headerRegex = /^(?:\[#([^\]]+)\]\s*\n)?(=+)\s+(.+)$/gm;
+  const sections: ParsedSection[] = [];
+  let lastIndex = 0;
+  let lastTitle = '';
+  let lastAnchor: string | undefined;
+  let match;
+
+  // Trim the content to remove leading/trailing whitespace
+  content = content.trim();
+
+  // Convert AsciiDoc code blocks to Markdown code blocks
+  content = convertCodeBlocks(content);
+
+  while ((match = headerRegex.exec(content)) !== null) {
+    if (!isInsideCodeBlock(content, match.index)) {
+      if (lastIndex < match.index) {
+        const sectionContent = content.slice(lastIndex, match.index).trim();
+        if (sectionContent) {
+          addSectionWithSizeLimit(
+            sections,
+            lastTitle,
+            sectionContent,
+            MAX_SECTION_SIZE,
+            lastAnchor
+          );
+        }
+      }
+      lastAnchor = match[1]; // Capture the custom anchor if present
+      lastTitle = match[3];
+      lastIndex = match.index + match[0].length;
+    }
+  }
+
+  // Add the last section
+  if (lastIndex < content.length) {
+    const sectionContent = content.slice(lastIndex).trim();
+    if (sectionContent) {
+      addSectionWithSizeLimit(
+        sections,
+        lastTitle,
+        sectionContent,
+        MAX_SECTION_SIZE,
+        lastAnchor
+      );
+    }
+  }
+
+  return sections;
+}
+
+export function convertCodeBlocks(content: string): string {
+  // Case 1: With language specification
+  const languageCodeBlockRegex = /^\[source,(\w+)\]\s*^----$([\s\S]*?)^----$/gm;
+  content = content.replace(languageCodeBlockRegex, (match, language, codeContent) => {
+    return convertCodeBlock(codeContent, language);
+  });
+
+  // Case 2: No language specification
+  const simpleCodeBlockRegex = /^----$([\s\S]*?)^----$/gm;
+  content = content.replace(simpleCodeBlockRegex, (match, codeContent) => {
+    return convertCodeBlock(codeContent);
+  });
+
+  return content;
+}
+
+function convertCodeBlock(codeContent: string, language: string = ''): string {
+  // Remove only the leading and trailing newline characters
+  codeContent = codeContent.replace(/^\n|\n$/g, '');
+
+  return '```' + language + '\n' + codeContent + '\n```';
+}
+
+function isInsideCodeBlock(content: string, index: number): boolean {
+  const codeBlockRegex = /^(----|\`\`\`)$/gm;
+  let isInside = false;
+  let match;
+
+  while ((match = codeBlockRegex.exec(content)) !== null) {
+    if (match.index >= index) {
+      break;
+    }
+    isInside = !isInside;
+  }
+
+  return isInside;
+}
+
+// Update the createChunks function
 async function createChunks(
   pages: BookPageDto[],
 ): Promise<Document<BookChunk>[]> {
-  logger.info('Creating chunks from book pages based on markdown sections');
+  logger.info('Creating chunks from book pages based on AsciiDoc sections');
   return pages.flatMap((page) =>
-    splitMarkdownIntoSections(page.content).map((section, index) =>
+    splitAsciiDocIntoSections(page.content).map((section, index) =>
       createChunk(page, section, index),
     ),
   );
@@ -186,10 +321,14 @@ async function createChunks(
 
 function createChunk(
   page: BookPageDto,
-  section: MarkdownSection,
+  section: ParsedSection,
   index: number,
 ): Document<BookChunk> {
   const hash = calculateHash(section.content);
+  const anchor = section.anchor ? section.anchor : createAnchor(section.title);
+  //Hardcode the root/index page to be the root
+  const page_name = page.name === 'root/index' ? '' : page.name;
+
   return new Document<BookChunk>({
     pageContent: section.content,
     metadata: {
@@ -198,7 +337,7 @@ function createChunk(
       chunkNumber: index,
       contentHash: hash,
       uniqueId: `${page.name}-${index}`,
-      sourceLink: `${STARKNET_DOCS_CONFIG.baseUrl}/${page.name}#${createAnchor(section.title)}`,
+      sourceLink: `${STARKNET_DOCS_CONFIG.baseUrl}/${page_name}#${anchor}`,
     },
   });
 }
@@ -236,9 +375,17 @@ async function cleanupDownloadedFiles() {
   await fs.rm(extractDir, { recursive: true, force: true });
   logger.info(`Deleted downloaded markdown files from ${extractDir}`);
 
+  const extractDirCommon = path.join(__dirname, 'docs-common-content');
+  await fs.rm(extractDirCommon, { recursive: true, force: true });
+  logger.info(`Deleted downloaded markdown files from ${extractDirCommon}`);
+
   const extractDir2 = path.join(__dirname, 'starknet-docs-restructured');
   await fs.rm(extractDir2, { recursive: true, force: true });
   logger.info(`Deleted restructured markdown files from ${extractDir2}`);
+
+  const extractDirCommon2 = path.join(__dirname, 'docs-common-content-restructured');
+  await fs.rm(extractDirCommon2, { recursive: true, force: true });
+  logger.info(`Deleted restructured markdown files from ${extractDirCommon2}`);
 }
 
 function handleError(error: unknown) {

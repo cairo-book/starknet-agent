@@ -23,13 +23,19 @@ const Page = () => {
   useEffect(() => {
     const fetchChats = async () => {
       if (isHostedModel) {
-        const storedChats = JSON.parse(localStorage.getItem('chats') || '[]') as StoredChat[];
-        setChats(storedChats.map((chat) : Chat => ({
-          id: chat.id,
-          title: chat.messages[0].content,
-          createdAt: chat.createdAt.toString(),
-          focusMode: chat.focusMode,
-        })));
+        const storedChats = JSON.parse(
+          localStorage.getItem('chats') || '[]',
+        ) as StoredChat[];
+        setChats(
+          storedChats.map(
+            (chat): Chat => ({
+              id: chat.id,
+              title: chat.messages[0].content,
+              createdAt: chat.createdAt.toString(),
+              focusMode: chat.focusMode,
+            }),
+          ),
+        );
         setLoading(false);
         return;
       }
@@ -44,7 +50,7 @@ const Page = () => {
 
       const data = await res.json();
 
-      setChats(data.chats);
+      setChats(data?.chats ?? []);
       setLoading(false);
     };
 

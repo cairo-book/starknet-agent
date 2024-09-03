@@ -24,3 +24,9 @@ export type BookChunk = {
   uniqueId: string;
   sourceLink: string;
 };
+
+export interface ParsedSection {
+  title: string;
+  content: string;
+  anchor?: string; // Optional custom anchor
+}

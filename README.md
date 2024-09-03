@@ -1,4 +1,4 @@
-# 🚀 Perplexica - An AI-powered search engine for the Starknet Ecosystem 🔎 <!-- omit in toc -->
+# 🚀 Starknet Agent - An AI-powered search engine for the Starknet Ecosystem 🔎 <!-- omit in toc -->
 
 ![preview](.assets/perplexica-screenshot.png)
 
@@ -21,11 +21,11 @@
 
 ## Credits
 
-This project was originally forked from [Perplexica](https://github.com/ItzCrazyKns/Perplexica), an open-source AI search engine. We've adapted and expanded upon their work to create a specialized tool for the Starknet ecosystem. We're grateful for their initial contribution which provided a strong foundation for Perplexica.
+This project was originally forked from [Perplexica](https://github.com/ItzCrazyKns/Perplexica), an open-source AI search engine. We've adapted and expanded upon their work to create a specialized tool for the Starknet ecosystem. We're grateful for their initial contribution which provided a base foundation for Starknet Agent.
 
 ## Overview
 
-Perplexica is an open-source AI-powered searching tool specifically designed for the Starknet Ecosystem. It uses advanced machine learning algorithms to search and understand the Starknet documentation and the Cairo Book, providing clear and accurate answers to your queries about Starknet and Cairo.
+Starknet Agent is an open-source AI-powered searching tool specifically designed for the Starknet Ecosystem. It uses advanced machine learning algorithms to search and understand the Starknet documentation and the Cairo Book, providing clear and accurate answers to your queries about Starknet and Cairo.
 
 ## Preview
 
@@ -34,21 +34,21 @@ Perplexica is an open-source AI-powered searching tool specifically designed for
 ## Features
 
 - **Local LLMs**: You can make use of local LLMs such as Llama3 and Mixtral using Ollama.
-- **Focus Modes:** Special modes to better answer specific types of questions. Perplexica currently has 2 focus modes:
+- **Focus Modes:** Special modes to better answer specific types of questions. Starknet Agent currently has 2 focus modes:
   - **Cairo Book:** Searches the [Cairo Book](https://book.cairo-lang.org) for answers.
   - **Starknet Docs:** Searches the [Starknet documentation](https://docs.starknet.io) for answers.
 
 ## Installation
 
-There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. Using Docker is highly recommended.
+There are mainly 2 ways of installing Starknet Agent - With Docker, Without Docker. Using Docker is highly recommended.
 
 ### Getting Started with Docker (Recommended)
 
 1. Ensure Docker is installed and running on your system.
-2. Clone the Perplexica repository:
+2. Clone the Starknet Agent repository:
 
    ```bash
-   git clone https://github.com/enitrat/Perplexica.git
+   git clone https://github.com/cairo-book/starknet-agent.git
    ```
 
 3. After cloning, navigate to the directory containing the project files.
@@ -60,9 +60,10 @@ There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. 
    - `GROQ`: Your Groq API key. **You only need to fill this if you wish to use Groq's hosted models**.
    - `ANTHROPIC`: Your Anthropic API key. **You only need to fill this if you wish to use Anthropic models**.
 
-     **Note**: You can change these after starting Perplexica from the settings dialog.
+     **Note**: You can change these after starting Starknet Agent from the settings dialog.
 
    - `SIMILARITY_MEASURE`: The similarity measure to use (This is filled by default; you can leave it as is if you are unsure about it.)
+   - CAIRO_DB and STARKNET_DB: These are the databases for the Cairo Book and Starknet Documentation. You will need to fill these with your own database URLs.
 
 5. Ensure you are in the directory containing the `docker-compose.yaml` file and execute:
 
@@ -76,9 +77,9 @@ There are mainly 2 ways of installing Perplexica - With Docker, Without Docker. 
 docker compose up -f docker-compose.dev.yaml up -d
 ```
 
-6. Wait a few minutes for the setup to complete. You can access Perplexica at http://localhost:3000 in your web browser.
+6. Wait a few minutes for the setup to complete. You can access Starknet Agent at http://localhost:3000 in your web browser.
 
-**Note**: After the containers are built, you can start Perplexica directly from Docker without having to open a terminal.
+**Note**: After the containers are built, you can start Starknet Agent directly from Docker without having to open a terminal.
 
 ### Non-Docker Installation
 
@@ -90,8 +91,6 @@ docker compose up -f docker-compose.dev.yaml up -d
 6. Finally, start both the frontend and the backend by running `npm run start` in both the `ui` folder and the root directory.
 
 **Note**: Using Docker is recommended as it simplifies the setup process, especially for managing environment variables and dependencies.
-
-See the [installation documentation](https://github.com/ItzCrazyKns/Perplexica/tree/master/docs/installation) for more information like exposing it your network, etc.
 
 ### Ollama Connection Errors
 
@@ -112,27 +111,14 @@ If you're encountering an Ollama connection error, it is likely due to the backe
 
    - Ensure that the port (default is 11434) is not blocked by your firewall.
 
-## Using as a Search Engine
-
-If you wish to use Perplexica as an alternative to traditional search engines like Google or Bing, or if you want to add a shortcut for quick access from your browser's search bar, follow these steps:
-
-1. Open your browser's settings.
-2. Navigate to the 'Search Engines' section.
-3. Add a new site search with the following URL: `http://localhost:3000/?q=%s`. Replace `localhost` with your IP address or domain name, and `3000` with the port number if Perplexica is not hosted locally.
-4. Click the add button. Now, you can use Perplexica directly from your browser's search bar.
-
-## One-Click Deployment
-
-[![Deploy to RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/?app_id=267)
-
 ## Upcoming Features
 
 - [x] Add settings page
 - [x] Adding support for local LLMs
 - [x] History Saving features
 - [ ] Expanding coverage of Starknet-related resources
-- [ ] Adding a Copilot Mode for more precise answers
+- [ ] Adding an Autonomous Agent Mode for more precise answers
 
 ## Contribution
 
-Perplexica is built on the idea that AI and large language models should be easy for everyone to use. If you find bugs or have ideas, please share them in via GitHub Issues. For more information on contributing to Perplexica you can read the [CONTRIBUTING.md](CONTRIBUTING.md) file to learn more about Perplexica and how you can contribute to it.
+For more information on contributing to Starknet Agent you can read the [CONTRIBUTING.md](CONTRIBUTING.md) file to learn more about Starknet Agent and how you can contribute to it.
