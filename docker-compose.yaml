@@ -30,7 +30,6 @@ services:
       - perplexica-network
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_HOSTED_MODE=true
     restart: always
 
   perplexica-frontend:
