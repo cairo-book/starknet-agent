@@ -59,7 +59,7 @@ services:
       - ssl_data:/etc/resty-auto-ssl
     environment:
       ALLOWED_DOMAINS: '(backend.)?agent.starknet.builder'
-      SITES: 'backend.agent.starknet.builders=perplexica-backend:3001;agent.starknet.builders=perplexica-frontend:3000'
+      SITES: 'backend.agent.starknet.builders=starknet-agent-backend:3001;agent.starknet.builders=starknet-agent-frontend:3000'
     networks:
       - starknet-agent-network
     depends_on:
