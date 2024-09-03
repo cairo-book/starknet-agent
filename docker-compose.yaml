@@ -6,6 +6,7 @@ services:
     ports:
       - 4000:8080
     networks:
+      - perplexica-network
     restart: unless-stopped
 
   starknet-agent-backend:
