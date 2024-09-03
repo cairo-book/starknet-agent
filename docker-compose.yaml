@@ -36,8 +36,8 @@ services:
       context: .
       dockerfile: app.dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=https://backend.agent.starknet.builders/api
-        - NEXT_PUBLIC_WS_URL=wss://backend.agent.starknet.builders
+        - NEXT_PUBLIC_API_URL=https://backend.agent.starknet.id/api
+        - NEXT_PUBLIC_WS_URL=wss://backend.agent.starknet.id
         - NEXT_PUBLIC_HOSTED_MODE=true
     depends_on:
       - starknet-agent-backend
@@ -59,7 +59,7 @@ services:
       - ssl_data:/etc/resty-auto-ssl
     environment:
       ALLOWED_DOMAINS: '(backend.)?agent.starknet.builder'
-      SITES: 'backend.agent.starknet.builders=starknet-agent-backend:3001;agent.starknet.builders=starknet-agent-frontend:3000'
+      SITES: 'backend.agent.starknet.id=starknet-agent-backend:3001;agent.starknet.id=starknet-agent-frontend:3000'
     networks:
       - starknet-agent-network
     depends_on:
