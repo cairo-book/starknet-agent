@@ -17,6 +17,7 @@ import {
   createAnchor,
   addSectionWithSizeLimit,
   MAX_SECTION_SIZE,
+  updateVectorStore,
 } from './shared';
 
 const config: BookConfig = {
@@ -28,44 +29,13 @@ const config: BookConfig = {
   baseUrl: 'https://book.cairo-lang.org',
 };
 
+
 export const ingestCairoBook = async (vectorStore: VectorStore) => {
   try {
     const pages = await downloadAndExtractCairoBook();
     const chunks = await createChunks(pages);
-
-    const storedChunkHashes = await vectorStore.getStoredBookPagesHashes();
-    const { chunksToUpdate, chunksToRemove } = findChunksToUpdateAndRemove(
-      chunks,
-      storedChunkHashes,
-    );
-    logger.info(
-      `Found ${chunksToUpdate.length} chunks to update and ${chunksToRemove.length} chunks to remove`,
-    );
-
-    //TODO(remove) Randomly select 15 chunks to log
-    const sampleSize = Math.min(15, chunks.length);
-    const randomChunks = chunks
-      .sort(() => 0.5 - Math.random())
-      .slice(0, sampleSize);
-
-    if (chunksToRemove.length > 0) {
-      await vectorStore.removeBookPages(chunksToRemove);
-    }
-    if (chunksToUpdate.length > 0) {
-      await vectorStore.addDocuments(
-        chunksToUpdate,
-        chunksToUpdate.map((chunk) => chunk.metadata.uniqueId),
-      );
-    }
-
-    logger.info(
-      `Updated ${chunksToUpdate.length} chunks and removed ${chunksToRemove.length} chunks.`,
-    );
-
-    // Delete the downloaded markdown files
-    const extractDir = path.join(__dirname, 'cairo-book');
-    await fs.rm(extractDir, { recursive: true, force: true });
-    logger.info(`Deleted downloaded markdown files from ${extractDir}`);
+    updateVectorStore(vectorStore, chunks);
+     await cleanupDownloadedFiles();
   } catch (error) {
     console.error('Error processing Cairo Book:', error);
     if (error instanceof Error) {
@@ -75,7 +45,13 @@ export const ingestCairoBook = async (vectorStore: VectorStore) => {
   }
 };
 
-async function downloadAndExtractCairoBook(): Promise<BookPageDto[]> {
+export async function cleanupDownloadedFiles() {
+  const extractDir = path.join(__dirname, 'cairo-book');
+  await fs.rm(extractDir, { recursive: true, force: true });
+  logger.info(`Deleted downloaded markdown files from ${extractDir}`);
+}
+
+export async function downloadAndExtractCairoBook(): Promise<BookPageDto[]> {
   logger.info('Downloading and extracting Cairo Book');
   const latestReleaseUrl = `https://api.github.com/repos/${config.repoOwner}/${config.repoName}/releases/latest`;
   const response = await axios.get(latestReleaseUrl);

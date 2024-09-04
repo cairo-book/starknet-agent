@@ -51,7 +51,7 @@ export const ingestStarknetDocs = async (vectorStore: VectorStore) => {
 };
 
 // Helper functions
-async function downloadAndExtractStarknetDocs(): Promise<BookPageDto[]> {
+export async function downloadAndExtractStarknetDocs(): Promise<BookPageDto[]> {
   logger.info('Downloading and extracting Starknet Docs');
   // 1. Starknet Docs
   const latestTag = await getLatestTag();
@@ -308,7 +308,7 @@ function isInsideCodeBlock(content: string, index: number): boolean {
 }
 
 // Update the createChunks function
-async function createChunks(
+export async function createChunks(
   pages: BookPageDto[],
 ): Promise<Document<BookChunk>[]> {
   logger.info('Creating chunks from book pages based on AsciiDoc sections');
@@ -370,7 +370,7 @@ async function updateVectorStore(
   );
 }
 
-async function cleanupDownloadedFiles() {
+export async function cleanupDownloadedFiles() {
   const extractDir = path.join(__dirname, 'starknet-docs');
   await fs.rm(extractDir, { recursive: true, force: true });
   logger.info(`Deleted downloaded markdown files from ${extractDir}`);
