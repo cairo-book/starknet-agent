@@ -10,12 +10,14 @@ import crypto from 'crypto';
 import {
   getCairoDbConfig,
   getStarknetDbConfig,
+  getStarknetEcosystemDbConfig,
   VectorStoreConfig,
 } from '../config';
 import { VectorStore } from '../db/vectorStore';
 import handleCairoBookSearch from '../agents/ragSearchAgents/cairoBookSearchAgent';
 import { HandlerOptions, SearchHandler } from '../types/types';
 import handleStarknetDocsSearch from '../agents/ragSearchAgents/starknetDocsSearchAgent';
+import handleStarknetEcosystemSearch from '../agents/ragSearchAgents/starknetEcosystemSearchAgent';
 
 type Message = {
   messageId: string;
@@ -34,11 +36,13 @@ type WSMessage = {
 const searchHandlers: Record<string, SearchHandler> = {
   cairoBookSearch: handleCairoBookSearch,
   starknetDocsSearch: handleStarknetDocsSearch,
+  starknetEcosystemSearch: handleStarknetEcosystemSearch,
 };
 
 const searchDatabases: Record<string, () => VectorStoreConfig> = {
   cairoBookSearch: getCairoDbConfig,
   starknetDocsSearch: getStarknetDbConfig,
+  starknetEcosystemSearch: getStarknetEcosystemDbConfig,
 };
 
 const handleEmitterEvents = (

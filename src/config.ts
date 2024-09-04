@@ -17,6 +17,7 @@ interface Config {
   };
   CAIRO_DB: VectorStoreConfig;
   STARKNET_DB: VectorStoreConfig;
+  ECOSYSTEM_DB: VectorStoreConfig;
   API_KEYS: {
     OPENAI: string;
     GROQ: string;
@@ -65,6 +66,8 @@ export const getOllamaApiEndpoint = () => loadConfig().API_ENDPOINTS.OLLAMA;
 export const getCairoDbConfig = () => loadConfig().CAIRO_DB;
 
 export const getStarknetDbConfig = () => loadConfig().STARKNET_DB;
+
+export const getStarknetEcosystemDbConfig = () => loadConfig().ECOSYSTEM_DB;
 
 export const updateConfig = (config: RecursivePartial<Config>) => {
   const currentConfig = loadConfig();
