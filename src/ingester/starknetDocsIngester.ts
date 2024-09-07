@@ -1,5 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import downdoc from 'downdoc';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
 import { VectorStore } from '../db/vectorStore';
@@ -15,7 +16,7 @@ import {
   findChunksToUpdateAndRemove,
   MAX_SECTION_SIZE,
   ParsedSection,
-  processMarkdownFiles,
+  processDocFiles,
 } from './shared';
 import { splitMarkdownIntoSections } from './cairoBookIngester';
 
@@ -53,25 +54,25 @@ export const ingestStarknetDocs = async (vectorStore: VectorStore) => {
 // Helper functions
 export async function downloadAndExtractStarknetDocs(): Promise<BookPageDto[]> {
   logger.info('Downloading and extracting Starknet Docs');
-  // 1. Starknet Docs
-  const latestTag = await getLatestTag();
-  const zipData = await downloadSourceCode(latestTag);
-  const extractPath = `starknet-docs-${latestTag.replace('v', '')}/components/Starknet/modules/`;
-  const extractDir = await extractZipContent(path.join(__dirname, 'starknet-docs'), extractPath, zipData);
+  // Run Antora to generate the documentation
+  logger.info('Running Antora to link documentation');
+  const antoraCommand = 'antora playbook.yml';
+
+  try {
+    const { execSync } = require('child_process');
+    execSync(antoraCommand, { cwd: __dirname, stdio: 'inherit' });
+    logger.info('Antora documentation generation completed successfully');
+  } catch (error) {
+    logger.error('Error running Antora:', error);
+    throw error;
+  } finally {
+    await fs.rm(path.join(__dirname, 'build'), { recursive: true, force: true });
+  }
+
+  const outputDir = path.join(__dirname, 'antora-output');
   const targetDir = path.join(__dirname, 'starknet-docs-restructured');
-  const restructuredDir = await restructureDocumentation(extractDir, targetDir);
-
-  // 2. Docs Common Content
-  const docsCommonContentZipData = await downloadDocsCommonContent();
-  const docsCommonExtractPath = 'docs-common-content-main/modules';
-  const docsCommonContentExtractDir = await extractZipContent(path.join(__dirname, 'docs-common-content'), docsCommonExtractPath, docsCommonContentZipData);
-  const docsCommonContentTargetDir = path.join(__dirname, 'docs-common-content-restructured');
-  const docsCommonContentRestructuredDir = await restructureDocumentation(docsCommonContentExtractDir, docsCommonContentTargetDir);
-
-  // 3. Merge Docs Common Content into starknet-docs-restructured
-  const mergeDir = path.join(__dirname, 'starknet-docs-restructured');
-  await mergeDocsCommonContent(docsCommonContentRestructuredDir, mergeDir);
-  return await processMarkdownFiles(STARKNET_DOCS_CONFIG, mergeDir);
+  await restructureDocumentation(outputDir, targetDir);
+  return await processDocFiles(STARKNET_DOCS_CONFIG, targetDir);
 }
 
 async function mergeDocsCommonContent(docsCommonContentDir: string, mergeDir: string) {
@@ -236,11 +237,12 @@ export function splitAsciiDocIntoSections(content: string): ParsedSection[] {
     if (!isInsideCodeBlock(content, match.index)) {
       if (lastIndex < match.index) {
         const sectionContent = content.slice(lastIndex, match.index).trim();
-        if (sectionContent) {
+        const markdownContent = downdoc(sectionContent);
+        if (markdownContent) {
           addSectionWithSizeLimit(
             sections,
             lastTitle,
-            sectionContent,
+            markdownContent,
             MAX_SECTION_SIZE,
             lastAnchor
           );
@@ -256,13 +258,16 @@ export function splitAsciiDocIntoSections(content: string): ParsedSection[] {
   if (lastIndex < content.length) {
     const sectionContent = content.slice(lastIndex).trim();
     if (sectionContent) {
+      const markdownContent = downdoc(sectionContent);
+      if (markdownContent) {
       addSectionWithSizeLimit(
         sections,
         lastTitle,
-        sectionContent,
+        markdownContent,
         MAX_SECTION_SIZE,
-        lastAnchor
-      );
+          lastAnchor
+        );
+      }
     }
   }
 
@@ -313,7 +318,7 @@ export async function createChunks(
 ): Promise<Document<BookChunk>[]> {
   logger.info('Creating chunks from book pages based on AsciiDoc sections');
   return pages.flatMap((page) =>
-    splitAsciiDocIntoSections(page.content).map((section, index) =>
+    splitAsciiDocIntoSections(page.content).flatMap((section, index) =>
       createChunk(page, section, index),
     ),
   );
@@ -326,8 +331,8 @@ function createChunk(
 ): Document<BookChunk> {
   const hash = calculateHash(section.content);
   const anchor = section.anchor ? section.anchor : createAnchor(section.title);
-  //Hardcode the root/index page to be the root
-  const page_name = page.name === 'root/index' ? '' : page.name;
+  //Hardcode the index page to be the root
+  const page_name = page.name === 'index' ? '' : page.name;
 
   return new Document<BookChunk>({
     pageContent: section.content,
@@ -371,21 +376,13 @@ async function updateVectorStore(
 }
 
 export async function cleanupDownloadedFiles() {
-  const extractDir = path.join(__dirname, 'starknet-docs');
-  await fs.rm(extractDir, { recursive: true, force: true });
-  logger.info(`Deleted downloaded markdown files from ${extractDir}`);
-
-  const extractDirCommon = path.join(__dirname, 'docs-common-content');
-  await fs.rm(extractDirCommon, { recursive: true, force: true });
-  logger.info(`Deleted downloaded markdown files from ${extractDirCommon}`);
-
   const extractDir2 = path.join(__dirname, 'starknet-docs-restructured');
   await fs.rm(extractDir2, { recursive: true, force: true });
   logger.info(`Deleted restructured markdown files from ${extractDir2}`);
 
-  const extractDirCommon2 = path.join(__dirname, 'docs-common-content-restructured');
-  await fs.rm(extractDirCommon2, { recursive: true, force: true });
-  logger.info(`Deleted restructured markdown files from ${extractDirCommon2}`);
+  const antoraOutputDir = path.join(__dirname, 'antora-output');
+  await fs.rm(antoraOutputDir, { recursive: true, force: true });
+  logger.info(`Deleted antora output files from ${antoraOutputDir}`);
 }
 
 function handleError(error: unknown) {

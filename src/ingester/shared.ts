@@ -31,7 +31,7 @@ export interface ParsedSection {
   anchor?: string;
 }
 
-export async function processMarkdownFiles(
+export async function processDocFiles(
   config: BookConfig,
   directory: string,
 ): Promise<BookPageDto[]> {

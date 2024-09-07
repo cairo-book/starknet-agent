@@ -12,7 +12,7 @@ import {
   findChunksToUpdateAndRemove,
   isInsideCodeBlock,
   ParsedSection,
-  processMarkdownFiles,
+  processDocFiles,
   calculateHash,
   createAnchor,
   addSectionWithSizeLimit,
@@ -77,7 +77,7 @@ export async function downloadAndExtractCairoBook(): Promise<BookPageDto[]> {
   logger.info('ZIP file downloaded and extracted successfully.');
 
   const srcDir = path.join(extractDir, 'book/markdown');
-  const pages = await processMarkdownFiles(config, srcDir);
+  const pages = await processDocFiles(config, srcDir);
 
   return pages;
 }
