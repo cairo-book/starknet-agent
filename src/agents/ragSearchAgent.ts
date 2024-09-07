@@ -90,7 +90,7 @@ export const attachSources = async (
     pageContent: doc.pageContent,
     metadata: {
       ...doc.metadata,
-      title: doc.metadata.name,
+      title: doc.metadata.title,
       url: doc.metadata.sourceLink,
     },
   }));
