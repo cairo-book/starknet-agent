@@ -1,29 +1,15 @@
 services:
-  searxng:
-    image: docker.io/searxng/searxng:latest
-    volumes:
-      - ./searxng:/etc/searxng:rw
-    ports:
-      - 4000:8080
-    networks:
-      - starknet-agent-network
-    restart: unless-stopped
 
   starknet-agent-backend:
     build:
       context: .
       dockerfile: backend.dev.dockerfile
-      args:
-        - SEARXNG_API_URL=http://searxng:8080
     volumes:
       - ./src:/home/starknet-agent/src
       - ./config.toml:/home/starknet-agent/config.toml
       - backend-dbstore:/home/starknet-agent/data
     ports:
       - 3001:3001
-    depends_on:
-      - searxng
-      # - cairobook-ingest
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     networks:
@@ -45,6 +31,7 @@ services:
     volumes:
       - ./ui:/home/starknet-agent
       - /home/starknet-agent/node_modules
+      - /home/starknet-agent/.next
     depends_on:
       - starknet-agent-backend
     ports:
@@ -53,6 +40,7 @@ services:
       - starknet-agent-network
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     restart: unless-stopped
 
   # cairobook-ingest:
@@ -68,4 +56,3 @@ networks:
 
 volumes:
   backend-dbstore:
-

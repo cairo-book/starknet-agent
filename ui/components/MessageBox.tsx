@@ -17,6 +17,8 @@ import Copy from './MessageActions/Copy';
 import Rewrite from './MessageActions/Rewrite';
 import MessageSources from './MessageSources';
 import { useSpeech } from 'react-text-to-speech';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const MessageBox = ({
   message,
@@ -63,6 +65,38 @@ const MessageBox = ({
 
   const { speechStatus, start, stop } = useSpeech({ text: speechMessage });
 
+  const CodeBlock = ({ className, children }: { className?: string; children: string }) => {
+    const language = className ? className.replace('lang-', '') : 'text';
+    console.log(className);
+    if (language.includes('cairo')) {
+    // Manually rendering the Cairo language as rust for highlighting
+    return (
+      <SyntaxHighlighter language={'rust'} style={vscDarkPlus}>
+        {children}
+      </SyntaxHighlighter>
+    );
+  } else {
+      // For inline code or other languages
+      const isInline = !className || className === 'language-text';
+      const style = {
+        backgroundColor: vscDarkPlus['code[class*="language-"]'].backgroundColor,
+        color: vscDarkPlus['code[class*="language-"]'].color,
+        padding: '0.2em 0.4em',
+        borderRadius: '3px',
+        fontSize: '85%',
+        fontFamily: 'monospace',
+        display: isInline ? 'inline' : 'block',
+        whiteSpace: isInline ? 'normal' : 'pre-wrap',
+      };
+
+      return (
+        <code className={className} style={style}>
+          {children}
+        </code>
+      );
+    }
+  };
+
   return (
     <div>
       {message.role === 'user' && (
@@ -104,6 +138,11 @@ const MessageBox = ({
                 </h3>
               </div>
               <Markdown
+                options={{
+                  overrides: {
+                    code: CodeBlock,
+                  },
+                }}
                 className={cn(
                   'prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0',
                   'max-w-none break-words text-black dark:text-white text-sm md:text-base font-medium',
