@@ -34,8 +34,8 @@ export const ingestCairoBook = async (vectorStore: VectorStore) => {
   try {
     const pages = await downloadAndExtractCairoBook();
     const chunks = await createChunks(pages);
-    updateVectorStore(vectorStore, chunks);
-     await cleanupDownloadedFiles();
+    await updateVectorStore(vectorStore, chunks);
+    await cleanupDownloadedFiles();
   } catch (error) {
     console.error('Error processing Cairo Book:', error);
     if (error instanceof Error) {
