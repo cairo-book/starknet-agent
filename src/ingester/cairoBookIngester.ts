@@ -136,13 +136,14 @@ export function sanitizeCodeBlocks(content: string): string {
 
 /**
  * Splits markdown content into sections based on headers and imposes a maximum section size
+ * Only Headers 1 & 2 are considered to avoid splitting sections too small.
  * The maximum section size is 20000 characters - this is to avoid embedding large sections, which is
  * limited by OpenAI. The limit is 8192 tokens, therefore 20000 characters should be safe at 1token~=4 characters.
  * @param content - The markdown content to split
  * @returns ParsedSection[] - Array of ParsedSection objects
  */
 export function splitMarkdownIntoSections(content: string): ParsedSection[] {
-  const headerRegex = /^(#{1,6})\s+(.+)$/gm;
+  const headerRegex = /^(#{1,2})\s+(.+)$/gm;
   const sections: ParsedSection[] = [];
   let lastIndex = 0;
   let lastTitle = '';
