@@ -1,6 +1,6 @@
 # 🚀 Starknet Agent - An AI-powered search engine for the Starknet Ecosystem 🔎 <!-- omit in toc -->
 
-![preview](.assets/perplexica-screenshot.png)
+<!-- ![preview](.assets/perplexica-screenshot.png) -->
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -29,7 +29,7 @@ Starknet Agent is an open-source AI-powered searching tool specifically designed
 
 ## Preview
 
-![video-preview](.assets/perplexica-preview.gif)
+<!-- ![video-preview](.assets/perplexica-preview.gif) -->
 
 ## Features
 
