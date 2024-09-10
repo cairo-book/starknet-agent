@@ -1,6 +1,7 @@
 import {
   getCairoDbConfig,
   getStarknetDbConfig,
+  getStarknetEcosystemDbConfig,
   VectorStoreConfig,
 } from '../config';
 import { loadOpenAIEmbeddingsModels } from '../lib/providers/openai';
@@ -10,6 +11,7 @@ import { VectorStore } from '../db/vectorStore';
 import dotenv from 'dotenv';
 import { createInterface } from 'readline';
 import logger from '../utils/logger';
+import { ingestStarknetEcosystem } from '../ingester/starknetEcosystemIngester';
 
 dotenv.config();
 
@@ -58,6 +60,18 @@ async function ingestStarknetDocsData() {
   }
 }
 
+async function ingestEcosystemData() {
+  console.log('Starting Ecosystem ingestion process...');
+  try {
+    const store = await setupVectorStore(getStarknetEcosystemDbConfig());
+    await ingestStarknetEcosystem(store);
+    console.log('Ecosystem ingestion completed successfully.');
+  } catch (error) {
+    console.error('Error during Ecosystem ingestion:', error);
+    throw error;
+  }
+}
+
 async function promptForTarget(): Promise<string> {
   const rl = createInterface({
     input: process.stdin,
@@ -66,10 +80,10 @@ async function promptForTarget(): Promise<string> {
 
   return new Promise((resolve) => {
     rl.question(
-      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Both): ',
+      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Ecosystem): ',
       (answer) => {
         rl.close();
-        const targets = ['Cairo Book', 'Starknet Docs', 'Both'];
+        const targets = ['Cairo Book', 'Starknet Docs', 'All Starknet Ecosystem'];
         resolve(targets[parseInt(answer) - 1] || 'Both');
       },
     );
@@ -77,19 +91,20 @@ async function promptForTarget(): Promise<string> {
 }
 
 async function main() {
-  const target = await Promise.race([
-    promptForTarget(),
-    new Promise<string>((resolve) => setTimeout(() => resolve('Both'), 7000)),
-  ]);
+  const target = await promptForTarget();
   console.log(`Selected target: ${target}`);
 
   try {
-    if (target === 'Cairo Book' || target === 'Both') {
+    if (target === 'Cairo Book') {
       await ingestCairoBookData();
     }
 
-    if (target === 'Starknet Docs' || target === 'Both') {
+    if (target === 'Starknet Docs') {
       await ingestStarknetDocsData();
+    }
+
+    if (target === 'All Starknet Ecosystem') {
+      await ingestEcosystemData();
     }
 
     console.log('All specified ingestion processes completed successfully.');

@@ -367,13 +367,15 @@ const ChatWindow = ({ id }: { id?: string }) => {
     setHasError,
   );
 
+  const DEFAULT_FOCUS_MODE = 'starknetEcosystemSearch';
+
   const [loading, setLoading] = useState(false);
   const [messageAppeared, setMessageAppeared] = useState(false);
 
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const [focusMode, setFocusMode] = useState('cairoBookSearch');
+  const [focusMode, setFocusMode] = useState(DEFAULT_FOCUS_MODE);
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
@@ -391,7 +393,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
       if (isHostedMode) {
         const storedMessages = loadMessagesFromLocalStorage(chatId);
         setMessages(storedMessages?.messages || []);
-        setFocusMode(storedMessages?.focusMode || 'cairoBookSearch');
+        setFocusMode(storedMessages?.focusMode || DEFAULT_FOCUS_MODE);
         const history = storedMessages?.messages.map((msg) => {
           return [msg.role, msg.content];
         }) as [string, string][];

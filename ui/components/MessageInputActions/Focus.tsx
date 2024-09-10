@@ -14,6 +14,12 @@ import { Fragment } from 'react';
 
 const focusModes = [
   {
+    key: 'starknetEcosystemSearch',
+    title: 'All of Starknet',
+    description: 'Search in the entire Starknet Ecosystem',
+    icon: <Globe size={20} />,
+  },
+  {
     key: 'cairoBookSearch',
     title: 'Cairo Book',
     description: 'Search in Cairo Book',

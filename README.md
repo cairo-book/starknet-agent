@@ -1,6 +1,6 @@
 # 🚀 Starknet Agent - An AI-powered search engine for the Starknet Ecosystem 🔎 <!-- omit in toc -->
 
-![preview](.assets/perplexica-screenshot.png)
+<!-- ![preview](.assets/perplexica-screenshot.png) -->
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -29,12 +29,13 @@ Starknet Agent is an open-source AI-powered searching tool specifically designed
 
 ## Preview
 
-![video-preview](.assets/perplexica-preview.gif)
+<!-- ![video-preview](.assets/perplexica-preview.gif) -->
 
 ## Features
 
 - **Local LLMs**: You can make use of local LLMs such as Llama3 and Mixtral using Ollama.
-- **Focus Modes:** Special modes to better answer specific types of questions. Starknet Agent currently has 2 focus modes:
+- **Focus Modes:** Special modes to better answer specific types of questions. Starknet Agent currently has 3 focus modes:
+  - **Starknet Ecosystem:** Searches the entire Starknet Ecosystem, including the [Cairo Book](https://book.cairo-lang.org) and the [Starknet documentation](https://docs.starknet.io).
   - **Cairo Book:** Searches the [Cairo Book](https://book.cairo-lang.org) for answers.
   - **Starknet Docs:** Searches the [Starknet documentation](https://docs.starknet.io) for answers.
 

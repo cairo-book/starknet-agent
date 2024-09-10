@@ -1,0 +1,45 @@
+site:
+  title: Starknet documentation
+  url: https://docs.starknet.io/
+  start_page: ROOT::index.adoc
+
+content:
+  sources:
+    - url: https://github.com/starknet-io/starknet-docs.git
+      branches: HEAD
+      start_paths:
+        - components/Starknet
+    - url: https://github.com/starknet-io/docs-common-content.git
+      branches:
+        - 'HEAD'
+
+asciidoc:
+  extensions:
+    - '@asciidoctor/tabs'
+  attributes:
+    idprefix: ''
+    stem: 'latexmath'
+    page-pagination: ''
+    experimental: ''
+    starknet_mainnet_version: 'Mainnet: 0.13.1.1'
+    starknet_testnet_version: 'Sepolia: 0.13.1.1'
+    page-starknet_version: '{starknet_mainnet_version} | {starknet_testnet_version}'
+
+antora:
+  extensions:
+    - require: './lunr-tokenizer'
+    - require: './asciidoc-output-extension.js'
+
+# output:
+#   dir: ./output_adoc
+#   destinations:
+#     - provider: fs
+#       clean: true
+
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/master/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+
+runtime:
+  fetch: true

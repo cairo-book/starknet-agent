@@ -3,6 +3,8 @@ import { Document } from 'langchain/document';
 import logger from '../utils/logger';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { VectorStore } from '../db/vectorStore';
+import { BookChunk } from '../types/types';
 
 export const MAX_SECTION_SIZE = 20000;
 
@@ -29,7 +31,7 @@ export interface ParsedSection {
   anchor?: string;
 }
 
-export async function processMarkdownFiles(
+export async function processDocFiles(
   config: BookConfig,
   directory: string,
 ): Promise<BookPageDto[]> {
@@ -152,4 +154,33 @@ export function addSectionWithSizeLimit(
       startIndex = endIndex;
     }
   }
+}
+
+
+export async function updateVectorStore(
+  vectorStore: VectorStore,
+  chunks: Document<BookChunk>[],
+) {
+  const storedChunkHashes = await vectorStore.getStoredBookPagesHashes();
+  const { chunksToUpdate, chunksToRemove } = findChunksToUpdateAndRemove(
+    chunks,
+    storedChunkHashes,
+  );
+  logger.info(
+    `Found ${chunksToUpdate.length} chunks to update and ${chunksToRemove.length} chunks to remove`,
+  );
+
+  if (chunksToRemove.length > 0) {
+    await vectorStore.removeBookPages(chunksToRemove);
+  }
+  if (chunksToUpdate.length > 0) {
+    await vectorStore.addDocuments(
+      chunksToUpdate,
+      chunksToUpdate.map((chunk) => chunk.metadata.uniqueId),
+    );
+  }
+
+  logger.info(
+    `Updated ${chunksToUpdate.length} chunks and removed ${chunksToRemove.length} chunks.`,
+  );
 }
