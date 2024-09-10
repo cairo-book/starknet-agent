@@ -22,6 +22,32 @@ import { VectorStore } from '../db/vectorStore';
 import { BookChunk } from '../types/types';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
 
+const noSourceFoundPrompt = `
+You are an AI assistant specialized in providing information about Starknet and Cairo. However, in this case, you were unable to find any relevant sources to answer the user's query.
+
+Your response should be concise and honest, acknowledging that you don't have the information to answer the question accurately. Use a polite and helpful tone.
+
+Here's how you should respond:
+
+1. Apologize for not being able to find specific information.
+2. Suggest that the user might want to rephrase their question with more specific terms, or provide more context.
+3. Present your understanding of the user's query and suggest a new question that might be more relevant.
+
+Example response:
+
+"I apologize, but I couldn't find any specific information to answer your question about dicts accurately. It's possible that I don't have access to the relevant data, or the question might be outside my current knowledge base.
+
+Perhaps you are looking for information about Cairo's Felt252Dict or Storage Mappings?"
+
+Remember, it's better to admit when you don't have the information rather than providing potentially incorrect or misleading answers.
+
+<context>
+{context}
+</context>
+
+Always maintain a helpful and professional tone in your response. Do not invent information or make assumptions beyond what's provided in the context.
+`;
+
 const strParser = new StringOutputParser();
 
 export type BasicChainInput = {
@@ -97,6 +123,9 @@ export const attachSources = async (
 };
 
 export const processDocs = async (docs: Document[]): Promise<string> => {
+  if (docs.length === 0) {
+    return 'NO_SOURCES_FOUND';
+  }
   return docs
     .map((_, index) => `${index + 1}. ${docs[index].pageContent}`)
     .join('\n');
@@ -142,12 +171,23 @@ export const createBasicSearchAnsweringChain = (
   vectorStore: VectorStore,
   searchRetrieverPrompt: string,
   searchResponsePrompt: string,
+  noSourceFoundPrompt: string
 ) => {
   const basicSearchRetrieverChain = createBasicSearchRetrieverChain(
     llm,
     vectorStore,
     searchRetrieverPrompt,
   );
+
+  const regularPromptTemplate = ChatPromptTemplate.fromMessages([
+    ['system', searchResponsePrompt],
+    new MessagesPlaceholder('chat_history'),
+    ['user', '{query}'],
+  ]);
+
+  const noSourcePromptTemplate = PromptTemplate.fromTemplate(noSourceFoundPrompt);
+
+  const strParser = new StringOutputParser();
 
   return RunnableSequence.from([
     RunnableMap.from({
@@ -167,11 +207,16 @@ export const createBasicSearchAnsweringChain = (
           .pipe(processDocs),
       ]),
     }),
-    ChatPromptTemplate.fromMessages([
-      ['system', searchResponsePrompt],
-      new MessagesPlaceholder('chat_history'),
-      ['user', '{query}'],
-    ]),
+    RunnableLambda.from(async (input) => {
+      if (input.context === "NO_SOURCES_FOUND") {
+        return noSourcePromptTemplate.format({
+          query: input.query,
+          chat_history: formatChatHistoryAsString(input.chat_history)
+        });
+      } else {
+        return regularPromptTemplate.format(input);
+      }
+    }),
     llm,
     strParser,
   ]).withConfig({
@@ -197,6 +242,7 @@ export const basicRagSearch = (
       vectorStore,
       searchRetrieverPrompt,
       searchResponsePrompt,
+      noSourceFoundPrompt,
     );
 
     const stream = basicSearchAnsweringChain.streamEvents(
