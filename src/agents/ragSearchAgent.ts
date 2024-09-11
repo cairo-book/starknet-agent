@@ -36,14 +36,13 @@ Here's how you should respond:
 Example response:
 
 "I apologize, but I couldn't find any specific information to answer your question about dicts accurately. It's possible that I don't have access to the relevant data, or the question might be outside my current knowledge base.
-
-Perhaps you are looking for information about Cairo's Felt252Dict or Storage Mappings?"
+Perhaps you could rephrase your question to something like: "What is the default behavior in Cairo when accessing a key that hasn't been set in a Felt252Dict?"
 
 Remember, it's better to admit when you don't have the information rather than providing potentially incorrect or misleading answers.
 
-<context>
-{context}
-</context>
+<query>
+{query}
+</query>
 
 Always maintain a helpful and professional tone in your response. Do not invent information or make assumptions beyond what's provided in the context.
 `;
@@ -171,7 +170,7 @@ export const createBasicSearchAnsweringChain = (
   vectorStore: VectorStore,
   searchRetrieverPrompt: string,
   searchResponsePrompt: string,
-  noSourceFoundPrompt: string
+  noSourceFoundPrompt: string,
 ) => {
   const basicSearchRetrieverChain = createBasicSearchRetrieverChain(
     llm,
@@ -185,7 +184,8 @@ export const createBasicSearchAnsweringChain = (
     ['user', '{query}'],
   ]);
 
-  const noSourcePromptTemplate = PromptTemplate.fromTemplate(noSourceFoundPrompt);
+  const noSourcePromptTemplate =
+    PromptTemplate.fromTemplate(noSourceFoundPrompt);
 
   const strParser = new StringOutputParser();
 
@@ -208,10 +208,10 @@ export const createBasicSearchAnsweringChain = (
       ]),
     }),
     RunnableLambda.from(async (input) => {
-      if (input.context === "NO_SOURCES_FOUND") {
+      if (input.context === 'NO_SOURCES_FOUND') {
         return noSourcePromptTemplate.format({
           query: input.query,
-          chat_history: formatChatHistoryAsString(input.chat_history)
+          chat_history: formatChatHistoryAsString(input.chat_history),
         });
       } else {
         return regularPromptTemplate.format(input);
