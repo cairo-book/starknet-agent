@@ -101,7 +101,6 @@ export const createBasicSearchRetrieverChain = (
       }
 
       const documents = await vectorStore.similaritySearch(input, 5);
-      vectorStore.close();
 
       return { query: input, docs: documents };
     }),
