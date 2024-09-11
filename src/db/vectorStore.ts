@@ -10,6 +10,7 @@ import { Embeddings } from '@langchain/core/embeddings';
  * VectorStore class for managing document storage and similarity search
  */
 export class VectorStore {
+  private static instance: VectorStore | null = null;
   private client: MongoClient;
   collection: Collection;
   private vectorSearch: MongoDBAtlasVectorSearch;
@@ -49,6 +50,34 @@ export class VectorStore {
     });
 
     return new VectorStore(client, collection, vectorSearch);
+  }
+
+  static async getInstance(
+    config: VectorStoreConfig,
+    embeddings: Embeddings,
+  ): Promise<VectorStore> {
+    if (!VectorStore.instance) {
+      const client = new MongoClient(config.MONGODB_URI, {
+        maxPoolSize: 10, // Adjust this value based on your needs
+        minPoolSize: 5,
+      });
+      await client.connect();
+      logger.info('Connected to MongoDB');
+
+      const collection = client
+        .db(config.DB_NAME)
+        .collection(config.COLLECTION_NAME);
+
+      const vectorSearch = new MongoDBAtlasVectorSearch(embeddings, {
+        collection,
+        indexName: 'default',
+        textKey: 'content',
+        embeddingKey: 'embedding',
+      });
+
+      VectorStore.instance = new VectorStore(client, collection, vectorSearch);
+    }
+    return VectorStore.instance;
   }
 
   /**
@@ -133,6 +162,9 @@ export class VectorStore {
    */
   async close(): Promise<void> {
     logger.info('Disconnecting from MongoDB');
-    await this.client.close();
+    if (this.client) {
+      await this.client.close(true); // Force close all connections in the pool
+      VectorStore.instance = null; // Reset the singleton instance
+    }
   }
 }
