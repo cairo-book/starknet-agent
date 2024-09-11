@@ -5,8 +5,6 @@ import { cn } from '@/lib/utils';
 import Sidebar from '@/components/Sidebar';
 import { Toaster } from 'sonner';
 import ThemeProvider from '@/components/theme/Provider';
-import { PostHogProvider } from 'posthog-js/react';
-import posthog from 'posthog-js';
 
 const ibmPlexSans = IBM_Plex_Sans({
   weight: ['300', '400', '500', '700'],
@@ -23,17 +21,6 @@ export const metadata: Metadata = {
   },
 };
 
-if (typeof window !== 'undefined') {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-    api_host: 'https://app.posthog.com',
-    session_recording: {
-      recordCrossOriginIframes: true,
-    },
-    capture_pageleave: false,
-  });
-  (window as any).posthog = posthog;
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,20 +29,18 @@ export default function RootLayout({
   return (
     <html className="h-full" lang="en" suppressHydrationWarning>
       <body className={cn('h-full', ibmPlexSans.className)}>
-        <PostHogProvider client={posthog}>
-          <ThemeProvider>
-            <Sidebar>{children}</Sidebar>
-            <Toaster
-              toastOptions={{
-                unstyled: true,
-                classNames: {
-                  toast:
-                    'bg-light-primary dark:bg-dark-secondary dark:text-white/70 text-black-70 rounded-lg p-4 flex flex-row items-center space-x-2',
-                },
-              }}
-            />
-          </ThemeProvider>
-        </PostHogProvider>
+        <ThemeProvider>
+          <Sidebar>{children}</Sidebar>
+          <Toaster
+            toastOptions={{
+              unstyled: true,
+              classNames: {
+                toast:
+                  'bg-light-primary dark:bg-dark-secondary dark:text-white/70 text-black-70 rounded-lg p-4 flex flex-row items-center space-x-2',
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );
