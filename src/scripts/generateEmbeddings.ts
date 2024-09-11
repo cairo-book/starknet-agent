@@ -15,19 +15,18 @@ import { ingestStarknetEcosystem } from '../ingester/starknetEcosystemIngester';
 
 dotenv.config();
 
-let vectorStores: {[key: string]: VectorStore} | {} = {};
+let vectorStores: { [key: string]: VectorStore } | {} = {};
 
 async function setupVectorStore(
   dbConfig: VectorStoreConfig,
 ): Promise<VectorStore> {
-  if (vectorStores && vectorStores[dbConfig.COLLECTION_NAME]) {
-    return vectorStores[dbConfig.COLLECTION_NAME];
-  }
   try {
     const embeddingModels = await loadOpenAIEmbeddingsModels();
     const textEmbedding3Large = embeddingModels['Text embedding 3 large'];
-    const vectorStore = await VectorStore.initialize(dbConfig, textEmbedding3Large);
-    vectorStores[dbConfig.COLLECTION_NAME] = vectorStore;
+    const vectorStore = await VectorStore.getInstance(
+      dbConfig,
+      textEmbedding3Large,
+    );
     logger.info('VectorStore initialized successfully');
     return vectorStore;
   } catch (error) {
@@ -83,7 +82,11 @@ async function promptForTarget(): Promise<string> {
       'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Ecosystem): ',
       (answer) => {
         rl.close();
-        const targets = ['Cairo Book', 'Starknet Docs', 'All Starknet Ecosystem'];
+        const targets = [
+          'Cairo Book',
+          'Starknet Docs',
+          'All Starknet Ecosystem',
+        ];
         resolve(targets[parseInt(answer) - 1] || 'Both');
       },
     );
@@ -114,9 +117,9 @@ async function main() {
     if (vectorStores) {
       for (const vectorStore of Object.values(vectorStores)) {
         await vectorStore.close();
+      }
+      process.exit(1);
     }
-    process.exit(1);
-  }
   }
 }
 

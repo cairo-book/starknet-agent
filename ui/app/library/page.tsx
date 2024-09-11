@@ -55,7 +55,7 @@ const Page = () => {
     };
 
     fetchChats();
-  }, []);
+  }, [isHostedModel]);
 
   return loading ? (
     <div className="flex flex-row items-center justify-center min-h-screen">
