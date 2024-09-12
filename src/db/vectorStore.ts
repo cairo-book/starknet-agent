@@ -25,33 +25,6 @@ export class VectorStore {
     this.vectorSearch = vectorSearch;
   }
 
-  /**
-   * Initialize and connect to the VectorStore
-   * @param config - Configuration for the VectorStore
-   * @returns Promise<VectorStore>
-   */
-  static async initialize(
-    config: VectorStoreConfig,
-    embeddings: Embeddings,
-  ): Promise<VectorStore> {
-    const client = new MongoClient(config.MONGODB_URI);
-    await client.connect();
-    logger.info('Connected to MongoDB');
-
-    const collection = client
-      .db(config.DB_NAME)
-      .collection(config.COLLECTION_NAME);
-
-    const vectorSearch = new MongoDBAtlasVectorSearch(embeddings, {
-      collection,
-      indexName: 'default',
-      textKey: 'content',
-      embeddingKey: 'embedding',
-    });
-
-    return new VectorStore(client, collection, vectorSearch);
-  }
-
   static async getInstance(
     config: VectorStoreConfig,
     embeddings: Embeddings,

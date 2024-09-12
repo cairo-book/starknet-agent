@@ -10,7 +10,7 @@ let vectorStore: VectorStore;
 
 async function setupVectorStore() {
   try {
-    vectorStore = await VectorStore.initialize(
+    vectorStore = await VectorStore.getInstance(
       getCairoDbConfig(),
       await loadOpenAIEmbeddingsModels()['Text embedding 3 large'],
     );

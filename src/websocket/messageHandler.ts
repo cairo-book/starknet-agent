@@ -147,7 +147,7 @@ export const handleMessage = async (
         if (dbConfigGetter) {
           const dbConfig = dbConfigGetter();
           try {
-            const vectorStore = await VectorStore.initialize(
+            const vectorStore = await VectorStore.getInstance(
               dbConfig,
               embeddings,
             );
