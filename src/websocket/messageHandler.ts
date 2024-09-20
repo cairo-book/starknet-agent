@@ -18,6 +18,7 @@ import handleCairoBookSearch from '../agents/ragSearchAgents/cairoBookSearchAgen
 import { HandlerOptions, SearchHandler } from '../types/types';
 import handleStarknetDocsSearch from '../agents/ragSearchAgents/starknetDocsSearchAgent';
 import handleStarknetEcosystemSearch from '../agents/ragSearchAgents/starknetEcosystemSearchAgent';
+import handleSuccintCairoBookSearch from '../agents/ragSearchAgents/succintCairoBookSearchAgent';
 
 type Message = {
   messageId: string;
@@ -35,6 +36,7 @@ type WSMessage = {
 
 const searchHandlers: Record<string, SearchHandler> = {
   cairoBookSearch: handleCairoBookSearch,
+  succintCairoBookSearch: handleSuccintCairoBookSearch,
   starknetDocsSearch: handleStarknetDocsSearch,
   starknetEcosystemSearch: handleStarknetEcosystemSearch,
 };
@@ -43,6 +45,7 @@ const searchDatabases: Record<string, () => VectorStoreConfig> = {
   cairoBookSearch: getCairoDbConfig,
   starknetDocsSearch: getStarknetDbConfig,
   starknetEcosystemSearch: getStarknetEcosystemDbConfig,
+  succintCairoBookSearch: getCairoDbConfig,
 };
 
 const handleEmitterEvents = (
