@@ -601,20 +601,16 @@ const ChatWindow = ({ id }: { id?: string }) => {
   }, [isReady, initialMessage]);
 
   if (hasError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <p className="dark:text-white/70 text-black/70 text-sm">
-          {reconnectStatus.isReconnecting
-            ? `Failed to connect to the server. Attempting to reconnect... (Attempt ${reconnectStatus.attempts}/${reconnectStatus.maxAttempts})`
-            : reconnectStatus.attempts >= reconnectStatus.maxAttempts
-              ? 'Failed to connect after multiple attempts. Please try again later.'
-              : 'Failed to connect to the server. Please try again later.'}
-        </p>
-      </div>
+    toast.error(
+      reconnectStatus.isReconnecting
+        ? `Attempting to reconnect... (Attempt ${reconnectStatus.attempts}/${reconnectStatus.maxAttempts})`
+        : reconnectStatus.attempts >= reconnectStatus.maxAttempts
+        ? 'Failed to connect after multiple attempts. Please try again later.'
+        : 'Failed to connect to the server. Please try again later.'
     );
   }
 
-  return isReady ? (
+  return isReady || messages.length > 0 ? (
     notFound ? (
       <Error statusCode={404} />
     ) : (
@@ -660,5 +656,4 @@ const ChatWindow = ({ id }: { id?: string }) => {
     </div>
   );
 };
-
 export default ChatWindow;
