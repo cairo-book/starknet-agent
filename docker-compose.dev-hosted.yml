@@ -1,5 +1,4 @@
 services:
-
   starknet-agent-backend:
     build:
       context: .
@@ -43,7 +42,7 @@ services:
       - WATCHPACK_POLLING=true
     restart: unless-stopped
 
-  # cairobook-ingest:
+  # docs-ingest:
   #   build:
   #     context: .
   #     dockerfile: ingest.dockerfile

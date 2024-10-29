@@ -2,6 +2,7 @@ import {
   getCairoDbConfig,
   getStarknetDbConfig,
   getStarknetEcosystemDbConfig,
+  getStarknetFoundryDbConfig,
   VectorStoreConfig,
 } from '../config';
 import { loadOpenAIEmbeddingsModels } from '../lib/providers/openai';
@@ -12,6 +13,7 @@ import dotenv from 'dotenv';
 import { createInterface } from 'readline';
 import logger from '../utils/logger';
 import { ingestStarknetEcosystem } from '../ingester/starknetEcosystemIngester';
+import { ingestStarknetFoundry } from '../ingester/starknetFoundryIngester';
 
 dotenv.config();
 
@@ -71,6 +73,18 @@ async function ingestEcosystemData() {
   }
 }
 
+async function ingestFoundryData() {
+  console.log('Starting Starknet Foundry ingestion process...');
+  try {
+    const store = await setupVectorStore(getStarknetFoundryDbConfig());
+    await ingestStarknetFoundry(store);
+    console.log('Starknet Foundry ingestion completed successfully.');
+  } catch (error) {
+    console.error('Error during Starknet Foundry ingestion:', error);
+    throw error;
+  }
+}
+
 async function promptForTarget(): Promise<string> {
   const rl = createInterface({
     input: process.stdin,
@@ -79,13 +93,14 @@ async function promptForTarget(): Promise<string> {
 
   return new Promise((resolve) => {
     rl.question(
-      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Ecosystem): ',
+      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Ecosystem, 4: Starknet Foundry): ',
       (answer) => {
         rl.close();
         const targets = [
           'Cairo Book',
           'Starknet Docs',
           'All Starknet Ecosystem',
+          'Starknet Foundry',
         ];
         resolve(targets[parseInt(answer) - 1] || 'Both');
       },
@@ -108,6 +123,10 @@ async function main() {
 
     if (target === 'All Starknet Ecosystem') {
       await ingestEcosystemData();
+    }
+
+    if (target === 'Starknet Foundry') {
+      await ingestFoundryData();
     }
 
     console.log('All specified ingestion processes completed successfully.');

@@ -66,7 +66,10 @@ export async function downloadAndExtractStarknetDocs(): Promise<BookPageDto[]> {
     logger.error('Error running Antora:', error);
     throw error;
   } finally {
-    await fs.rm(path.join(__dirname, 'build'), { recursive: true, force: true });
+    await fs.rm(path.join(__dirname, 'build'), {
+      recursive: true,
+      force: true,
+    });
   }
 
   const outputDir = path.join(__dirname, 'antora-output');
@@ -75,9 +78,14 @@ export async function downloadAndExtractStarknetDocs(): Promise<BookPageDto[]> {
   return await processDocFiles(STARKNET_DOCS_CONFIG, targetDir);
 }
 
-async function mergeDocsCommonContent(docsCommonContentDir: string, mergeDir: string) {
+async function mergeDocsCommonContent(
+  docsCommonContentDir: string,
+  mergeDir: string,
+) {
   console.log('Merging Docs Common Content into Starknet Docs');
-  const entries = await fs.readdir(docsCommonContentDir, { withFileTypes: true });
+  const entries = await fs.readdir(docsCommonContentDir, {
+    withFileTypes: true,
+  });
   for (const entry of entries) {
     if (entry.isDirectory()) {
       const sourcePath = path.join(docsCommonContentDir, entry.name);
@@ -244,7 +252,7 @@ export function splitAsciiDocIntoSections(content: string): ParsedSection[] {
             lastTitle,
             markdownContent,
             MAX_SECTION_SIZE,
-            lastAnchor
+            lastAnchor,
           );
         }
       }
@@ -260,12 +268,12 @@ export function splitAsciiDocIntoSections(content: string): ParsedSection[] {
     if (sectionContent) {
       const markdownContent = downdoc(sectionContent);
       if (markdownContent) {
-      addSectionWithSizeLimit(
-        sections,
-        lastTitle,
-        markdownContent,
-        MAX_SECTION_SIZE,
-          lastAnchor
+        addSectionWithSizeLimit(
+          sections,
+          lastTitle,
+          markdownContent,
+          MAX_SECTION_SIZE,
+          lastAnchor,
         );
       }
     }
@@ -277,9 +285,12 @@ export function splitAsciiDocIntoSections(content: string): ParsedSection[] {
 export function convertCodeBlocks(content: string): string {
   // Case 1: With language specification
   const languageCodeBlockRegex = /^\[source,(\w+)\]\s*^----$([\s\S]*?)^----$/gm;
-  content = content.replace(languageCodeBlockRegex, (match, language, codeContent) => {
-    return convertCodeBlock(codeContent, language);
-  });
+  content = content.replace(
+    languageCodeBlockRegex,
+    (match, language, codeContent) => {
+      return convertCodeBlock(codeContent, language);
+    },
+  );
 
   // Case 2: No language specification
   const simpleCodeBlockRegex = /^----$([\s\S]*?)^----$/gm;

@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, Transition } from '@headlessui/react';
-import { SiReddit, SiYoutube } from '@icons-pack/react-simple-icons';
 import { Fragment } from 'react';
 
 const focusModes = [
@@ -29,6 +28,18 @@ const focusModes = [
     key: 'starknetDocsSearch',
     title: 'Starknet Docs',
     description: 'Search in Starknet Docs',
+    icon: <BookOpen size={20} />,
+  },
+  {
+    key: 'starknetDocsSearch',
+    title: 'Starknet Docs',
+    description: 'Search in Starknet Docs',
+    icon: <BookOpen size={20} />,
+  },
+  {
+    key: 'starknetFoundrySearch',
+    title: 'Starknet Foundry',
+    description: 'Search in Starknet Foundry',
     icon: <BookOpen size={20} />,
   },
 ];

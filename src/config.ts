@@ -18,6 +18,7 @@ interface Config {
   CAIRO_DB: VectorStoreConfig;
   STARKNET_DB: VectorStoreConfig;
   ECOSYSTEM_DB: VectorStoreConfig;
+  STARKNET_FOUNDRY_DB: VectorStoreConfig;
   API_KEYS: {
     OPENAI: string;
     GROQ: string;
@@ -64,6 +65,9 @@ export const getSearxngApiEndpoint = () => loadConfig().API_ENDPOINTS.SEARXNG;
 export const getOllamaApiEndpoint = () => loadConfig().API_ENDPOINTS.OLLAMA;
 
 export const getCairoDbConfig = () => loadConfig().CAIRO_DB;
+
+export const getStarknetFoundryDbConfig = () =>
+  loadConfig().STARKNET_FOUNDRY_DB;
 
 export const getStarknetDbConfig = () => loadConfig().STARKNET_DB;
 
