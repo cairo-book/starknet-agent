@@ -93,14 +93,14 @@ async function promptForTarget(): Promise<string> {
 
   return new Promise((resolve) => {
     rl.question(
-      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Ecosystem, 4: Starknet Foundry): ',
+      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Starknet Foundry, 4: Everything): ',
       (answer) => {
         rl.close();
         const targets = [
           'Cairo Book',
           'Starknet Docs',
-          'All Starknet Ecosystem',
           'Starknet Foundry',
+          'Everything',
         ];
         resolve(targets[parseInt(answer) - 1] || 'Both');
       },
@@ -121,12 +121,12 @@ async function main() {
       await ingestStarknetDocsData();
     }
 
-    if (target === 'All Starknet Ecosystem') {
-      await ingestEcosystemData();
-    }
-
     if (target === 'Starknet Foundry') {
       await ingestFoundryData();
+    }
+
+    if (target === 'Everything') {
+      await ingestEcosystemData();
     }
 
     console.log('All specified ingestion processes completed successfully.');

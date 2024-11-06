@@ -34,6 +34,10 @@ interface Config {
     DEFAULT_EMBEDDING_PROVIDER: string;
     DEFAULT_EMBEDDING_MODEL: string;
   };
+  VERSIONS: {
+    STARKNET_FOUNDRY: string;
+    SCARB: string;
+  };
 }
 
 type RecursivePartial<T> = {
@@ -99,3 +103,6 @@ export const updateConfig = (config: RecursivePartial<Config>) => {
     toml.stringify(config),
   );
 };
+
+export const getStarknetFoundryVersion = () => loadConfig().VERSIONS.STARKNET_FOUNDRY;
+export const getScarbVersion = () => loadConfig().VERSIONS.SCARB;
