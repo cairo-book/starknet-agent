@@ -11,6 +11,7 @@ import {
   getCairoDbConfig,
   getStarknetDbConfig,
   getStarknetEcosystemDbConfig,
+  getStarknetFoundryDbConfig,
   VectorStoreConfig,
 } from '../config';
 import { VectorStore } from '../db/vectorStore';
@@ -19,6 +20,7 @@ import { HandlerOptions, SearchHandler } from '../types/types';
 import handleStarknetDocsSearch from '../agents/ragSearchAgents/starknetDocsSearchAgent';
 import handleStarknetEcosystemSearch from '../agents/ragSearchAgents/starknetEcosystemSearchAgent';
 import handleSuccintCairoBookSearch from '../agents/ragSearchAgents/succintCairoBookSearchAgent';
+import handleStarknetFoundrySearch from '../agents/ragSearchAgents/starknetFoundrySearchAgent';
 
 type Message = {
   messageId: string;
@@ -39,6 +41,7 @@ const searchHandlers: Record<string, SearchHandler> = {
   succintCairoBookSearch: handleSuccintCairoBookSearch,
   starknetDocsSearch: handleStarknetDocsSearch,
   starknetEcosystemSearch: handleStarknetEcosystemSearch,
+  starknetFoundrySearch: handleStarknetFoundrySearch,
 };
 
 const searchDatabases: Record<string, () => VectorStoreConfig> = {
@@ -46,6 +49,7 @@ const searchDatabases: Record<string, () => VectorStoreConfig> = {
   starknetDocsSearch: getStarknetDbConfig,
   starknetEcosystemSearch: getStarknetEcosystemDbConfig,
   succintCairoBookSearch: getCairoDbConfig,
+  starknetFoundrySearch: getStarknetFoundryDbConfig,
 };
 
 const handleEmitterEvents = (

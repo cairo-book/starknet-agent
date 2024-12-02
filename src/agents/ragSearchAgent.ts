@@ -58,31 +58,55 @@ export const handleStream = async (
   stream: IterableReadableStream<StreamEvent>,
   emitter: eventEmitter,
 ): Promise<void> => {
-  for await (const event of stream) {
-    if (
-      event.event === 'on_chain_end' &&
-      event.name === 'FinalSourceRetriever'
-    ) {
-      emitter.emit(
-        'data',
-        JSON.stringify({ type: 'sources', data: event.data.output }),
-      );
+  logger.info('Starting stream handling');
+  try {
+    for await (const event of stream) {
+      logger.debug('Stream event received:', {
+        eventType: event.event,
+        name: event.name,
+      });
+
+      if (
+        event.event === 'on_chain_end' &&
+        event.name === 'FinalSourceRetriever'
+      ) {
+        logger.info('Sources retrieved:', {
+          sourceCount: event.data.output.length,
+        });
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'sources',
+            data: event.data.output,
+          }),
+        );
+      }
+
+      if (
+        event.event === 'on_chain_stream' &&
+        event.name === 'FinalResponseGenerator'
+      ) {
+        logger.debug('Response chunk received');
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'response',
+            data: event.data.chunk,
+          }),
+        );
+      }
+
+      if (
+        event.event === 'on_chain_end' &&
+        event.name === 'FinalResponseGenerator'
+      ) {
+        logger.info('Stream completed successfully');
+        emitter.emit('end');
+      }
     }
-    if (
-      event.event === 'on_chain_stream' &&
-      event.name === 'FinalResponseGenerator'
-    ) {
-      emitter.emit(
-        'data',
-        JSON.stringify({ type: 'response', data: event.data.chunk }),
-      );
-    }
-    if (
-      event.event === 'on_chain_end' &&
-      event.name === 'FinalResponseGenerator'
-    ) {
-      emitter.emit('end');
-    }
+  } catch (error) {
+    logger.error('Error in handleStream:', error);
+    throw error;
   }
 };
 
@@ -96,12 +120,16 @@ export const createBasicSearchRetrieverChain = (
     llm,
     strParser,
     RunnableLambda.from(async (input: string) => {
+      logger.debug('Search retriever input:', { input });
       if (input === 'not_needed') {
         return { query: '', docs: [] };
       }
 
       const documents = await vectorStore.similaritySearch(input, 5);
-
+      logger.debug('Vector store search results:', {
+        documentCount: documents.length,
+        firstDoc: documents[0],
+      });
       return { query: input, docs: documents };
     }),
   ]);
@@ -138,29 +166,55 @@ export const rerankDocs =
     query: string;
     docs: Document[];
   }): Promise<Document[]> => {
+    logger.debug('Reranking docs input:', {
+      query,
+      docsLength: docs.length,
+      firstDoc: docs[0],
+    });
+
     if (docs.length === 0 || query === 'Summarize') {
+      logger.info('Skipping reranking - empty docs or summarize query');
       return docs;
     }
 
     const docsWithContent = docs.filter(
       (doc) => doc.pageContent && doc.pageContent.length > 0,
     );
+    logger.debug('Filtered documents with content:', {
+      originalCount: docs.length,
+      filteredCount: docsWithContent.length,
+    });
 
-    const [docEmbeddings, queryEmbedding] = await Promise.all([
-      embeddings.embedDocuments(docsWithContent.map((doc) => doc.pageContent)),
-      embeddings.embedQuery(query),
-    ]);
+    try {
+      const [docEmbeddings, queryEmbedding] = await Promise.all([
+        embeddings.embedDocuments(
+          docsWithContent.map((doc) => doc.pageContent),
+        ),
+        embeddings.embedQuery(query),
+      ]);
+      logger.debug('Embeddings generated successfully');
 
-    const similarity = docEmbeddings.map((docEmbedding, i) => ({
-      index: i,
-      similarity: computeSimilarity(queryEmbedding, docEmbedding),
-    }));
+      const similarity = docEmbeddings.map((docEmbedding, i) => ({
+        index: i,
+        similarity: computeSimilarity(queryEmbedding, docEmbedding),
+      }));
 
-    return similarity
-      .filter((sim) => sim.similarity > 0.5)
-      .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, 15)
-      .map((sim) => docsWithContent[sim.index]);
+      const rerankedDocs = similarity
+        .filter((sim) => sim.similarity > 0.5)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 15)
+        .map((sim) => docsWithContent[sim.index]);
+
+      logger.info('Reranking completed', {
+        inputDocs: docsWithContent.length,
+        filteredDocs: rerankedDocs.length,
+      });
+
+      return rerankedDocs;
+    } catch (error) {
+      logger.error('Error in rerankDocs:', error);
+      throw error;
+    }
   };
 
 export const createBasicSearchAnsweringChain = (
@@ -234,7 +288,13 @@ export const basicRagSearch = (
 ): eventEmitter => {
   const emitter = new eventEmitter();
 
+  logger.info('Starting RAG search', {
+    query,
+    historyLength: history.length,
+  });
+
   try {
+    logger.debug('Initializing search chain');
     const basicSearchAnsweringChain = createBasicSearchAnsweringChain(
       llm,
       embeddings,
@@ -244,6 +304,7 @@ export const basicRagSearch = (
       noSourceFoundPrompt,
     );
 
+    logger.debug('Starting stream');
     const stream = basicSearchAnsweringChain.streamEvents(
       {
         chat_history: history,
@@ -254,13 +315,25 @@ export const basicRagSearch = (
       },
     );
 
-    handleStream(stream, emitter);
+    handleStream(stream, emitter).catch((error) => {
+      logger.error('Stream handling failed:', error);
+      emitter.emit(
+        'error',
+        JSON.stringify({
+          data: 'An error occurred while processing the stream',
+        }),
+      );
+    });
   } catch (err) {
+    logger.error('Error in basicRagSearch:', {
+      error: err,
+      query,
+      historyLength: history.length,
+    });
     emitter.emit(
       'error',
       JSON.stringify({ data: 'An error has occurred please try again later' }),
     );
-    logger.error(`Error in Search: ${err}`);
   }
 
   return emitter;

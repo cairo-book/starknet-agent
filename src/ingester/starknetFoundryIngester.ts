@@ -9,7 +9,6 @@ import { BookChunk } from '../types/types';
 import {
   BookConfig,
   BookPageDto,
-  findChunksToUpdateAndRemove,
   isInsideCodeBlock,
   ParsedSection,
   processDocFiles,
@@ -22,21 +21,21 @@ import {
 
 const config: BookConfig = {
   repoOwner: 'cairo-book',
-  repoName: 'cairo-book',
+  repoName: 'starknet-foundry',
   fileExtension: '.md',
   chunkSize: 4096,
   chunkOverlap: 512,
-  baseUrl: 'https://book.cairo-lang.org',
+  baseUrl: 'https://foundry-rs.github.io/starknet-foundry',
 };
 
-export const ingestCairoBook = async (vectorStore: VectorStore) => {
+export const ingestStarknetFoundry = async (vectorStore: VectorStore) => {
   try {
-    const pages = await downloadAndExtractCairoBook();
+    const pages = await downloadAndExtractFoundryDocs();
     const chunks = await createChunks(pages);
     await updateVectorStore(vectorStore, chunks);
     await cleanupDownloadedFiles();
   } catch (error) {
-    console.error('Error processing Cairo Book:', error);
+    console.error('Error processing Starknet Foundry docs:', error);
     if (error instanceof Error) {
       console.error('Stack trace:', error.stack);
     }
@@ -45,17 +44,16 @@ export const ingestCairoBook = async (vectorStore: VectorStore) => {
 };
 
 export async function cleanupDownloadedFiles() {
-  const extractDir = path.join(__dirname, 'cairo-book');
+  const extractDir = path.join(__dirname, 'starknet-foundry');
   await fs.rm(extractDir, { recursive: true, force: true });
   logger.info(`Deleted downloaded markdown files from ${extractDir}`);
 }
 
-export async function downloadAndExtractCairoBook(): Promise<BookPageDto[]> {
-  logger.info('Downloading and extracting Cairo Book');
+export async function downloadAndExtractFoundryDocs(): Promise<BookPageDto[]> {
+  logger.info('Downloading and extracting Starknet Foundry docs');
   const latestReleaseUrl = `https://api.github.com/repos/${config.repoOwner}/${config.repoName}/releases/latest`;
   const response = await axios.get(latestReleaseUrl);
   const latestRelease = response.data;
-
   const zipAsset = latestRelease.assets.find(
     (asset: any) => asset.name === 'markdown-output.zip',
   );
@@ -70,12 +68,13 @@ export async function downloadAndExtractCairoBook(): Promise<BookPageDto[]> {
   const zipData = zipResponse.data;
 
   const zipFile = new AdmZip(zipData);
-  const extractDir = path.join(__dirname, 'cairo-book');
+  const extractDir = path.join(__dirname, 'starknet-foundry');
   zipFile.extractAllTo(extractDir, true);
 
   logger.info('ZIP file downloaded and extracted successfully.');
 
-  const srcDir = path.join(extractDir, 'book/markdown');
+  const srcDir = path.join(extractDir, 'markdown-output');
+
   const pages = await processDocFiles(config, srcDir);
 
   return pages;
@@ -89,7 +88,7 @@ export async function downloadAndExtractCairoBook(): Promise<BookPageDto[]> {
 export async function createChunks(
   pages: BookPageDto[],
 ): Promise<Document<BookChunk>[]> {
-  logger.info('Creating chunks from book pages based on markdown sections');
+  logger.info('Creating chunks from foundry pages based on markdown sections');
   const chunks: Document[] = [];
 
   for (const page of pages) {

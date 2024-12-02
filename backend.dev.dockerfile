@@ -1,21 +1,27 @@
-FROM node:slim
-
-ARG SEARXNG_API_URL
+FROM node:20-bullseye-slim
 
 WORKDIR /home/starknet-agent
 
-# Copy package.json and yarn.lock first to leverage Docker cache
+# Install Python and build dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    build-essential \
+    python-is-python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
 COPY package.json yarn.lock ./
 
+# Install dependencies
+RUN yarn install
 
-# Copy the rest of the application code
+# Copy source code
 COPY . .
 
-RUN sed -i "s|SEARXNG = \".*\"|SEARXNG = \"${SEARXNG_API_URL}\"|g" /home/starknet-agent/config.toml
+# Build TypeScript
+RUN yarn build
 
-RUN mkdir -p /home/starknet-agent/data
+EXPOSE 3001
 
-# Install dependencies including development ones
-RUN yarn install
-# Use the existing dev command
 CMD ["yarn", "run", "dev"]

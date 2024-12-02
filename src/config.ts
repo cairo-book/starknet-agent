@@ -18,6 +18,7 @@ interface Config {
   CAIRO_DB: VectorStoreConfig;
   STARKNET_DB: VectorStoreConfig;
   ECOSYSTEM_DB: VectorStoreConfig;
+  STARKNET_FOUNDRY_DB: VectorStoreConfig;
   API_KEYS: {
     OPENAI: string;
     GROQ: string;
@@ -32,6 +33,10 @@ interface Config {
     DEFAULT_CHAT_MODEL: string;
     DEFAULT_EMBEDDING_PROVIDER: string;
     DEFAULT_EMBEDDING_MODEL: string;
+  };
+  VERSIONS: {
+    STARKNET_FOUNDRY: string;
+    SCARB: string;
   };
 }
 
@@ -65,6 +70,9 @@ export const getOllamaApiEndpoint = () => loadConfig().API_ENDPOINTS.OLLAMA;
 
 export const getCairoDbConfig = () => loadConfig().CAIRO_DB;
 
+export const getStarknetFoundryDbConfig = () =>
+  loadConfig().STARKNET_FOUNDRY_DB;
+
 export const getStarknetDbConfig = () => loadConfig().STARKNET_DB;
 
 export const getStarknetEcosystemDbConfig = () => loadConfig().ECOSYSTEM_DB;
@@ -95,3 +103,6 @@ export const updateConfig = (config: RecursivePartial<Config>) => {
     toml.stringify(config),
   );
 };
+
+export const getStarknetFoundryVersion = () => loadConfig().VERSIONS.STARKNET_FOUNDRY;
+export const getScarbVersion = () => loadConfig().VERSIONS.SCARB;
