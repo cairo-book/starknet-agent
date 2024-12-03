@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'The Starknet Agent - Unlock your Starknet expertise',
   description: 'AI-powered assistant for Starknet and Cairo.',
   icons: {
-    icon: '/cairo_logo.webp',
+    icon: '/starknet_logo.svg',
   },
 };
 
