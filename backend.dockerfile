@@ -1,4 +1,4 @@
-FROM node:slim
+FROM public.ecr.aws/docker/library/node:20.11-bullseye-slim
 
 ARG SEARXNG_API_URL
 

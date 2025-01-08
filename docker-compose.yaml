@@ -16,6 +16,11 @@ services:
       dockerfile: backend.dockerfile
       args:
         - SEARXNG_API_URL=http://searxng:8080
+      network: host
+    deploy:
+      resources:
+        limits:
+          memory: 4G
     depends_on:
       - searxng
     ports:
