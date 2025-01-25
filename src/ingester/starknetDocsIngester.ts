@@ -227,7 +227,35 @@ async function restructureFiles(
   return hasRelevantFiles;
 }
 
-export function splitAsciiDocIntoSections(content: string): ParsedSection[] {
+export function splitAsciiDocIntoSections(content: string, split: boolean = false): ParsedSection[] {
+  // Trim and convert code blocks regardless of mode
+  content = content.trim();
+  content = convertCodeBlocks(content);
+
+  if (!split) {
+    // Single section mode - treat entire content as one section
+    const headerRegex = /^(?:\[#([^\]]+)\]\s*\n)?(=+)\s+(.+)$/m;
+    const match = headerRegex.exec(content);
+    const sections: ParsedSection[] = [];
+
+    if (match) {
+      const title = match[3];
+      const anchor = match[1]; // Use custom anchor if present
+      const markdownContent = downdoc(content);
+      if (markdownContent) {
+        addSectionWithSizeLimit(
+          sections,
+          title,
+          markdownContent,
+          MAX_SECTION_SIZE,
+          anchor || createAnchor(title)
+        );
+      }
+    }
+    return sections;
+  }
+
+  // Split mode - divide content into multiple sections
   const headerRegex = /^(?:\[#([^\]]+)\]\s*\n)?(=+)\s+(.+)$/gm;
   const sections: ParsedSection[] = [];
   let lastIndex = 0;
@@ -252,7 +280,7 @@ export function splitAsciiDocIntoSections(content: string): ParsedSection[] {
             lastTitle,
             markdownContent,
             MAX_SECTION_SIZE,
-            lastAnchor,
+            lastAnchor
           );
         }
       }
@@ -273,7 +301,7 @@ export function splitAsciiDocIntoSections(content: string): ParsedSection[] {
           lastTitle,
           markdownContent,
           MAX_SECTION_SIZE,
-          lastAnchor,
+          lastAnchor
         );
       }
     }
@@ -329,7 +357,7 @@ export async function createChunks(
 ): Promise<Document<BookChunk>[]> {
   logger.info('Creating chunks from book pages based on AsciiDoc sections');
   return pages.flatMap((page) =>
-    splitAsciiDocIntoSections(page.content).flatMap((section, index) =>
+    splitAsciiDocIntoSections(page.content, true).flatMap((section, index) =>
       createChunk(page, section, index),
     ),
   );

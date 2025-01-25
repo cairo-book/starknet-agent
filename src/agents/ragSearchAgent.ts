@@ -125,7 +125,7 @@ export const createBasicSearchRetrieverChain = (
         return { query: '', docs: [] };
       }
 
-      const documents = await vectorStore.similaritySearch(input, 5);
+      const documents = await vectorStore.similaritySearch(input, 10);
       logger.debug('Vector store search results:', {
         documentCount: documents.length,
         firstDoc: documents[0],
@@ -200,9 +200,9 @@ export const rerankDocs =
       }));
 
       const rerankedDocs = similarity
-        .filter((sim) => sim.similarity > 0.5)
+        .filter((sim) => sim.similarity > 0.4)
         .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 15)
+        .slice(0, 10)
         .map((sim) => docsWithContent[sim.index]);
 
       logger.info('Reranking completed', {

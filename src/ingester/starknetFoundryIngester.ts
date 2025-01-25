@@ -18,6 +18,7 @@ import {
   MAX_SECTION_SIZE,
   updateVectorStore,
 } from './shared';
+import { createChunks } from './cairoBookIngester';
 
 const config: BookConfig = {
   repoOwner: 'cairo-book',
@@ -78,102 +79,4 @@ export async function downloadAndExtractFoundryDocs(): Promise<BookPageDto[]> {
   const pages = await processDocFiles(config, srcDir);
 
   return pages;
-}
-
-/**
- * Creates chunks from book pages based on markdown sections
- * @param pages - Array of BookPageDto objects
- * @returns Promise<Document[]> - Array of Document objects representing chunks
- */
-export async function createChunks(
-  pages: BookPageDto[],
-): Promise<Document<BookChunk>[]> {
-  logger.info('Creating chunks from foundry pages based on markdown sections');
-  const chunks: Document[] = [];
-
-  for (const page of pages) {
-    const sanitizedContent = sanitizeCodeBlocks(page.content);
-    const sections: ParsedSection[] =
-      splitMarkdownIntoSections(sanitizedContent);
-
-    sections.forEach((section: ParsedSection, index: number) => {
-      const hash: string = calculateHash(section.content);
-      chunks.push(
-        new Document<BookChunk>({
-          pageContent: section.content,
-          metadata: {
-            name: page.name,
-            title: section.title,
-            chunkNumber: index,
-            contentHash: hash,
-            uniqueId: `${page.name}-${index}`,
-            sourceLink: `${config.baseUrl}/${page.name}.html#${createAnchor(section.title)}`,
-          },
-        }),
-      );
-    });
-  }
-
-  return chunks as Document<BookChunk>[];
-}
-
-export function sanitizeCodeBlocks(content: string): string {
-  const lines = content.split('\n');
-  let isInCodeBlock = false;
-  const sanitizedLines = lines.filter((line) => {
-    if (line.trim().startsWith('```')) {
-      isInCodeBlock = !isInCodeBlock;
-      return true;
-    }
-    if (isInCodeBlock) {
-      return !line.trim().startsWith('# ') && line.trim() !== '#';
-    }
-    return true;
-  });
-  return sanitizedLines.join('\n');
-}
-
-/**
- * Splits markdown content into sections based on headers and imposes a maximum section size
- * Only Headers 1 & 2 are considered to avoid splitting sections too small.
- * The maximum section size is 20000 characters - this is to avoid embedding large sections, which is
- * limited by OpenAI. The limit is 8192 tokens, therefore 20000 characters should be safe at 1token~=4 characters.
- * @param content - The markdown content to split
- * @returns ParsedSection[] - Array of ParsedSection objects
- */
-export function splitMarkdownIntoSections(content: string): ParsedSection[] {
-  const headerRegex = /^(#{1,2})\s+(.+)$/gm;
-  const sections: ParsedSection[] = [];
-  let lastIndex = 0;
-  let lastTitle = '';
-  let match;
-
-  while ((match = headerRegex.exec(content)) !== null) {
-    if (!isInsideCodeBlock(content, match.index)) {
-      if (lastIndex < match.index) {
-        const sectionContent = content.slice(lastIndex, match.index).trim();
-        addSectionWithSizeLimit(
-          sections,
-          lastTitle,
-          sectionContent,
-          MAX_SECTION_SIZE,
-        );
-      }
-      lastTitle = match[2];
-      lastIndex = match.index;
-    }
-  }
-
-  // Add the last section
-  if (lastIndex < content.length) {
-    const sectionContent = content.slice(lastIndex).trim();
-    addSectionWithSizeLimit(
-      sections,
-      lastTitle,
-      sectionContent,
-      MAX_SECTION_SIZE,
-    );
-  }
-
-  return sections;
 }
