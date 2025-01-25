@@ -23,6 +23,7 @@ interface Config {
     OPENAI: string;
     GROQ: string;
     ANTHROPIC: string;
+    DEEPSEEK: string;
   };
   API_ENDPOINTS: {
     SEARXNG: string;
@@ -63,6 +64,8 @@ export const getOpenaiApiKey = () => loadConfig().API_KEYS.OPENAI;
 export const getGroqApiKey = () => loadConfig().API_KEYS.GROQ;
 
 export const getAnthropicApiKey = () => loadConfig().API_KEYS.ANTHROPIC;
+
+export const getDeepseekApiKey = () => loadConfig().API_KEYS.DEEPSEEK;
 
 export const getSearxngApiEndpoint = () => loadConfig().API_ENDPOINTS.SEARXNG;
 

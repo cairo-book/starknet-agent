@@ -8,6 +8,7 @@ import {
   getOllamaApiEndpoint,
   getAnthropicApiKey,
   getOpenaiApiKey,
+  getDeepseekApiKey,
   updateConfig,
   isHostedMode,
 } from '../config';
@@ -46,6 +47,7 @@ router.get('/', async (_, res) => {
   config['ollamaApiUrl'] = getOllamaApiEndpoint();
   config['anthropicApiKey'] = getAnthropicApiKey();
   config['groqApiKey'] = getGroqApiKey();
+  config['deepseekApiKey'] = getDeepseekApiKey();
 
   res.status(200).json(config);
 });
@@ -63,6 +65,7 @@ router.post('/', async (req, res) => {
       OPENAI: config.openaiApiKey,
       GROQ: config.groqApiKey,
       ANTHROPIC: config.anthropicApiKey,
+      DEEPSEEK: config.deepseekApiKey,
     },
     API_ENDPOINTS: {
       OLLAMA: config.ollamaApiUrl,
