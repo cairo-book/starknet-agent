@@ -3,6 +3,7 @@ import {
   PromptTemplate,
   ChatPromptTemplate,
   MessagesPlaceholder,
+  ChatMessagePromptTemplate,
 } from '@langchain/core/prompts';
 import {
   RunnableSequence,
@@ -21,6 +22,110 @@ import logger from '../utils/logger';
 import { VectorStore } from '../db/vectorStore';
 import { BookChunk } from '../types/types';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
+
+const basicContractTemplate =
+`
+use core::starknet::ContractAddress;
+
+// Define the contract interface
+#[starknet::interface]
+pub trait IRegistry<TContractState> {
+    fn register_data(ref self: TContractState, data: felt252);
+    fn update_data(ref self: TContractState, index: u64, new_data: felt252);
+    fn get_data(self: @TContractState, index: u64) -> felt252;
+    fn get_all_data(self: @TContractState) -> Array<felt252>;
+    fn get_user_data(self: @TContractState, user: ContractAddress) -> felt252;
+}
+
+// Define the contract module
+#[starknet::contract]
+mod Registry {
+    // Always use full paths for core library imports.
+    use core::starknet::ContractAddress;
+    // Required for interactions with 'map' and the 'entry' method. Don't forget 'StoragePathEntry'!!
+    use core::starknet::storage::{Map, StoragePathEntry};
+    // Required for interactions with 'vec'
+    use core::starknet::storage::{Vec, VecTrait, MutableVecTrait};
+    // Required for all storage operations
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+    use core::starknet::get_caller_address;
+
+    // Define storage variables
+    #[storage]
+    struct Storage {
+        data_vector: Vec<felt252>, // A vector to store data
+        user_data_map: Map<ContractAddress, felt252>, // A mapping to store user-specific data
+        foo: usize, // A simple storage variable
+    }
+
+    // events derive 'Drop, starknet::Event' and the '#[event]' attribute
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        DataRegistered: DataRegistered,
+        DataUpdated: DataUpdated,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct DataRegistered {
+        user: ContractAddress,
+        data: felt252,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct DataUpdated {
+        user: ContractAddress,
+        index: u64,
+        new_data: felt252,
+    }
+
+    // Implement the contract interface
+    // all these functions are public
+    #[abi(embed_v0)]
+    impl RegistryImpl of super::IRegistry<ContractState> {
+        // Register data and emit an event
+        fn register_data(ref self: ContractState, data: felt252) {
+            let caller = get_caller_address();
+            self.data_vector.append().write(data);
+            self.user_data_map.entry(caller).write(data);
+            self.emit(Event::DataRegistered(DataRegistered { user: caller, data }));
+        }
+
+        // Update data at a specific index and emit an event
+        fn update_data(ref self: ContractState, index: u64, new_data: felt252) {
+            let caller = get_caller_address();
+            self.data_vector.at(index).write(new_data);
+            self.user_data_map.entry(caller).write(new_data);
+            self.emit(Event::DataUpdated(DataUpdated { user: caller, index, new_data }));
+        }
+
+        // Retrieve data at a specific index
+        fn get_data(self: @ContractState, index: u64) -> felt252 {
+            self.data_vector.at(index).read()
+        }
+
+        // Retrieve all data stored in the vector
+        fn get_all_data(self: @ContractState) -> Array<felt252> {
+            let mut all_data = array![];
+            for i in 0..self.data_vector.len() {
+                all_data.append(self.data_vector.at(i).read());
+            };
+            // for loops have an ending `;`
+            all_data
+        }
+
+        // Retrieve data for a specific user
+        fn get_user_data(self: @ContractState, user: ContractAddress) -> felt252 {
+            self.user_data_map.entry(user).read()
+        }
+    }
+
+    // this function is private
+    fn foo(self: @ContractState)->usize{
+        self.foo.read()
+    }
+}
+`;
 
 const noSourceFoundPrompt = `
 You are an AI assistant specialized in providing information about Starknet and Cairo. However, in this case, you were unable to find any relevant sources to answer the user's query.
@@ -61,11 +166,6 @@ export const handleStream = async (
   logger.info('Starting stream handling');
   try {
     for await (const event of stream) {
-      logger.debug('Stream event received:', {
-        eventType: event.event,
-        name: event.name,
-      });
-
       if (
         event.event === 'on_chain_end' &&
         event.name === 'FinalSourceRetriever'
@@ -86,7 +186,6 @@ export const handleStream = async (
         event.event === 'on_chain_stream' &&
         event.name === 'FinalResponseGenerator'
       ) {
-        logger.debug('Response chunk received');
         emitter.emit(
           'data',
           JSON.stringify({
@@ -121,16 +220,76 @@ export const createBasicSearchRetrieverChain = (
     strParser,
     RunnableLambda.from(async (input: string) => {
       logger.debug('Search retriever input:', { input });
-      if (input === 'not_needed') {
+
+      // Extract content from XML tags
+      const parseXMLContent = (xml: string, tag: string): string[] => {
+        const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 'gs');
+        const matches = [...xml.matchAll(regex)];
+        return matches.map(match => match[1].trim());
+      };
+
+      // Handle not_needed case
+      if (input.includes('<response>not_needed</response>')) {
         return { query: '', docs: [] };
       }
 
-      const documents = await vectorStore.similaritySearch(input, 10);
-      logger.debug('Vector store search results:', {
-        documentCount: documents.length,
-        firstDoc: documents[0],
-      });
-      return { query: input, docs: documents };
+      // Handle search_terms format
+      if (input.includes('<search_terms>')) {
+        try {
+          const searchTerms = parseXMLContent(input, 'term');
+          logger.debug('Parsed search terms:', { searchTerms });
+
+          if (searchTerms.length === 0) {
+            logger.error('No search terms found in XML:', { input });
+            return { query: '', docs: [] };
+          }
+
+          // Perform search for each term and combine results
+          const searchPromises = searchTerms.map(term =>
+            vectorStore.similaritySearch(term, 5)
+          );
+
+          const searchResults = await Promise.all(searchPromises);
+
+          // Flatten and deduplicate results based on content
+          const seenContent = new Set<string>();
+          const uniqueDocs = searchResults.flat().filter(doc => {
+            if (seenContent.has(doc.pageContent)) {
+              return false;
+            }
+            seenContent.add(doc.pageContent);
+            return true;
+          });
+
+          logger.debug('Combined search results:', {
+            docs: uniqueDocs.map(doc => doc.metadata.title)
+          });
+
+          return {
+            query: searchTerms.join(' + '),
+            docs: uniqueDocs.slice(0, 15) // Limit to top 15 most relevant docs
+          };
+        } catch (error) {
+          logger.error('Error processing search terms:', error);
+          return { query: '', docs: [] };
+        }
+      }
+
+      // Handle regular queries (wrapped in <response> tags)
+      const regularResponses = parseXMLContent(input, 'response');
+      if (regularResponses.length > 0) {
+        const query = regularResponses[0];
+        const documents = await vectorStore.similaritySearch(query, 10);
+        logger.debug('Vector store search results:', {
+          documentCount: documents.length,
+          firstDoc: documents[0],
+        });
+        return { query, docs: documents };
+      }
+
+      // Fallback for unexpected format
+      logger.warn('Unexpected response format:', { input });
+      return { query: '', docs: [] };
     }),
   ]);
 };
@@ -237,8 +396,7 @@ export const createBasicSearchAnsweringChain = (
     ['user', '{query}'],
   ]);
 
-  const noSourcePromptTemplate =
-    PromptTemplate.fromTemplate(noSourceFoundPrompt);
+  const noSourcePromptTemplate = PromptTemplate.fromTemplate(noSourceFoundPrompt);
 
   const strParser = new StringOutputParser();
 
@@ -267,7 +425,28 @@ export const createBasicSearchAnsweringChain = (
           chat_history: formatChatHistoryAsString(input.chat_history),
         });
       } else {
-        return regularPromptTemplate.format(input);
+        let context = input.context;
+
+        // Check if this is a contract-related query by looking for XML search terms
+        const isContractQuery = input.query.toLowerCase().includes('contract') ||
+                              context.includes('<search_terms>');
+
+        // Only inject the template for contract-related queries
+        if (isContractQuery) {
+          logger.debug('Contract-related query detected, injecting template');
+          context += basicContractTemplate;
+        }
+
+        logger.debug('Input context:', {
+          isContractQuery,
+          contextLength: context.length,
+          query: input.query
+        });
+
+        return regularPromptTemplate.format({
+          ...input,
+          context
+        });
       }
     }),
     llm,

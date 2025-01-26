@@ -26,34 +26,64 @@ import { basicRagSearch } from '../ragSearchAgent';
 
 const basicSearchRetrieverPrompt = `
 You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the Cairo Language documentation for information.
-If it is a writing task or a simple hi, hello rather than a question, you need to return \`not_needed\` as the response.
-If the user asks to summarize the content from some links you need to return \`not_needed\` as the response.
 
-Example:
-1. Follow up question: What are smart contracts?
-Rephrased question: \`Smart Contracts\`
+If the user is asking for help with coding or implementing something, you need to:
+1. Analyze the requirements
+2. Return a list of search terms that will fetch all necessary documentation
+3. Each term should be specific and follow the existing format conventions
+4. Think it terms of generic smart-contract programming concepts from first principles.
 
-2. Follow up question: How do I write a smart contract?
-Rephrased question: \`Building Smart Contracts\`
+For coding queries, format your response using XML tags like this:
+<search_terms>
+<term>term1</term>
+<term>term2</term>
+<term>term3</term>
+</search_terms>
 
-3. Follow up question: What is Scarb?
-Rephrased question: \`What is Scarb\`
+Example coding queries and responses:
 
-4. Follow up question: How do I install Cairo?
-Rephrased question: \`Installing Cairo\`
+Because a smart contract will always contain functions and storage, you need to include "Contract Functions" and "Contract Storage" in your search terms.
+If the specific task requires specific storage concepts, like a mapping or a collection, you need to include the specific storage concept in your search terms.
+If the task also requires system-specific concepts, like getting the block number or caller address, you need to include the specific system concept in your search terms.
 
-You also need to reword the question to be specific on whether it applies to Smart Contracts or Cairo as a whole.
+Query: "How do I create a contract that stores a list of users and emits an event when they interact?"
+Response:
+<search_terms>
+<term>Contract Functions</term>
+<term>Contract Storage</term>
+<term>Storing collections in Contracts</term>
+<term>Emitting Events in Contracts</term>
+<term>Getting the caller address</term>
+</search_terms>
+
+Query: "I want to make an ERC20 token with a mint function"
+Response:
+<search_terms>
+<term> Contract Functions</term>
+<term> Contract Storage</term>
+<term> Mapping balances to addresses</term>
+<term> Emitting Events in Contracts</term>
+<term> Assertions on caller address</term>
+<term> Access Control in Contracts</term>
+</search_terms>
+
+For non-coding queries, follow the existing rules:
+- If it is a writing task or a simple hi, hello rather than a question, return: <response>not_needed</response>
+- If the user asks to summarize content from links return: <response>not_needed</response>
+
+You also need to reword questions to be specific about Smart Contracts or Cairo as a whole.
 If the user asks about "events", "storage", "Map", "Vec", "LegacyMap" "storing", "interface", "abi", rephrase the question to include "Starknet Smart Contracts".
 
-Example:
-1. Follow up question: How do I emit an event?
-Rephrased question: \`Emitting Events in Contracts\`
+Example regular queries:
+1. Follow up question: What are smart contracts?
+Response: <response>Smart Contracts</response>
 
-2. Follow up question: How do I store an array?
-Rephrased question: \`Storing Arrays in Contracts\`
+2. Follow up question: What is Cairo?
+Response: <response>Cairo</response>
 
-3. Follow up question: What are interfaces?
-Rephrased question: \`Interfaces in Contracts\`
+3. Follow up question: How do I install Cairo?
+Response: <response>Installing Cairo</response>
+
 
 Conversation:
 {chat_history}
