@@ -33,11 +33,12 @@ Starknet Agent is an open-source AI-powered searching tool specifically designed
 
 ## Features
 
-- **Local LLMs**: You can make use of local LLMs such as Llama3 and Mixtral using Ollama.
+- **Local LLMs**: You can make use of local LLMs such as Llama3 and Mixtral using Ollama. 🚧 Work in progress
 - **Focus Modes:** Special modes to better answer specific types of questions. Starknet Agent currently has 3 focus modes:
   - **Starknet Ecosystem:** Searches the entire Starknet Ecosystem, including the [Cairo Book](https://book.cairo-lang.org) and the [Starknet documentation](https://docs.starknet.io).
   - **Cairo Book:** Searches the [Cairo Book](https://book.cairo-lang.org) for answers.
   - **Starknet Docs:** Searches the [Starknet documentation](https://docs.starknet.io) for answers.
+  - **Starknet Foundry:** Searches the [Starknet Foundry documentation](https://foundry-rs.github.io/starknet-foundry/) for answers.
 
 ## Installation
 
@@ -54,44 +55,65 @@ There are mainly 2 ways of installing Starknet Agent - With Docker, Without Dock
 
 3. After cloning, navigate to the directory containing the project files.
 
-4. Rename the `sample.config.toml` file to `config.toml`. For Docker setups, you need only fill in the following fields:
+4. Setup your databases on [MongoDB Atlas](https://www.mongodb.com/products/platform/atlas-vector-search).
+   - Create a new cluster.
+   - Create a new database for each of the focus modes you intend to use. A single database for the ecosystem-wide mode is enough, e.g.: `starknet-ecosystem`.
+   - Create a new collection inside each database that will store the embeddings. e.g. `all-chunks` for the `starknet-ecosystem` database.
+   - Create a vectorSearch index named **default** on the collection (tab `Atlas Search`). Example index configuration:
+     ```json
+         {
+         "fields": [
+            {
+               "numDimensions": 2048,
+               "path": "embedding",
+               "similarity": "cosine",
+               "type": "vector"
+            }
+         ]
+         }
+     ```
+
+5. Copy the `sample.config.toml` file to a `config.toml`. For Docker setups, you need only fill in the following fields:
 
    - `OPENAI`: Your OpenAI API key. **You only need to fill this if you wish to use OpenAI's models**.
-   - `OLLAMA`: Your Ollama API URL. You should enter it as `http://host.docker.internal:PORT_NUMBER`. If you installed Ollama on port 11434, use `http://host.docker.internal:11434`. For other ports, adjust accordingly. **You need to fill this if you wish to use Ollama's models instead of OpenAI's**.
-   - `GROQ`: Your Groq API key. **You only need to fill this if you wish to use Groq's hosted models**.
    - `ANTHROPIC`: Your Anthropic API key. **You only need to fill this if you wish to use Anthropic models**.
 
      **Note**: You can change these after starting Starknet Agent from the settings dialog.
 
    - `SIMILARITY_MEASURE`: The similarity measure to use (This is filled by default; you can leave it as is if you are unsure about it.)
-   - CAIRO_DB and STARKNET_DB: These are the databases for the Cairo Book and Starknet Documentation. You will need to fill these with your own database URLs.
+   - Databases:
+     - `ECOSYSTEM_DB`: This is the database for the entire Starknet Ecosystem, that aggregates all the other databases. You will need to fill this with your own database URL. example:
+     ```toml
+         [ECOSYSTEM_DB]
+         MONGODB_URI = "mongodb+srv://mongo:..."
+         DB_NAME = "starknet-ecosystem"
+         COLLECTION_NAME = "all-chunks"
+      ```
+     - Other databases are for focused modes (in a single resource). You only need to fill these ones if you want to use the associated focused mode. You will need to create databases for each of the focused modes.
+   - Models: The `[HOSTED_MODE] table defines the underlying LLM model used. We recommend using:
+   ```
+      [HOSTED_MODE]
+      DEFAULT_CHAT_PROVIDER = "anthropic"
+      DEFAULT_CHAT_MODEL = "Claude 3.5 Sonnet"
+      DEFAULT_EMBEDDING_PROVIDER = "openai"
+      DEFAULT_EMBEDDING_MODEL = "Text embedding 3 large"
+   ```
+
+5. Generate the embeddings for the databases. You can do this by running the `generateEmbeddings.ts` script with bun. If you followed the example above, you will need to run the script with option `4 (Everything)` for the `starknet-ecosystem` database.
+   ```bash
+   bun run src/scripts/generateEmbeddings.ts
+   ```
 
 5. Ensure you are in the directory containing the `docker-compose.yaml` file and execute:
 
    ```bash
-   docker compose up -d
+      docker-compose -f docker-compose.dev-hosted.yml up
    ```
-
-5bis. Alternatively, you can start the containers in dev mode, with hot reloading, by running:
-
-```bash
-docker compose up -f docker-compose.dev.yaml up -d
-```
 
 6. Wait a few minutes for the setup to complete. You can access Starknet Agent at http://localhost:3000 in your web browser.
 
 **Note**: After the containers are built, you can start Starknet Agent directly from Docker without having to open a terminal.
 
-### Non-Docker Installation
-
-1. Install SearXNG and allow `JSON` format in the SearXNG settings.
-2. Clone the repository and rename the `sample.config.toml` file to `config.toml` in the root directory. Ensure you complete all required fields in this file.
-3. Rename the `.env.example` file to `.env` in the `ui` folder and fill in all necessary fields.
-4. After populating the configuration and environment files, run `npm i` in both the `ui` folder and the root directory.
-5. Install the dependencies and then execute `npm run build` in both the `ui` folder and the root directory.
-6. Finally, start both the frontend and the backend by running `npm run start` in both the `ui` folder and the root directory.
-
-**Note**: Using Docker is recommended as it simplifies the setup process, especially for managing environment variables and dependencies.
 
 ### Ollama Connection Errors
 
