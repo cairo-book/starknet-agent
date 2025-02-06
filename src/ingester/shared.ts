@@ -128,14 +128,6 @@ export function createAnchor(title: string | undefined): string {
     .replace(/^-+|-+$/g, ''); // Remove leading and trailing hyphens
 }
 
-export function outputTitleAndLink(
-  prettyPart: string,
-  anchorLink: string,
-): string {
-  return `[${prettyPart}]${anchorLink}  `;
-}
-
-
 export function addSectionWithSizeLimit(
   sections: ParsedSection[],
   title: string,

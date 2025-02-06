@@ -2,6 +2,7 @@ import { loadGroqChatModels } from './groq';
 import { loadOllamaChatModels, loadOllamaEmbeddingsModels } from './ollama';
 import { loadOpenAIChatModels, loadOpenAIEmbeddingsModels } from './openai';
 import { loadAnthropicChatModels } from './anthropic';
+import { loadDeepseekChatModels } from './deepseek';
 import { loadTransformersEmbeddingsModels } from './transformers';
 import { getHostedModeConfig, isHostedMode } from '../../config';
 
@@ -10,6 +11,7 @@ const chatModelProviders = {
   groq: loadGroqChatModels,
   ollama: loadOllamaChatModels,
   anthropic: loadAnthropicChatModels,
+  deepseek: loadDeepseekChatModels,
 };
 
 const embeddingModelProviders = {

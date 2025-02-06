@@ -9,7 +9,6 @@ import { BookChunk } from '../types/types';
 import {
   BookConfig,
   BookPageDto,
-  findChunksToUpdateAndRemove,
   isInsideCodeBlock,
   ParsedSection,
   processDocFiles,
@@ -94,8 +93,8 @@ export async function createChunks(
 
   for (const page of pages) {
     const sanitizedContent = sanitizeCodeBlocks(page.content);
-    const sections: ParsedSection[] =
-      splitMarkdownIntoSections(sanitizedContent);
+    //TODO: make `split` an env variable?
+    const sections = parseMarkdownPage(sanitizedContent, true);
 
     sections.forEach((section: ParsedSection, index: number) => {
       const hash: string = calculateHash(section.content);
@@ -132,6 +131,41 @@ export function sanitizeCodeBlocks(content: string): string {
     return true;
   });
   return sanitizedLines.join('\n');
+}
+
+/**
+ * Parses a markdown page into a single "Section" object
+ * In our RAG process, we can either store the entire page as a single chunk, or we can split it into multiple chunks
+ * If the LLM capacity and pricing is a concern, use `splitMarkdownIntoSections` instead.
+ * @param content - The markdown content to parse
+ * @param split - Whether to split the markdown into sections
+ * @returns ParsedSection[] - Array of ParsedSection objects
+ */
+export function parseMarkdownPage(
+  content: string,
+  split: boolean = false,
+): ParsedSection[] {
+  if (split) {
+    return splitMarkdownIntoSections(content);
+  }
+
+  const contentHash = calculateHash(content);
+  const headerRegex = /^(#{1,2})\s+(.+)$/gm;
+  let match;
+  if ((match = headerRegex.exec(content)) !== null) {
+    const sections: ParsedSection[] = [];
+    addSectionWithSizeLimit(
+      sections,
+      match[2],
+      content,
+      MAX_SECTION_SIZE,
+      createAnchor(match[2])
+    );
+    return sections;
+  }
+
+  return [];
+
 }
 
 /**

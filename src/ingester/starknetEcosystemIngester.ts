@@ -1,6 +1,6 @@
 import { VectorStore } from '../db/vectorStore';
 import {
-  createChunks as createCairoBookChunks,
+  createChunks as createMdBookChunks,
   downloadAndExtractCairoBook,
   cleanupDownloadedFiles as cleanupCairoBookFiles,
 } from './cairoBookIngester';
@@ -12,7 +12,6 @@ import {
 } from './starknetDocsIngester';
 import {
   downloadAndExtractFoundryDocs,
-  createChunks as createFoundryChunks,
   cleanupDownloadedFiles as cleanupFoundryFiles,
 } from './starknetFoundryIngester';
 
@@ -22,10 +21,10 @@ export const ingestStarknetEcosystem = async (vectorStore: VectorStore) => {
     const snDocsPages = await downloadAndExtractStarknetDocs();
     const snDocsChunks = await createSNDocsChunks(snDocsPages);
     const cairoBookPages = await downloadAndExtractCairoBook();
-    const cairoBookChunks = await createCairoBookChunks(cairoBookPages);
+    const cairoBookChunks = await createMdBookChunks(cairoBookPages);
     const starknetFoundryPages = await downloadAndExtractFoundryDocs();
     const starknetFoundryChunks =
-      await createFoundryChunks(starknetFoundryPages);
+      await createMdBookChunks(starknetFoundryPages);
     const chunks = [
       ...snDocsChunks,
       ...cairoBookChunks,
