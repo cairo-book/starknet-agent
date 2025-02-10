@@ -3,7 +3,6 @@ import {
   PromptTemplate,
   ChatPromptTemplate,
   MessagesPlaceholder,
-  ChatMessagePromptTemplate,
 } from '@langchain/core/prompts';
 import {
   RunnableSequence,
@@ -20,143 +19,32 @@ import eventEmitter from 'events';
 import computeSimilarity from '../utils/computeSimilarity';
 import logger from '../utils/logger';
 import { VectorStore } from '../db/vectorStore';
-import { BookChunk } from '../types/types';
+import { RagSearchConfig } from '../types/agent';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
+import { injectPromptVariables } from '../config/prompts';
+import { BookChunk } from '../types/types';
+import { parseXMLContent } from '../config/agentConfigs';
 
-const basicContractTemplate =
-`
-use core::starknet::ContractAddress;
-
-// Define the contract interface
-#[starknet::interface]
-pub trait IRegistry<TContractState> {
-    fn register_data(ref self: TContractState, data: felt252);
-    fn update_data(ref self: TContractState, index: u64, new_data: felt252);
-    fn get_data(self: @TContractState, index: u64) -> felt252;
-    fn get_all_data(self: @TContractState) -> Array<felt252>;
-    fn get_user_data(self: @TContractState, user: ContractAddress) -> felt252;
-}
-
-// Define the contract module
-#[starknet::contract]
-mod Registry {
-    // Always use full paths for core library imports.
-    use core::starknet::ContractAddress;
-    // Required for interactions with 'map' and the 'entry' method. Don't forget 'StoragePathEntry'!!
-    use core::starknet::storage::{Map, StoragePathEntry};
-    // Required for interactions with 'vec'
-    use core::starknet::storage::{Vec, VecTrait, MutableVecTrait};
-    // Required for all storage operations
-    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use core::starknet::get_caller_address;
-
-    // Define storage variables
-    #[storage]
-    struct Storage {
-        data_vector: Vec<felt252>, // A vector to store data
-        user_data_map: Map<ContractAddress, felt252>, // A mapping to store user-specific data
-        foo: usize, // A simple storage variable
-    }
-
-    // events derive 'Drop, starknet::Event' and the '#[event]' attribute
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    enum Event {
-        DataRegistered: DataRegistered,
-        DataUpdated: DataUpdated,
-    }
-
-    #[derive(Drop, starknet::Event)]
-    struct DataRegistered {
-        user: ContractAddress,
-        data: felt252,
-    }
-
-    #[derive(Drop, starknet::Event)]
-    struct DataUpdated {
-        user: ContractAddress,
-        index: u64,
-        new_data: felt252,
-    }
-
-    // Implement the contract interface
-    // all these functions are public
-    #[abi(embed_v0)]
-    impl RegistryImpl of super::IRegistry<ContractState> {
-        // Register data and emit an event
-        fn register_data(ref self: ContractState, data: felt252) {
-            let caller = get_caller_address();
-            self.data_vector.append().write(data);
-            self.user_data_map.entry(caller).write(data);
-            self.emit(Event::DataRegistered(DataRegistered { user: caller, data }));
-        }
-
-        // Update data at a specific index and emit an event
-        fn update_data(ref self: ContractState, index: u64, new_data: felt252) {
-            let caller = get_caller_address();
-            self.data_vector.at(index).write(new_data);
-            self.user_data_map.entry(caller).write(new_data);
-            self.emit(Event::DataUpdated(DataUpdated { user: caller, index, new_data }));
-        }
-
-        // Retrieve data at a specific index
-        fn get_data(self: @ContractState, index: u64) -> felt252 {
-            self.data_vector.at(index).read()
-        }
-
-        // Retrieve all data stored in the vector
-        fn get_all_data(self: @ContractState) -> Array<felt252> {
-            let mut all_data = array![];
-            for i in 0..self.data_vector.len() {
-                all_data.append(self.data_vector.at(i).read());
-            };
-            // for loops have an ending `;`
-            all_data
-        }
-
-        // Retrieve data for a specific user
-        fn get_user_data(self: @ContractState, user: ContractAddress) -> felt252 {
-            self.user_data_map.entry(user).read()
-        }
-    }
-
-    // this function is private
-    fn foo(self: @ContractState)->usize{
-        self.foo.read()
-    }
-}
-`;
-
-const noSourceFoundPrompt = `
-You are an AI assistant specialized in providing information about Starknet and Cairo. However, in this case, you were unable to find any relevant sources to answer the user's query.
-
-Your response should be concise and honest, acknowledging that you don't have the information to answer the question accurately. Use a polite and helpful tone.
-
-Here's how you should respond:
-
-1. Apologize for not being able to find specific information.
-2. Suggest that the user might want to rephrase their question with more specific terms, or provide more context.
-3. Present your understanding of the user's query and suggest a new question that might be more relevant.
-
-Example response:
-
-"I apologize, but I couldn't find any specific information to answer your question about dicts accurately. It's possible that I don't have access to the relevant data, or the question might be outside my current knowledge base.
-Perhaps you could rephrase your question to something like: "What is the default behavior in Cairo when accessing a key that hasn't been set in a Felt252Dict?"
-
-Remember, it's better to admit when you don't have the information rather than providing potentially incorrect or misleading answers.
-
-<query>
-{query}
-</query>
-
-Always maintain a helpful and professional tone in your response. Do not invent information or make assumptions beyond what's provided in the context.
-`;
-
-const strParser = new StringOutputParser();
 
 export type BasicChainInput = {
   chat_history: BaseMessage[];
   query: string;
+}
+
+const strParser = new StringOutputParser();
+
+// Helper function to check if query is contract-related
+const isContractQuery = (query: string, context: string, config: RagSearchConfig): boolean => {
+  // First check XML search terms
+  const hasContractTerms = query.toLowerCase().includes('contract') ||
+                          context.includes('<search_terms>');
+
+  // Then use the configured classifier if available
+  if (config.queryClassifier) {
+    return hasContractTerms || config.queryClassifier.isContractQuery(query, context);
+  }
+
+  return hasContractTerms;
 };
 
 export const handleStream = async (
@@ -211,30 +99,24 @@ export const handleStream = async (
 
 export const createBasicSearchRetrieverChain = (
   llm: BaseChatModel,
-  vectorStore: VectorStore,
-  searchRetrieverPrompt: string,
+  config: RagSearchConfig,
 ): RunnableSequence => {
+  const retrieverPrompt = injectPromptVariables(config.prompts.searchRetrieverPrompt);
+
   return RunnableSequence.from([
-    PromptTemplate.fromTemplate(searchRetrieverPrompt),
+    PromptTemplate.fromTemplate(retrieverPrompt),
     llm,
     strParser,
     RunnableLambda.from(async (input: string) => {
       logger.debug('Search retriever input:', { input });
 
-      // Extract content from XML tags
-      const parseXMLContent = (xml: string, tag: string): string[] => {
-        const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 'gs');
-        const matches = [...xml.matchAll(regex)];
-        return matches.map(match => match[1].trim());
-      };
-
       // Handle not_needed case
-      if (input.includes('<response>not_needed</response>')) {
+      if (config.queryClassifier?.isNotNeeded(input)) {
         return { query: '', docs: [] };
       }
 
       // Handle search_terms format
-      if (input.includes('<search_terms>')) {
+      if (config.queryClassifier?.isTermQuery(input, 'search_terms')) {
         try {
           const searchTerms = parseXMLContent(input, 'term');
           logger.debug('Parsed search terms:', { searchTerms });
@@ -246,7 +128,7 @@ export const createBasicSearchRetrieverChain = (
 
           // Perform search for each term and combine results
           const searchPromises = searchTerms.map(term =>
-            vectorStore.similaritySearch(term, 5)
+            config.vectorStore.similaritySearch(term, 5)
           );
 
           const searchResults = await Promise.all(searchPromises);
@@ -267,7 +149,7 @@ export const createBasicSearchRetrieverChain = (
 
           return {
             query: searchTerms.join(' + '),
-            docs: uniqueDocs.slice(0, 15) // Limit to top 15 most relevant docs
+            docs: uniqueDocs.slice(0, config.maxSourceCount || 15)
           };
         } catch (error) {
           logger.error('Error processing search terms:', error);
@@ -279,17 +161,24 @@ export const createBasicSearchRetrieverChain = (
       const regularResponses = parseXMLContent(input, 'response');
       if (regularResponses.length > 0) {
         const query = regularResponses[0];
-        const documents = await vectorStore.similaritySearch(query, 10);
+        const documents = await config.vectorStore.similaritySearch(
+          query,
+          config.maxSourceCount || 10
+        );
         logger.debug('Vector store search results:', {
           documentCount: documents.length,
-          firstDoc: documents[0],
+          firstDoc: documents[0]?.metadata?.title,
         });
         return { query, docs: documents };
       }
 
-      // Fallback for unexpected format
-      logger.warn('Unexpected response format:', { input });
-      return { query: '', docs: [] };
+      logger.warn("Unexpected response format:", { input });
+      // Fallback: treat input as direct query
+      const documents = await config.vectorStore.similaritySearch(
+        input,
+        config.maxSourceCount || 10
+      );
+      return { query: input, docs: documents };
     }),
   ]);
 };
@@ -308,16 +197,20 @@ export const attachSources = async (
 };
 
 export const processDocs = async (docs: Document[]): Promise<string> => {
-  if (docs.length === 0) {
-    return 'NO_SOURCES_FOUND';
-  }
+  if (!docs.length) return 'NO_SOURCES_FOUND';
+
   return docs
-    .map((_, index) => `${index + 1}. ${docs[index].pageContent}`)
+    .map(
+      (doc, i) =>
+        `[${i + 1}] ${doc.pageContent}\nSource: ${
+          doc.metadata.title || 'Unknown'
+        }\n`,
+    )
     .join('\n');
 };
 
 export const rerankDocs =
-  (embeddings: Embeddings) =>
+  (embeddings: Embeddings, similarityThreshold: number = 0.4) =>
   async ({
     query,
     docs,
@@ -359,7 +252,7 @@ export const rerankDocs =
       }));
 
       const rerankedDocs = similarity
-        .filter((sim) => sim.similarity > 0.4)
+        .filter((sim) => sim.similarity > similarityThreshold)
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, 10)
         .map((sim) => docsWithContent[sim.index]);
@@ -379,26 +272,18 @@ export const rerankDocs =
 export const createBasicSearchAnsweringChain = (
   llm: BaseChatModel,
   embeddings: Embeddings,
-  vectorStore: VectorStore,
-  searchRetrieverPrompt: string,
-  searchResponsePrompt: string,
-  noSourceFoundPrompt: string,
+  config: RagSearchConfig,
+  basicSearchRetrieverChain: RunnableSequence,
 ) => {
-  const basicSearchRetrieverChain = createBasicSearchRetrieverChain(
-    llm,
-    vectorStore,
-    searchRetrieverPrompt,
-  );
-
   const regularPromptTemplate = ChatPromptTemplate.fromMessages([
-    ['system', searchResponsePrompt],
+    ['system', injectPromptVariables(config.prompts.searchResponsePrompt)],
     new MessagesPlaceholder('chat_history'),
     ['user', '{query}'],
   ]);
 
-  const noSourcePromptTemplate = PromptTemplate.fromTemplate(noSourceFoundPrompt);
-
-  const strParser = new StringOutputParser();
+  const noSourcePromptTemplate = PromptTemplate.fromTemplate(
+    config.prompts.noSourceFoundPrompt || 'No relevant information found.',
+  );
 
   return RunnableSequence.from([
     RunnableMap.from({
@@ -410,7 +295,7 @@ export const createBasicSearchAnsweringChain = (
           chat_history: formatChatHistoryAsString(input.chat_history),
         }),
         basicSearchRetrieverChain
-          .pipe(rerankDocs(embeddings))
+          .pipe(rerankDocs(embeddings, config.similarityThreshold))
           .pipe(attachSources)
           .withConfig({
             runName: 'FinalSourceRetriever',
@@ -428,17 +313,16 @@ export const createBasicSearchAnsweringChain = (
         let context = input.context;
 
         // Check if this is a contract-related query by looking for XML search terms
-        const isContractQuery = input.query.toLowerCase().includes('contract') ||
-                              context.includes('<search_terms>');
+        const isContractQuery_ = isContractQuery(input.query, context, config);
 
         // Only inject the template for contract-related queries
-        if (isContractQuery) {
+        if (isContractQuery_ && config.contractTemplate) {
           logger.debug('Contract-related query detected, injecting template');
-          context += basicContractTemplate;
+          context += config.contractTemplate;
         }
 
         logger.debug('Input context:', {
-          isContractQuery,
+          isContractQuery_,
           contextLength: context.length,
           query: input.query
         });
@@ -461,9 +345,7 @@ export const basicRagSearch = (
   history: BaseMessage[],
   llm: BaseChatModel,
   embeddings: Embeddings,
-  vectorStore: VectorStore,
-  searchRetrieverPrompt: string,
-  searchResponsePrompt: string,
+  config: RagSearchConfig,
 ): eventEmitter => {
   const emitter = new eventEmitter();
 
@@ -474,13 +356,15 @@ export const basicRagSearch = (
 
   try {
     logger.debug('Initializing search chain');
+    const basicSearchRetrieverChain = createBasicSearchRetrieverChain(
+      llm,
+      config,
+    );
     const basicSearchAnsweringChain = createBasicSearchAnsweringChain(
       llm,
       embeddings,
-      vectorStore,
-      searchRetrieverPrompt,
-      searchResponsePrompt,
-      noSourceFoundPrompt,
+      config,
+      basicSearchRetrieverChain,
     );
 
     logger.debug('Starting stream');
