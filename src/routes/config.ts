@@ -11,6 +11,7 @@ import {
   getDeepseekApiKey,
   updateConfig,
   isHostedMode,
+  getGeminiApiKey,
 } from '../config';
 
 const router = express.Router();
@@ -48,6 +49,7 @@ router.get('/', async (_, res) => {
   config['anthropicApiKey'] = getAnthropicApiKey();
   config['groqApiKey'] = getGroqApiKey();
   config['deepseekApiKey'] = getDeepseekApiKey();
+  config['geminiApiKey'] = getGeminiApiKey();
 
   res.status(200).json(config);
 });
@@ -66,6 +68,7 @@ router.post('/', async (req, res) => {
       GROQ: config.groqApiKey,
       ANTHROPIC: config.anthropicApiKey,
       DEEPSEEK: config.deepseekApiKey,
+      GEMINI: config.geminiApiKey,
     },
     API_ENDPOINTS: {
       OLLAMA: config.ollamaApiUrl,
