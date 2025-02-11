@@ -33,6 +33,8 @@ interface Config {
   HOSTED_MODE?: {
     DEFAULT_CHAT_PROVIDER: string;
     DEFAULT_CHAT_MODEL: string;
+    DEFAULT_FAST_CHAT_PROVIDER: string;
+    DEFAULT_FAST_CHAT_MODEL: string;
     DEFAULT_EMBEDDING_PROVIDER: string;
     DEFAULT_EMBEDDING_MODEL: string;
   };

@@ -18,11 +18,12 @@ import eventEmitter from 'events';
 import { basicRagSearch } from '../ragSearchAgent';
 import { getAgentConfig } from '../../config/agentConfigs';
 import { getScarbVersion, getStarknetFoundryVersion } from '../../config';
+import { LLMConfig } from '../../websocket/connectionManager';
 
 const handleStarknetFoundrySearch = (
   message: string,
   history: BaseMessage[],
-  llm: BaseChatModel,
+  llm: LLMConfig,
   embeddings: Embeddings,
   additionalParams: { vectorStore: VectorStore },
 ): eventEmitter => {

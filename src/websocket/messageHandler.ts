@@ -21,6 +21,7 @@ import handleStarknetDocsSearch from '../agents/ragSearchAgents/starknetDocsSear
 import handleStarknetEcosystemSearch from '../agents/ragSearchAgents/starknetEcosystemSearchAgent';
 import handleSuccintCairoBookSearch from '../agents/ragSearchAgents/succintCairoBookSearchAgent';
 import handleStarknetFoundrySearch from '../agents/ragSearchAgents/starknetFoundrySearchAgent';
+import { LLMConfig } from './connectionManager';
 
 type Message = {
   messageId: string;
@@ -114,7 +115,7 @@ const handleEmitterEvents = (
 export const handleMessage = async (
   message: string,
   ws: WebSocket,
-  llm: BaseChatModel,
+  llmConfig: LLMConfig,
   embeddings: Embeddings,
 ) => {
   try {
@@ -176,7 +177,7 @@ export const handleMessage = async (
         const emitter = handler(
           parsedMessage.content,
           history,
-          llm,
+          llmConfig,
           embeddings,
           handlerOptions,
         );

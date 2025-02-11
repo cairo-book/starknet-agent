@@ -5,11 +5,12 @@ import { VectorStore } from '../../db/vectorStore';
 import eventEmitter from 'events';
 import { basicRagSearch } from '../ragSearchAgent';
 import { getAgentConfig } from '../../config/agentConfigs';
+import { LLMConfig } from '../../websocket/connectionManager';
 
 const handleSuccintCairoBookSearch = (
   message: string,
   history: BaseMessage[],
-  llm: BaseChatModel,
+  llm: LLMConfig,
   embeddings: Embeddings,
   additionalParams: { vectorStore: VectorStore },
 ): eventEmitter => {

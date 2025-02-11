@@ -24,6 +24,7 @@ import { IterableReadableStream } from '@langchain/core/utils/stream';
 import { injectPromptVariables } from '../config/prompts';
 import { BookChunk } from '../types/types';
 import { parseXMLContent } from '../config/agentConfigs';
+import { LLMConfig } from '../websocket/connectionManager';
 
 
 export type BasicChainInput = {
@@ -98,14 +99,14 @@ export const handleStream = async (
 };
 
 export const createBasicSearchRetrieverChain = (
-  llm: BaseChatModel,
+  fastLLM: BaseChatModel | undefined,
   config: RagSearchConfig,
 ): RunnableSequence => {
   const retrieverPrompt = injectPromptVariables(config.prompts.searchRetrieverPrompt);
 
   return RunnableSequence.from([
     PromptTemplate.fromTemplate(retrieverPrompt),
-    llm,
+    fastLLM,
     strParser,
     RunnableLambda.from(async (input: string) => {
       logger.debug('Search retriever input:', { input });
@@ -343,7 +344,7 @@ export const createBasicSearchAnsweringChain = (
 export const basicRagSearch = (
   query: string,
   history: BaseMessage[],
-  llm: BaseChatModel,
+  llmConfig: LLMConfig,
   embeddings: Embeddings,
   config: RagSearchConfig,
 ): eventEmitter => {
@@ -352,16 +353,17 @@ export const basicRagSearch = (
   logger.info('Starting RAG search', {
     query,
     historyLength: history.length,
+    hasFastLLM: !!llmConfig.fastLLM,
   });
 
   try {
     logger.debug('Initializing search chain');
     const basicSearchRetrieverChain = createBasicSearchRetrieverChain(
-      llm,
+      llmConfig.fastLLM,
       config,
     );
     const basicSearchAnsweringChain = createBasicSearchAnsweringChain(
-      llm,
+      llmConfig.defaultLLM,
       embeddings,
       config,
       basicSearchRetrieverChain,
