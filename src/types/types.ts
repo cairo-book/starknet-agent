@@ -3,6 +3,7 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { VectorStore } from '../db/vectorStore';
 import { BaseMessage } from '@langchain/core/messages';
 import { Embeddings } from '@langchain/core/embeddings';
+import { LLMConfig } from '../websocket/connectionManager';
 
 export interface HandlerOptions {
   vectorStore?: VectorStore;
@@ -11,7 +12,7 @@ export interface HandlerOptions {
 export type SearchHandler = (
   content: string,
   history: BaseMessage[],
-  llm: BaseChatModel,
+  llm: LLMConfig,
   embeddings: Embeddings,
   options: HandlerOptions,
 ) => eventEmitter;

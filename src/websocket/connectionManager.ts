@@ -9,66 +9,59 @@ import type { Embeddings } from '@langchain/core/embeddings';
 import type { IncomingMessage } from 'http';
 import logger from '../utils/logger';
 import { ChatOpenAI } from '@langchain/openai';
+import { getHostedModeConfig } from '../config';
+
+export interface LLMConfig {
+  defaultLLM: BaseChatModel;
+  fastLLM?: BaseChatModel;
+}
 
 export const handleConnection = async (
   ws: WebSocket,
   request: IncomingMessage,
 ) => {
   try {
-    const searchParams = new URL(request.url, `http://${request.headers.host}`)
-      .searchParams;
-
     const [chatModelProviders, embeddingModelProviders] = await Promise.all([
       getAvailableChatModelProviders(),
       getAvailableEmbeddingModelProviders(),
     ]);
 
+    const hostedModeConfig = getHostedModeConfig();
+
+    // Default LLM setup
     const chatModelProvider =
-      searchParams.get('chatModelProvider') ||
-      Object.keys(chatModelProviders)[0];
+      chatModelProviders[hostedModeConfig.DEFAULT_CHAT_PROVIDER];
     const chatModel =
-      searchParams.get('chatModel') ||
-      Object.keys(chatModelProviders[chatModelProvider])[0];
+      chatModelProviders[hostedModeConfig.DEFAULT_CHAT_PROVIDER][
+        hostedModeConfig.DEFAULT_CHAT_MODEL
+      ];
 
-    const embeddingModelProvider =
-      searchParams.get('embeddingModelProvider') ||
-      Object.keys(embeddingModelProviders)[0];
-    const embeddingModel =
-      searchParams.get('embeddingModel') ||
-      Object.keys(embeddingModelProviders[embeddingModelProvider])[0];
+    // Fast LLM setup
+    const fastChatModelProvider =
+      chatModelProviders[hostedModeConfig.DEFAULT_FAST_CHAT_PROVIDER];
+    const fastChatModel =
+      chatModelProviders[hostedModeConfig.DEFAULT_FAST_CHAT_PROVIDER][
+        hostedModeConfig.DEFAULT_FAST_CHAT_MODEL
+      ];
 
-    let llm: BaseChatModel | undefined;
-    let embeddings: Embeddings | undefined;
+      // Embedding model setup
+      const embeddingModelProvider =
+        embeddingModelProviders[hostedModeConfig.DEFAULT_EMBEDDING_PROVIDER];
+      const embeddingModel = embeddingModelProvider[
+        hostedModeConfig.DEFAULT_EMBEDDING_MODEL
+      ];
 
-    if (
-      chatModelProviders[chatModelProvider] &&
-      chatModelProviders[chatModelProvider][chatModel] &&
-      chatModelProvider != 'custom_openai'
-    ) {
-      llm = chatModelProviders[chatModelProvider][chatModel] as unknown as
-        | BaseChatModel
-        | undefined;
-    } else if (chatModelProvider == 'custom_openai') {
-      llm = new ChatOpenAI({
-        modelName: chatModel,
-        openAIApiKey: searchParams.get('openAIApiKey'),
-        temperature: 0.7,
-        configuration: {
-          baseURL: searchParams.get('openAIBaseURL'),
-        },
-      }) as unknown as BaseChatModel;
-    }
+      let defaultLLM: BaseChatModel | undefined;
+      let fastLLM: BaseChatModel | undefined;
+      let embeddings: Embeddings | undefined;
 
-    if (
-      embeddingModelProviders[embeddingModelProvider] &&
-      embeddingModelProviders[embeddingModelProvider][embeddingModel]
-    ) {
-      embeddings = embeddingModelProviders[embeddingModelProvider][
-        embeddingModel
-      ] as Embeddings | undefined;
-    }
+    // Initialize default LLM
+      defaultLLM = chatModel
+      fastLLM = fastChatModel
+      embeddings = embeddingModel
 
-    if (!llm || !embeddings) {
+      if (!defaultLLM || !embeddings) {
+      logger.error('Invalid LLM or embeddings model selected, please refresh the page and try again.');
       ws.send(
         JSON.stringify({
           type: 'error',
@@ -79,10 +72,18 @@ export const handleConnection = async (
       ws.close();
     }
 
+    const llmConfig: LLMConfig = {
+      defaultLLM,
+      fastLLM,
+    };
+
+    console.log(llmConfig);
+    console.log(chatModelProviders)
+
     ws.on(
       'message',
       async (message) =>
-        await handleMessage(message.toString(), ws, llm, embeddings),
+        await handleMessage(message.toString(), ws, llmConfig, embeddings),
     );
 
     ws.on('close', () => logger.debug('Connection closed'));

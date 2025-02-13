@@ -34,13 +34,16 @@ export const getAvailableChatModelProviders = async () => {
 
   if (isHostedMode()) {
     const hostedModeConfig = getHostedModeConfig();
-    const hosted_model =
-      models[hostedModeConfig.DEFAULT_CHAT_PROVIDER][
-        hostedModeConfig.DEFAULT_CHAT_MODEL
-      ];
     return {
       [hostedModeConfig.DEFAULT_CHAT_PROVIDER]: {
-        [hostedModeConfig.DEFAULT_CHAT_MODEL]: hosted_model,
+        [hostedModeConfig.DEFAULT_CHAT_MODEL]: models[hostedModeConfig.DEFAULT_CHAT_PROVIDER][
+          hostedModeConfig.DEFAULT_CHAT_MODEL
+        ],
+      },
+      [hostedModeConfig.DEFAULT_FAST_CHAT_PROVIDER]: {
+        [hostedModeConfig.DEFAULT_FAST_CHAT_MODEL]: models[hostedModeConfig.DEFAULT_FAST_CHAT_PROVIDER][
+          hostedModeConfig.DEFAULT_FAST_CHAT_MODEL
+        ],
       },
     };
   }

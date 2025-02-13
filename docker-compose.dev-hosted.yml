@@ -16,6 +16,7 @@ services:
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_HOSTED_MODE=true
+      - LOG_LEVEL=debug
     command: yarn run dev
     restart: unless-stopped
 
