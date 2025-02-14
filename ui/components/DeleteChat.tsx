@@ -5,10 +5,11 @@ import { toast } from 'sonner';
 import { Chat } from '@/app/library/page';
 import { StoredChat } from './ChatWindow';
 
-
 const deleteChatFromLocalStorage = (chatId: string) => {
-  const existingChats = JSON.parse(localStorage.getItem('chats') || '[]') as StoredChat[];
-  const newChats = existingChats.filter(chat => chat.id !== chatId);
+  const existingChats = JSON.parse(
+    localStorage.getItem('chats') || '[]',
+  ) as StoredChat[];
+  const newChats = existingChats.filter((chat) => chat.id !== chatId);
   localStorage.setItem('chats', JSON.stringify(newChats));
 };
 

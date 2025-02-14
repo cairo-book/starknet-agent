@@ -3,6 +3,6 @@
 // parentheses and commas.
 
 module.exports.register = () => {
-    const lunr = require('lunr');
-    lunr.tokenizer.separator = /[\s\-(),]+/;
-  };
+  const lunr = require('lunr');
+  lunr.tokenizer.separator = /[\s\-(),]+/;
+};

@@ -27,13 +27,13 @@ Currently, the API does not require authentication. However, this may change in 
       "gpt-3.5-turbo": {}
     },
     "anthropic": {
-      "Claude 3.5 Sonnet": {},
+      "Claude 3.5 Sonnet": {}
     }
   },
   "embeddingModelProviders": {
     "openai": {
       "text-embedding-ada-002": {}
-    },
+    }
   }
 }
 ```
@@ -150,7 +150,10 @@ Messages sent to the WebSocket should be JSON strings with the following structu
   "focusMode": "cairoBookSearch",
   "history": [
     ["human", "Hello! I'm interested in learning about Cairo."],
-    ["ai", "Hello! I'd be happy to help you learn about Cairo. Cairo is a programming language designed for writing provable programs, particularly smart contracts for the StarkNet platform. What specific aspect of Cairo would you like to know more about?"],
+    [
+      "ai",
+      "Hello! I'd be happy to help you learn about Cairo. Cairo is a programming language designed for writing provable programs, particularly smart contracts for the StarkNet platform. What specific aspect of Cairo would you like to know more about?"
+    ],
     ["human", "Can you help me understand how Cairo smart contracts work?"]
   ]
 }
@@ -207,6 +210,8 @@ Error messages will be sent as JSON with the following structure:
 - The system uses a focus mode to determine the context of the conversation. Ensure the correct focus mode is specified in each message.
 - The chat history should be maintained on the client-side and sent with each message for context.
 - Handle WebSocket disconnections gracefully and implement reconnection logic if necessary.
+
 ```
 
 This formatted version of the document includes improved examples for each section, making it easier for external teams to understand and integrate with the AI chat system.
+```

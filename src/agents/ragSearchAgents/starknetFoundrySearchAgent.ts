@@ -27,14 +27,11 @@ const handleStarknetFoundrySearch = (
   embeddings: Embeddings,
   additionalParams: { vectorStore: VectorStore },
 ): eventEmitter => {
-  const config = getAgentConfig('starknetFoundry', additionalParams.vectorStore);
-  return basicRagSearch(
-    message,
-    history,
-    llm,
-    embeddings,
-    config,
+  const config = getAgentConfig(
+    'starknetFoundry',
+    additionalParams.vectorStore,
   );
+  return basicRagSearch(message, history, llm, embeddings, config);
 };
 
 export default handleStarknetFoundrySearch;

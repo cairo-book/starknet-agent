@@ -14,14 +14,11 @@ const handleSuccintCairoBookSearch = (
   embeddings: Embeddings,
   additionalParams: { vectorStore: VectorStore },
 ): eventEmitter => {
-  const config = getAgentConfig('succintCairoBook', additionalParams.vectorStore);
-  return basicRagSearch(
-    message,
-    history,
-    llm,
-    embeddings,
-    config,
+  const config = getAgentConfig(
+    'succintCairoBook',
+    additionalParams.vectorStore,
   );
+  return basicRagSearch(message, history, llm, embeddings, config);
 };
 
 export default handleSuccintCairoBookSearch;

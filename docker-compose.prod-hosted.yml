@@ -22,7 +22,7 @@ services:
     depends_on:
       - searxng
     extra_hosts:
-      - 'host.docker.internal:host-gateway'
+      - host.docker.internal:host-gateway
     networks:
       - starknet-agent-network
     restart: unless-stopped

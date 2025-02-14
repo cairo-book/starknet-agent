@@ -11,14 +11,13 @@ import {
 import { basicTestTemplate } from './templates/testTemplate';
 
 export const parseXMLContent = (xml: string, tag: string): string[] => {
-    const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 'gs');
-    const matches = [...xml.matchAll(regex)];
-    return matches.map(match => match[1].trim());
-  };
+  const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 'gs');
+  const matches = [...xml.matchAll(regex)];
+  return matches.map((match) => match[1].trim());
+};
 
 // Default query classifier that checks for contract-related terms
 const defaultQueryClassifier = {
-
   isNotNeeded: (query: string): boolean => {
     return query.includes('<response>not_needed</response>');
   },
@@ -43,16 +42,23 @@ const defaultQueryClassifier = {
     const lowercaseContext = context.toLowerCase();
 
     return (
-      contractTerms.some(term => lowercaseQuery.includes(term)) ||
+      contractTerms.some((term) => lowercaseQuery.includes(term)) ||
       context.includes('<search_terms>')
     );
-  }
+  },
 };
 
-type AvailableAgents = 'cairoBook' | 'starknetDocs' | 'starknetEcosystem' | 'starknetFoundry' | 'succintCairoBook';
+type AvailableAgents =
+  | 'cairoBook'
+  | 'starknetDocs'
+  | 'starknetEcosystem'
+  | 'starknetFoundry'
+  | 'succintCairoBook';
 
 // We'll make this a factory function instead of a static object
-export const createAgentConfigs = (vectorStore: VectorStore): Record<AvailableAgents, RagSearchConfig> => ({
+export const createAgentConfigs = (
+  vectorStore: VectorStore,
+): Record<AvailableAgents, RagSearchConfig> => ({
   cairoBook: {
     name: 'Cairo Book',
     prompts: cairoBookPrompts,
@@ -109,9 +115,11 @@ export const createAgentConfigs = (vectorStore: VectorStore): Record<AvailableAg
   },
 });
 
-
 // Update the helper function to take vectorStore as parameter
-export const getAgentConfig = (name: AvailableAgents, vectorStore: VectorStore): RagSearchConfig => {
+export const getAgentConfig = (
+  name: AvailableAgents,
+  vectorStore: VectorStore,
+): RagSearchConfig => {
   const configs = createAgentConfigs(vectorStore);
   const config = configs[name];
   if (!config) {

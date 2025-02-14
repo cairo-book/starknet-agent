@@ -26,32 +26,43 @@ import { BookChunk } from '../types/types';
 import { parseXMLContent } from '../config/agentConfigs';
 import { LLMConfig } from '../websocket/connectionManager';
 
-
 export type BasicChainInput = {
   chat_history: BaseMessage[];
   query: string;
-}
+};
 
 const strParser = new StringOutputParser();
 
 // Helper function to check if query is contract-related
-const isContractQuery = (query: string, context: string, config: RagSearchConfig): boolean => {
+const isContractQuery = (
+  query: string,
+  context: string,
+  config: RagSearchConfig,
+): boolean => {
   // First check XML search terms
-  const hasContractTerms = query.toLowerCase().includes('contract') ||
-                          context.includes('<search_terms>');
+  const hasContractTerms =
+    query.toLowerCase().includes('contract') ||
+    context.includes('<search_terms>');
 
   // Then use the configured classifier if available
   if (config.queryClassifier) {
-    return hasContractTerms || config.queryClassifier.isContractQuery(query, context);
+    return (
+      hasContractTerms || config.queryClassifier.isContractQuery(query, context)
+    );
   }
 
   return hasContractTerms;
 };
 
-const isTestQuery = (query: string, context: string, config: RagSearchConfig): boolean => {
-  const testTerms = ['test', 'tests', 'testing', 'starknet foundry']
-  const hasTestTerms = testTerms.some(term => query.toLowerCase().includes(term)) ||
-                      context.includes('<search_terms>');
+const isTestQuery = (
+  query: string,
+  context: string,
+  config: RagSearchConfig,
+): boolean => {
+  const testTerms = ['test', 'tests', 'testing', 'starknet foundry'];
+  const hasTestTerms =
+    testTerms.some((term) => query.toLowerCase().includes(term)) ||
+    context.includes('<search_terms>');
 
   return hasTestTerms;
 };
@@ -110,7 +121,9 @@ export const createBasicSearchRetrieverChain = (
   fastLLM: BaseChatModel | undefined,
   config: RagSearchConfig,
 ): RunnableSequence => {
-  const retrieverPrompt = injectPromptVariables(config.prompts.searchRetrieverPrompt);
+  const retrieverPrompt = injectPromptVariables(
+    config.prompts.searchRetrieverPrompt,
+  );
 
   return RunnableSequence.from([
     PromptTemplate.fromTemplate(retrieverPrompt),
@@ -136,15 +149,15 @@ export const createBasicSearchRetrieverChain = (
           }
 
           // Perform search for each term and combine results
-          const searchPromises = searchTerms.map(term =>
-            config.vectorStore.similaritySearch(term, 5)
+          const searchPromises = searchTerms.map((term) =>
+            config.vectorStore.similaritySearch(term, 5),
           );
 
           const searchResults = await Promise.all(searchPromises);
 
           // Flatten and deduplicate results based on content
           const seenContent = new Set<string>();
-          const uniqueDocs = searchResults.flat().filter(doc => {
+          const uniqueDocs = searchResults.flat().filter((doc) => {
             if (seenContent.has(doc.pageContent)) {
               return false;
             }
@@ -153,12 +166,12 @@ export const createBasicSearchRetrieverChain = (
           });
 
           logger.debug('Combined search results:', {
-            docs: uniqueDocs.map(doc => doc.metadata.title)
+            docs: uniqueDocs.map((doc) => doc.metadata.title),
           });
 
           return {
             query: searchTerms.join(' + '),
-            docs: uniqueDocs.slice(0, config.maxSourceCount || 15)
+            docs: uniqueDocs.slice(0, config.maxSourceCount || 15),
           };
         } catch (error) {
           logger.error('Error processing search terms:', error);
@@ -172,7 +185,7 @@ export const createBasicSearchRetrieverChain = (
         const query = regularResponses[0];
         const documents = await config.vectorStore.similaritySearch(
           query,
-          config.maxSourceCount || 10
+          config.maxSourceCount || 10,
         );
         logger.debug('Vector store search results:', {
           documentCount: documents.length,
@@ -181,11 +194,11 @@ export const createBasicSearchRetrieverChain = (
         return { query, docs: documents };
       }
 
-      logger.warn("Unexpected response format:", { input });
+      logger.warn('Unexpected response format:', { input });
       // Fallback: treat input as direct query
       const documents = await config.vectorStore.similaritySearch(
         input,
-        config.maxSourceCount || 10
+        config.maxSourceCount || 10,
       );
       return { query: input, docs: documents };
     }),
@@ -341,12 +354,12 @@ export const createBasicSearchAnsweringChain = (
           isContractQuery_,
           isTestQuery_,
           contextLength: context.length,
-          query: input.query
+          query: input.query,
         });
 
         return regularPromptTemplate.format({
           ...input,
-          context
+          context,
         });
       }
     }),

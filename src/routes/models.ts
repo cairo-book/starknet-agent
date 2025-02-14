@@ -15,25 +15,37 @@ router.get('/', async (req, res) => {
       getAvailableEmbeddingModelProviders(),
     ]);
 
-    const formattedChatProviders = Object.keys(chatModelProviders).reduce((acc, provider) => {
-      acc[provider] = Object.keys(chatModelProviders[provider]).reduce((modelAcc, model) => {
-        modelAcc[model] = {};
-        return modelAcc;
-      }, {});
+    const formattedChatProviders = Object.keys(chatModelProviders).reduce(
+      (acc, provider) => {
+        acc[provider] = Object.keys(chatModelProviders[provider]).reduce(
+          (modelAcc, model) => {
+            modelAcc[model] = {};
+            return modelAcc;
+          },
+          {},
+        );
+        return acc;
+      },
+      {},
+    );
+
+    const formattedEmbeddingProviders = Object.keys(
+      embeddingModelProviders,
+    ).reduce((acc, provider) => {
+      acc[provider] = Object.keys(embeddingModelProviders[provider]).reduce(
+        (modelAcc, model) => {
+          modelAcc[model] = {};
+          return modelAcc;
+        },
+        {},
+      );
       return acc;
     }, {});
 
-    const formattedEmbeddingProviders = Object.keys(embeddingModelProviders).reduce((acc, provider) => {
-      acc[provider] = Object.keys(embeddingModelProviders[provider]).reduce((modelAcc, model) => {
-        modelAcc[model] = {};
-        return modelAcc;
-      }, {});
-      return acc;
-    }, {});
-
-    res
-      .status(200)
-      .json({ chatModelProviders: formattedChatProviders, embeddingModelProviders: formattedEmbeddingProviders });
+    res.status(200).json({
+      chatModelProviders: formattedChatProviders,
+      embeddingModelProviders: formattedEmbeddingProviders,
+    });
   } catch (err) {
     res.status(500).json({ message: 'An error has occurred.' });
     logger.error(err.message);

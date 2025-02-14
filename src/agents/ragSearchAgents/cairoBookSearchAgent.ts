@@ -34,13 +34,7 @@ const handleCairoBookSearch = (
   additionalParams: { vectorStore: VectorStore },
 ): eventEmitter => {
   const config = getAgentConfig('cairoBook', additionalParams.vectorStore);
-  return basicRagSearch(
-    message,
-    history,
-    llm,
-    embeddings,
-    config,
-  );
+  return basicRagSearch(message, history, llm, embeddings, config);
 };
 
 export default handleCairoBookSearch;

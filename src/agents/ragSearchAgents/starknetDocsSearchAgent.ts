@@ -15,13 +15,7 @@ const handleStarknetDocsSearch = (
   additionalParams: { vectorStore: VectorStore },
 ): eventEmitter => {
   const config = getAgentConfig('starknetDocs', additionalParams.vectorStore);
-  return basicRagSearch(
-    message,
-    history,
-    llm,
-    embeddings,
-    config,
-  );
+  return basicRagSearch(message, history, llm, embeddings, config);
 };
 
 export default handleStarknetDocsSearch;

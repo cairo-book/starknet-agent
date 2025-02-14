@@ -44,24 +44,25 @@ export const handleConnection = async (
         hostedModeConfig.DEFAULT_FAST_CHAT_MODEL
       ];
 
-      // Embedding model setup
-      const embeddingModelProvider =
-        embeddingModelProviders[hostedModeConfig.DEFAULT_EMBEDDING_PROVIDER];
-      const embeddingModel = embeddingModelProvider[
-        hostedModeConfig.DEFAULT_EMBEDDING_MODEL
-      ];
+    // Embedding model setup
+    const embeddingModelProvider =
+      embeddingModelProviders[hostedModeConfig.DEFAULT_EMBEDDING_PROVIDER];
+    const embeddingModel =
+      embeddingModelProvider[hostedModeConfig.DEFAULT_EMBEDDING_MODEL];
 
-      let defaultLLM: BaseChatModel | undefined;
-      let fastLLM: BaseChatModel | undefined;
-      let embeddings: Embeddings | undefined;
+    let defaultLLM: BaseChatModel | undefined;
+    let fastLLM: BaseChatModel | undefined;
+    let embeddings: Embeddings | undefined;
 
     // Initialize default LLM
-      defaultLLM = chatModel
-      fastLLM = fastChatModel
-      embeddings = embeddingModel
+    defaultLLM = chatModel;
+    fastLLM = fastChatModel;
+    embeddings = embeddingModel;
 
-      if (!defaultLLM || !embeddings) {
-      logger.error('Invalid LLM or embeddings model selected, please refresh the page and try again.');
+    if (!defaultLLM || !embeddings) {
+      logger.error(
+        'Invalid LLM or embeddings model selected, please refresh the page and try again.',
+      );
       ws.send(
         JSON.stringify({
           type: 'error',

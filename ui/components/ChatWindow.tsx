@@ -605,8 +605,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
       reconnectStatus.isReconnecting
         ? `Attempting to reconnect... (Attempt ${reconnectStatus.attempts}/${reconnectStatus.maxAttempts})`
         : reconnectStatus.attempts >= reconnectStatus.maxAttempts
-        ? 'Failed to connect after multiple attempts. Please try again later.'
-        : 'Failed to connect to the server. Please try again later.'
+          ? 'Failed to connect after multiple attempts. Please try again later.'
+          : 'Failed to connect to the server. Please try again later.',
     );
   }
 

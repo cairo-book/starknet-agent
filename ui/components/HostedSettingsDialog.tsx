@@ -56,7 +56,6 @@ const HostedSettingsDialog = ({
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }) => {
-
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog
@@ -90,14 +89,14 @@ const HostedSettingsDialog = ({
                 <Dialog.Title className="text-xl font-medium leading-6 dark:text-white">
                   Settings
                 </Dialog.Title>
-                  <div className="flex flex-col space-y-4 mt-6">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-black/70 dark:text-white/70 text-sm">
-                        Theme
-                      </p>
-                      <ThemeSwitcher />
-                    </div>
+                <div className="flex flex-col space-y-4 mt-6">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-black/70 dark:text-white/70 text-sm">
+                      Theme
+                    </p>
+                    <ThemeSwitcher />
                   </div>
+                </div>
               </Dialog.Panel>
             </Transition.Child>
           </div>

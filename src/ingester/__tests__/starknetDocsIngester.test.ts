@@ -347,7 +347,6 @@ describe('restructureDocumentation', () => {
   });
 });
 
-
 // ... existing imports and tests ...
 
 describe('splitAsciiDocIntoSections', () => {
@@ -521,7 +520,6 @@ More content.
     expect(result[2].anchor).toBeUndefined();
   });
 });
-
 
 describe('convertCodeBlocks', () => {
   it('should convert basic code blocks', () => {
