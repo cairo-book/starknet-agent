@@ -8,6 +8,7 @@ import {
   starknetFoundryPrompts,
   succintCairoBookPrompts,
 } from './prompts';
+import { basicTestTemplate } from './templates/testTemplate';
 
 export const parseXMLContent = (xml: string, tag: string): string[] => {
     const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 'gs');
@@ -57,6 +58,7 @@ export const createAgentConfigs = (vectorStore: VectorStore): Record<AvailableAg
     prompts: cairoBookPrompts,
     vectorStore,
     contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 15,
     similarityThreshold: 0.4,
@@ -67,6 +69,7 @@ export const createAgentConfigs = (vectorStore: VectorStore): Record<AvailableAg
     prompts: starknetDocsPrompts,
     vectorStore,
     contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 10,
     similarityThreshold: 0.4,
@@ -77,6 +80,7 @@ export const createAgentConfigs = (vectorStore: VectorStore): Record<AvailableAg
     prompts: starknetEcosystemPrompts,
     vectorStore,
     contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 15,
     similarityThreshold: 0.4,
@@ -87,6 +91,7 @@ export const createAgentConfigs = (vectorStore: VectorStore): Record<AvailableAg
     prompts: starknetFoundryPrompts,
     vectorStore,
     contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 10,
     similarityThreshold: 0.4,
@@ -97,6 +102,7 @@ export const createAgentConfigs = (vectorStore: VectorStore): Record<AvailableAg
     prompts: succintCairoBookPrompts,
     vectorStore,
     contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 5,
     similarityThreshold: 0.5,

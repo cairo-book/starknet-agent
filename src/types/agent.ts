@@ -23,6 +23,7 @@ export interface AgentConfig {
 
 export interface RagSearchConfig extends AgentConfig {
   contractTemplate?: string;
+  testTemplate?: string;
   maxSourceCount?: number;
   similarityThreshold?: number;
 }

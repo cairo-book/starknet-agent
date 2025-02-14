@@ -48,6 +48,14 @@ const isContractQuery = (query: string, context: string, config: RagSearchConfig
   return hasContractTerms;
 };
 
+const isTestQuery = (query: string, context: string, config: RagSearchConfig): boolean => {
+  const testTerms = ['test', 'tests', 'testing', 'starknet foundry']
+  const hasTestTerms = testTerms.some(term => query.toLowerCase().includes(term)) ||
+                      context.includes('<search_terms>');
+
+  return hasTestTerms;
+};
+
 export const handleStream = async (
   stream: IterableReadableStream<StreamEvent>,
   emitter: eventEmitter,
@@ -322,8 +330,16 @@ export const createBasicSearchAnsweringChain = (
           context += config.contractTemplate;
         }
 
+        const isTestQuery_ = isTestQuery(input.query, context, config);
+
+        if (isTestQuery_ && config.testTemplate) {
+          logger.debug('Test query detected, injecting template');
+          context += config.testTemplate;
+        }
+
         logger.debug('Input context:', {
           isContractQuery_,
+          isTestQuery_,
           contextLength: context.length,
           query: input.query
         });
