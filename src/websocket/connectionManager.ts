@@ -77,9 +77,6 @@ export const handleConnection = async (
       fastLLM,
     };
 
-    console.log(llmConfig);
-    console.log(chatModelProviders)
-
     ws.on(
       'message',
       async (message) =>

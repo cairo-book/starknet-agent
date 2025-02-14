@@ -1,5 +1,6 @@
 // Basic contract template used for contract-related queries
 export const basicContractTemplate = `
+<contract>
 use core::starknet::ContractAddress;
 
 // Define the contract interface
@@ -100,4 +101,19 @@ mod Registry {
         self.foo.read()
     }
 }
+</contract>
+
+The content inside the <contract> tag is the contract code for a 'Registry' contract, demonstrating
+the syntax of the Cairo language for Starknet Smart Contracts. Follow the important rules when writing a contract.
+
+<important_rules>
+- Always use full paths for core library imports.
+- Always use the 'use core::starknet::ContractAddress;' import for the ContractAddress type.
+- Always use the 'use core::starknet::storage::{Map, StoragePathEntry};' import for the Map and StoragePathEntry types.
+- Always use the 'use core::starknet::storage::{Vec, VecTrait, MutableVecTrait};' import for the Vec, VecTrait, and MutableVecTrait types.
+- Always use the 'use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};' import for the StoragePointerReadAccess and StoragePointerWriteAccess types.
+- Always define the interface right above the contract module.
+- Always import strictly the required types in the module the interface is implemented in.
+- Always import the required types of the contract inside the contract module.
+</important_rules>
 `;
