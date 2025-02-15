@@ -133,7 +133,7 @@ export function addSectionWithSizeLimit(
   title: string,
   content: string,
   maxSize: number,
-  anchor?: string
+  anchor?: string,
 ) {
   if (content.length <= maxSize) {
     sections.push({ title, content, anchor });
@@ -147,7 +147,6 @@ export function addSectionWithSizeLimit(
     }
   }
 }
-
 
 export async function updateVectorStore(
   vectorStore: VectorStore,

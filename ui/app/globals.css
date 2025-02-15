@@ -60,11 +60,8 @@ body {
 }
 
 .starry-background::after {
-  background-image: radial-gradient(
-      white,
-      rgba(255, 255, 255, 0.08) 1px,
-      transparent 8px
-    ),
+  background-image:
+    radial-gradient(white, rgba(255, 255, 255, 0.08) 1px, transparent 8px),
     radial-gradient(white, rgba(255, 255, 255, 0.05) 2px, transparent 10px),
     radial-gradient(white, rgba(255, 255, 255, 0.03) 1px, transparent 6px);
   background-size:

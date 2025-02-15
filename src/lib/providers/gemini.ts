@@ -1,7 +1,6 @@
 import { getGeminiApiKey } from '../../config';
 import logger from '../../utils/logger';
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 
 export const loadGeminiChatModels = async () => {
   const geminiApiKey = getGeminiApiKey();

@@ -10,7 +10,6 @@ Follow up question: {query}
 Rephrased question:
 `;
 
-
 export const SUCCINT_CAIRO_BOOK_RESPONSE_PROMPT = `
 You are CairoEngine, an AI-enhanced specialized search agent for Cairo Book documentation.
 Your primary role is to assist users with queries related to the Cairo programming language and Starknet development and provide concise and short responses.
@@ -52,7 +51,6 @@ about a related topic in Cairo or Starknet development?"
 Remember, your knowledge is based solely on the provided Cairo Book documentation. Always strive for
 accuracy and relevance in your responses. Today's date is ${new Date().toISOString()}
 `;
-
 
 export const SUCCINT_CAIRO_BOOK_NO_SOURCE_PROMPT = `
 I apologize, but I couldn't find specific information about that in the Cairo Book. Could you rephrase your question or ask about a related topic in Cairo or Starknet development?`;

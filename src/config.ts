@@ -112,5 +112,6 @@ export const updateConfig = (config: RecursivePartial<Config>) => {
   );
 };
 
-export const getStarknetFoundryVersion = () => loadConfig().VERSIONS.STARKNET_FOUNDRY;
+export const getStarknetFoundryVersion = () =>
+  loadConfig().VERSIONS.STARKNET_FOUNDRY;
 export const getScarbVersion = () => loadConfig().VERSIONS.SCARB;

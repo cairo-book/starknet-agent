@@ -1,4 +1,8 @@
-import { splitMarkdownIntoSections, createChunks, sanitizeCodeBlocks } from '../cairoBookIngester';
+import {
+  splitMarkdownIntoSections,
+  createChunks,
+  sanitizeCodeBlocks,
+} from '../cairoBookIngester';
 import {
   BookPageDto,
   findChunksToUpdateAndRemove,

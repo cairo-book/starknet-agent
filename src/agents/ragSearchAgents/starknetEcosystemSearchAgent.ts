@@ -14,14 +14,11 @@ const handleStarknetEcosystemSearch = (
   embeddings: Embeddings,
   additionalParams: { vectorStore: VectorStore },
 ): eventEmitter => {
-  const config = getAgentConfig('starknetEcosystem', additionalParams.vectorStore);
-  return basicRagSearch(
-    message,
-    history,
-    llm,
-    embeddings,
-    config,
+  const config = getAgentConfig(
+    'starknetEcosystem',
+    additionalParams.vectorStore,
   );
+  return basicRagSearch(message, history, llm, embeddings, config);
 };
 
 export default handleStarknetEcosystemSearch;

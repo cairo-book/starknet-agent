@@ -28,7 +28,7 @@ services:
     volumes:
       - backend-dbstore:/home/starknet-agent/data
     extra_hosts:
-      - 'host.docker.internal:host-gateway'
+      - host.docker.internal:host-gateway
     networks:
       - starknet-agent-network
     environment:
@@ -63,8 +63,8 @@ services:
     volumes:
       - ssl_data:/etc/resty-auto-ssl
     environment:
-      ALLOWED_DOMAINS: '(backend.)?agent.starknet.id'
-      SITES: 'backend.agent.starknet.id=starknet-agent-backend:3001;agent.starknet.id=starknet-agent-frontend:3000'
+      ALLOWED_DOMAINS: (backend.)?agent.starknet.id
+      SITES: backend.agent.starknet.id=starknet-agent-backend:3001;agent.starknet.id=starknet-agent-frontend:3000
     networks:
       - starknet-agent-network
     depends_on:

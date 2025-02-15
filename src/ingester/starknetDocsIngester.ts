@@ -227,7 +227,10 @@ async function restructureFiles(
   return hasRelevantFiles;
 }
 
-export function splitAsciiDocIntoSections(content: string, split: boolean = false): ParsedSection[] {
+export function splitAsciiDocIntoSections(
+  content: string,
+  split: boolean = false,
+): ParsedSection[] {
   // Trim and convert code blocks regardless of mode
   content = content.trim();
   content = convertCodeBlocks(content);
@@ -248,7 +251,7 @@ export function splitAsciiDocIntoSections(content: string, split: boolean = fals
           title,
           markdownContent,
           MAX_SECTION_SIZE,
-          anchor || createAnchor(title)
+          anchor || createAnchor(title),
         );
       }
     }
@@ -280,7 +283,7 @@ export function splitAsciiDocIntoSections(content: string, split: boolean = fals
             lastTitle,
             markdownContent,
             MAX_SECTION_SIZE,
-            lastAnchor
+            lastAnchor,
           );
         }
       }
@@ -301,7 +304,7 @@ export function splitAsciiDocIntoSections(content: string, split: boolean = fals
           lastTitle,
           markdownContent,
           MAX_SECTION_SIZE,
-          lastAnchor
+          lastAnchor,
         );
       }
     }

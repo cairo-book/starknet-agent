@@ -25,7 +25,7 @@ services:
       - searxng
       # - cairobook-ingest
     extra_hosts:
-      - 'host.docker.internal:host-gateway'
+      - host.docker.internal:host-gateway
     networks:
       - starknet-agent-network
     environment:

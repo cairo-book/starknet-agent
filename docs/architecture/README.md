@@ -1,4 +1,4 @@
-## Starknet Agent's Architecture
+# Starknet Agent's Architecture
 
 Starknet Agent's architecture consists of the following key components:
 

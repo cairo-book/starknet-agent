@@ -159,13 +159,12 @@ export function parseMarkdownPage(
       match[2],
       content,
       MAX_SECTION_SIZE,
-      createAnchor(match[2])
+      createAnchor(match[2]),
     );
     return sections;
   }
 
   return [];
-
 }
 
 /**

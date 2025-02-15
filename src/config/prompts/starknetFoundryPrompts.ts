@@ -1,4 +1,4 @@
-import { getScarbVersion, getStarknetFoundryVersion } from "../../config";
+import { getScarbVersion, getStarknetFoundryVersion } from '../../config';
 
 export const STARKNET_FOUNDRY_RETRIEVER_PROMPT = `
 You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the Starknet Foundry documentation for information.
@@ -76,7 +76,6 @@ about a related topic in Starknet Foundry?"
 Remember, your knowledge is based solely on the provided Starknet Foundry documentation. Always strive for
 accuracy and relevance in your responses. Today's date is ${new Date().toISOString()}
 `;
-
 
 export const STARKNET_FOUNDRY_NO_SOURCE_PROMPT = `
 You are an AI assistant specialized in providing information about Starknet and Cairo. However, in this case, you were unable to find any relevant sources to answer the user's query.

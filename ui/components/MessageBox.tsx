@@ -65,7 +65,13 @@ const MessageBox = ({
 
   const { speechStatus, start, stop } = useSpeech({ text: speechMessage });
 
-  const CodeBlock = ({ className, children }: { className?: string; children: string }) => {
+  const CodeBlock = ({
+    className,
+    children,
+  }: {
+    className?: string;
+    children: string;
+  }) => {
     const language = className ? className.replace('lang-', '') : 'text';
     const isInline = !className || className === 'language-text';
 
@@ -100,7 +106,8 @@ const MessageBox = ({
       );
     } else {
       const style = {
-        backgroundColor: vscDarkPlus['code[class*="language-"]'].backgroundColor,
+        backgroundColor:
+          vscDarkPlus['code[class*="language-"]'].backgroundColor,
         color: vscDarkPlus['code[class*="language-"]'].color,
         padding: '0.2em 0.4em',
         borderRadius: '3px',

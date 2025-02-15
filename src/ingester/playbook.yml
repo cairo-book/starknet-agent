@@ -11,24 +11,24 @@ content:
         - components/Starknet
     - url: https://github.com/starknet-io/docs-common-content.git
       branches:
-        - 'HEAD'
+        - HEAD
 
 asciidoc:
   extensions:
     - '@asciidoctor/tabs'
   attributes:
     idprefix: ''
-    stem: 'latexmath'
-    page-pagination: ''
-    experimental: ''
-    starknet_mainnet_version: 'Mainnet: 0.13.1.1'
-    starknet_testnet_version: 'Sepolia: 0.13.1.1'
-    page-starknet_version: '{starknet_mainnet_version} | {starknet_testnet_version}'
+    stem: latexmath
+    page-pagination:
+    experimental:
+    starknet_mainnet_version: Mainnet: 0.13.1.1
+    starknet_testnet_version: Sepolia: 0.13.1.1
+    page-starknet_version: {starknet_mainnet_version} | {starknet_testnet_version}
 
 antora:
   extensions:
-    - require: './lunr-tokenizer'
-    - require: './asciidoc-output-extension.js'
+    - require: ./lunr-tokenizer
+    - require: ./asciidoc-output-extension.js
 
 # output:
 #   dir: ./output_adoc
