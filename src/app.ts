@@ -5,8 +5,7 @@ import http from 'http';
 import routes from './routes';
 import { getPort } from './config';
 import logger from './utils/logger';
-import { getAvailableChatModelProviders } from './lib/providers';
-import { getHostedModeConfig } from './config';
+import { initializeLLMConfig } from './lib/modelProviderService';
 
 const port = getPort();
 
@@ -23,28 +22,13 @@ app.use(express.json({ limit: '50mb' }));
 // Initialize LLM models before mounting routes
 const initializeApp = async () => {
   try {
-    // Initialize LLM models
-    const hostedModeConfig = getHostedModeConfig();
-    const chatModelProviders = await getAvailableChatModelProviders();
-
-    // Set up default LLM and fast LLM
-    const chatModelProvider =
-      chatModelProviders[hostedModeConfig.DEFAULT_CHAT_PROVIDER];
-    const chatModel =
-      chatModelProviders[hostedModeConfig.DEFAULT_CHAT_PROVIDER][
-        hostedModeConfig.DEFAULT_CHAT_MODEL
-      ];
-
-    const fastChatModelProvider =
-      chatModelProviders[hostedModeConfig.DEFAULT_FAST_CHAT_PROVIDER];
-    const fastChatModel =
-      chatModelProviders[hostedModeConfig.DEFAULT_FAST_CHAT_PROVIDER][
-        hostedModeConfig.DEFAULT_FAST_CHAT_MODEL
-      ];
+    // Initialize LLM models using the centralized service
+    const modelConfig = await initializeLLMConfig();
 
     // Store LLM instances in app.locals for use in routes
-    app.locals.defaultLLM = chatModel;
-    app.locals.fastLLM = fastChatModel;
+    app.locals.defaultLLM = modelConfig.defaultLLM;
+    app.locals.fastLLM = modelConfig.fastLLM;
+    app.locals.embeddings = modelConfig.embeddings;
 
     // Mount routes after LLM initialization
     app.use('/', routes);
