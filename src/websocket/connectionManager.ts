@@ -1,9 +1,9 @@
 import { WebSocket } from 'ws';
 import { handleMessage } from './messageHandler';
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { IncomingMessage } from 'http';
 import logger from '../utils/logger';
-import { getModelConfig } from '../lib/modelProviderService';
+import { Container } from '../types/context';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 
 export interface LLMConfig {
   defaultLLM: BaseChatModel;
@@ -13,20 +13,19 @@ export interface LLMConfig {
 export const handleConnection = async (
   ws: WebSocket,
   request: IncomingMessage,
+  container: Container,
 ) => {
   try {
-    const modelConfig = getModelConfig();
-    const { defaultLLM, fastLLM, embeddings } = modelConfig;
+    const context = container.getContext();
+    const { defaultLLM, fastLLM, embeddings } = context.config.models;
 
     if (!defaultLLM || !embeddings) {
-      logger.error(
-        'Invalid LLM or embeddings model selected, please refresh the page and try again.',
-      );
+      logger.error('Invalid LLM or embeddings model configuration');
       ws.send(
         JSON.stringify({
           type: 'error',
-          data: 'Invalid LLM or embeddings model selected, please refresh the page and try again.',
-          key: 'INVALID_MODEL_SELECTED',
+          data: 'Invalid LLM or embeddings model configuration',
+          key: 'INVALID_MODEL_CONFIG',
         }),
       );
       ws.close();
