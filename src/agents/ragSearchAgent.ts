@@ -126,11 +126,18 @@ export const createBasicSearchRetrieverChain = (
   );
 
   return RunnableSequence.from([
-    PromptTemplate.fromTemplate(retrieverPrompt),
+    RunnableLambda.from(async (input: any) => {
+      const raw_input =
+        await PromptTemplate.fromTemplate(retrieverPrompt).format(input);
+      const cleaned_input = cleanConversation(raw_input);
+      logger.debug('Cleaned search retriever input:', { cleaned_input });
+
+      return cleaned_input;
+    }),
     fastLLM,
     strParser,
     RunnableLambda.from(async (input: string) => {
-      logger.debug('Search retriever input:', { input });
+      logger.debug('search prompt output:', { input });
 
       // Handle not_needed case
       if (config.queryClassifier?.isNotNeeded(input)) {
@@ -431,4 +438,35 @@ export const basicRagSearch = (
   }
 
   return emitter;
+};
+
+// Helper function to clean conversation
+const cleanConversation = (text: string): string => {
+  // Split at "Conversation" to keep header
+  const [header, conversation] = text.split('Conversation:\n');
+
+  // Get all conversation parts
+  const parts = conversation.split('\n\n');
+  console.log(parts);
+  console.log('--------------------------------');
+
+  // Filter out system message and keep only human messages
+  const humanStartIndex = parts.findIndex((part) => part.startsWith('human:'));
+  const humanMessages = parts.slice(humanStartIndex);
+
+  // Combine back together
+  const headerPlusHumanMessages =
+    header + '\n\n Conversation:\n' + humanMessages.join('\n');
+
+  console.log(header);
+
+  console.log(humanMessages);
+
+  // Remove the custom instructions from the conversation
+  const cleanedConversation = headerPlusHumanMessages.replace(
+    /<custom_instructions>.*?<\/custom_instructions>/,
+    '',
+  );
+
+  return cleanedConversation;
 };
