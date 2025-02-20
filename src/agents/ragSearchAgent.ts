@@ -342,7 +342,11 @@ export const createBasicSearchAnsweringChain = (
         let context = input.context;
 
         // Check if this is a contract-related query by looking for XML search terms
-        const isContractQuery_ = isContractQuery(input.query, context, config);
+        const isContractQuery_ = isContractQuery(
+          input.query + '\n\n' + formatChatHistoryAsString(input.chat_history),
+          context,
+          config,
+        );
 
         // Only inject the template for contract-related queries
         if (isContractQuery_ && config.contractTemplate) {
@@ -365,8 +369,9 @@ export const createBasicSearchAnsweringChain = (
         });
 
         return regularPromptTemplate.format({
-          ...input,
-          context,
+          query: input.query,
+          chat_history: formatChatHistoryAsString(input.chat_history),
+          context: context,
         });
       }
     }),
@@ -442,31 +447,26 @@ export const basicRagSearch = (
 
 // Helper function to clean conversation
 const cleanConversation = (text: string): string => {
-  // Split at "Conversation" to keep header
+  // Split at "Conversation:" to keep header
   const [header, conversation] = text.split('Conversation:\n');
 
-  // Get all conversation parts
-  const parts = conversation.split('\n\n');
-  console.log(parts);
-  console.log('--------------------------------');
+  // Get all messages by splitting on message type indicators
+  const messages = conversation.split(/\n(?=system:|human:)/);
 
-  // Filter out system message and keep only human messages
-  const humanStartIndex = parts.findIndex((part) => part.startsWith('human:'));
-  const humanMessages = parts.slice(humanStartIndex);
+  // Filter to keep only human messages
+  const humanMessages = messages.filter((msg) =>
+    msg.trim().startsWith('human:'),
+  );
 
   // Combine back together
-  const headerPlusHumanMessages =
-    header + '\n\n Conversation:\n' + humanMessages.join('\n');
+  const cleanedConversation =
+    header + '\nConversation:\n' + humanMessages.join('\n');
 
-  console.log(header);
-
-  console.log(humanMessages);
+  console.log('cleanedConversation', cleanedConversation);
 
   // Remove the custom instructions from the conversation
-  const cleanedConversation = headerPlusHumanMessages.replace(
+  return cleanedConversation.replace(
     /<custom_instructions>.*?<\/custom_instructions>/,
     '',
   );
-
-  return cleanedConversation;
 };

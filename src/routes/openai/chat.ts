@@ -2,7 +2,7 @@ import { AIMessage } from '@langchain/core/messages';
 import { HumanMessage } from '@langchain/core/messages';
 import { SystemMessage } from '@langchain/core/messages';
 import { BaseMessage } from '@langchain/core/messages';
-import { getStarknetEcosystemDbConfig } from '../../config';
+import { getCairoDbConfig, getStarknetEcosystemDbConfig } from '../../config';
 import logger from '../../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import { LLMConfig } from '../../websocket/connectionManager';
@@ -113,9 +113,9 @@ export const chatEndpoint = async (
     };
 
     //TODO: this should likely not be done here
-    const dbConfig = getStarknetEcosystemDbConfig();
+    const dbConfig = getCairoDbConfig();
     const vectorStore = await VectorStore.getInstance(dbConfig, embeddings);
-    const config = getAgentConfig('cairoBook', vectorStore);
+    const config = getAgentConfig('cairoCoder', vectorStore);
     let response_text = '';
 
     // Stream the response
