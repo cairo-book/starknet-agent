@@ -50,10 +50,7 @@ interface ChatCompletionRequest {
   response_format?: { type: 'text' | 'json_object' };
 }
 
-export const chatEndpoint = async (
-  req,
-  res,
-) => {
+export const chatEndpoint = async (req, res) => {
   try {
     const {
       model,
