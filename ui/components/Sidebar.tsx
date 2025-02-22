@@ -8,7 +8,6 @@ import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, type ReactNode } from 'react';
 import Layout from './Layout';
 import SettingsDialog from './SettingsDialog';
-import HostedSettingsDialog from './HostedSettingsDialog';
 
 const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   return (
@@ -44,6 +43,7 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
               height={40}
             />
           </a>
+          <div className="flex-1" />
           <VerticalIconContainer>
             {navLinks.map((link, i) => (
               <Link
@@ -62,24 +62,17 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
                 )}
               </Link>
             ))}
+            <div
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className="cursor-pointer relative flex flex-row items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 duration-150 transition w-full py-2 rounded-lg text-black/70 dark:text-white/70"
+            >
+              <Settings />
+            </div>
           </VerticalIconContainer>
-
-          {/* <Settings
-            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className="cursor-pointer"
+          <SettingsDialog
+            isOpen={isSettingsOpen}
+            setIsOpen={setIsSettingsOpen}
           />
-
-          {isHostedMode ? (
-            <HostedSettingsDialog
-              isOpen={isSettingsOpen}
-              setIsOpen={setIsSettingsOpen}
-            />
-          ) : (
-            <SettingsDialog
-              isOpen={isSettingsOpen}
-              setIsOpen={setIsSettingsOpen}
-            />
-          )} */}
         </div>
       </div>
 
