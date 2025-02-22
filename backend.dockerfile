@@ -5,7 +5,6 @@ WORKDIR /home/starknet-agent
 COPY src /home/starknet-agent/src
 COPY tsconfig.json /home/starknet-agent/
 COPY config.toml /home/starknet-agent/
-COPY drizzle.config.ts /home/starknet-agent/
 COPY package.json /home/starknet-agent/
 COPY yarn.lock /home/starknet-agent/
 
