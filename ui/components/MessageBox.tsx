@@ -4,25 +4,15 @@
 import React, { MutableRefObject, useEffect, useState } from 'react';
 import { Message } from './ChatWindow';
 import { cn } from '@/lib/utils';
-import {
-  BookCopy,
-  Disc3,
-  Volume2,
-  StopCircle,
-  Layers3,
-  Plus,
-  User,
-  Bot,
-} from 'lucide-react';
+import { BookCopy, Layers3, User, Bot } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
 import Copy from './MessageActions/Copy';
 import Rewrite from './MessageActions/Rewrite';
 import MessageSources from './MessageSources';
-import { useSpeech } from 'react-text-to-speech';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-// Common styling patterns
+// Common styling patterns (unchanged)
 const styles = {
   messageBubble: {
     base: 'rounded-2xl px-3 sm:px-4 py-2',
@@ -111,6 +101,87 @@ const styles = {
   },
 } as const;
 
+// Custom component for rendering code blocks
+const CodeBlock = ({
+  language,
+  children,
+  isComplete,
+}: {
+  language: string;
+  children: string;
+  isComplete: boolean;
+}) => {
+  const codeBlockClass = cn(
+    styles.codeBlock.base,
+    styles.codeBlock.background,
+    styles.codeBlock.border,
+    !isComplete && 'animate-pulse',
+  );
+
+  const CopyButton = () => (
+    <button
+      onClick={() => navigator.clipboard.writeText(children)}
+      className={cn(styles.copyButton.base, !isComplete && 'hidden')}
+      title="Copy code"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-gray-300 hover:text-white"
+      >
+        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+      </svg>
+    </button>
+  );
+
+  return (
+    <div className={codeBlockClass}>
+      {language !== 'text' && (
+        <div className={styles.codeBlock.header}>
+          <div className="flex items-center h-full px-2 sm:px-4">
+            <span className="text-xs text-gray-400">{language}</span>
+          </div>
+        </div>
+      )}
+      <CopyButton />
+      <div
+        className={cn(
+          styles.codeBlock.wrapper,
+          language !== 'text' ? 'pt-7 sm:pt-8' : '',
+          styles.codeBlock.padding,
+        )}
+      >
+        <SyntaxHighlighter
+          language={language === 'cairo' ? 'rust' : language}
+          style={vscDarkPlus}
+          customStyle={{
+            margin: 0,
+            borderRadius: '0.5rem',
+            background: 'transparent',
+            fontSize: 'inherit',
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
+            overflowWrap: 'anywhere',
+          }}
+          className={styles.codeBlock.fontSize}
+          wrapLines={true}
+          wrapLongLines={true}
+        >
+          {children}
+        </SyntaxHighlighter>
+      </div>
+    </div>
+  );
+};
+
 const MessageBox = ({
   message,
   messageIndex,
@@ -130,43 +201,89 @@ const MessageBox = ({
   rewrite: (messageId: string) => void;
   sendMessage: (message: string) => void;
 }) => {
-  const [parsedMessage, setParsedMessage] = useState(message.content);
-  const [speechMessage, setSpeechMessage] = useState(message.content);
+  const [parsedContent, setParsedContent] = useState<React.ReactNode[]>([]);
   const [showSources, setShowSources] = useState(isLast);
   const [showSuggestions, setShowSuggestions] = useState(isLast);
   const isUser = message.role === 'user';
 
   useEffect(() => {
-    const regex = /\[(\d+)\]/g;
+    const parseContent = (content: string) => {
+      const parts: React.ReactNode[] = [];
+      const lines = content.split('\n');
+      let inCodeBlock = false;
+      let codeContent = '';
+      let codeLanguage = 'text';
+      let currentText = '';
 
-    if (
+      for (const line of lines) {
+        if (line.trim().startsWith('```') && !inCodeBlock) {
+          // Start of code block
+          if (currentText) {
+            parts.push(<Markdown key={parts.length}>{currentText}</Markdown>);
+            currentText = '';
+          }
+          inCodeBlock = true;
+          codeLanguage = line.trim().replace('```', '') || 'text';
+          codeContent = '';
+        } else if (line.trim() === '```' && inCodeBlock) {
+          // End of code block
+          inCodeBlock = false;
+          parts.push(
+            <CodeBlock
+              key={parts.length}
+              language={codeLanguage}
+              children={codeContent.trim()}
+              isComplete={true}
+            />,
+          );
+          codeContent = '';
+        } else if (inCodeBlock) {
+          // Inside code block
+          codeContent += line + '\n';
+        } else {
+          // Regular text
+          currentText += line + '\n';
+        }
+      }
+
+      // Handle incomplete content
+      if (currentText) {
+        parts.push(<Markdown key={parts.length}>{currentText}</Markdown>);
+      }
+      if (inCodeBlock && codeContent) {
+        parts.push(
+          <CodeBlock
+            key={parts.length}
+            language={codeLanguage}
+            children={codeContent.trim()}
+            isComplete={false}
+          />,
+        );
+      }
+
+      return parts;
+    };
+
+    const contentWithSources =
       message.role === 'assistant' &&
-      message?.sources &&
+      message.sources &&
       message.sources.length > 0
-    ) {
-      setParsedMessage(
-        message.content.replace(
-          regex,
-          (_, number) =>
-            `<a href="${message.sources?.[number - 1]?.metadata?.url}" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">${number}</a>`,
-        ),
-      );
-      return;
-    }
+        ? message.content.replace(
+            /\[(\d+)\]/g,
+            (_, number) =>
+              `<a href="${message.sources?.[number - 1]?.metadata?.url}" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">${number}</a>`,
+          )
+        : message.content;
 
-    setSpeechMessage(message.content.replace(regex, ''));
-    setParsedMessage(message.content);
+    setParsedContent(parseContent(contentWithSources));
   }, [message.content, message.sources, message.role]);
 
-  // Update expanded state when isLast changes
   useEffect(() => {
     if (isLast) {
       setShowSources(true);
       setShowSuggestions(true);
     }
   }, [isLast]);
-
-  const { speechStatus, start, stop } = useSpeech({ text: speechMessage });
 
   return (
     <div
@@ -201,134 +318,9 @@ const MessageBox = ({
           )}
           role={isUser ? 'user message' : 'assistant message'}
         >
-          <Markdown
-            options={{
-              overrides: {
-                code: ({
-                  className,
-                  children,
-                }: {
-                  className?: string;
-                  children: string;
-                }) => {
-                  let language = className
-                    ? className.replace('lang-', '')
-                    : 'text';
-                  if (language == 'cairo') {
-                    language = 'rust';
-                  }
-                  const isInline = !className || className === 'language-text';
-                  const [isComplete, setIsComplete] = useState(false);
-
-                  useEffect(() => {
-                    const hasClosingBackticks = !children.trim().endsWith('`');
-                    setIsComplete(hasClosingBackticks);
-                  }, [children]);
-
-                  if (isInline) {
-                    return (
-                      <span
-                        className={cn(
-                          styles.inlineCode.base,
-                          isUser
-                            ? styles.inlineCode.user
-                            : styles.inlineCode.assistant,
-                          className,
-                        )}
-                      >
-                        {children}
-                      </span>
-                    );
-                  }
-
-                  const codeBlockClass = cn(
-                    styles.codeBlock.base,
-                    styles.codeBlock.background,
-                    styles.codeBlock.border,
-                    !isComplete && 'animate-pulse',
-                  );
-
-                  const CopyButton = () => (
-                    <button
-                      onClick={() => navigator.clipboard.writeText(children)}
-                      className={cn(
-                        styles.copyButton.base,
-                        !isComplete && 'hidden',
-                      )}
-                      title="Copy code"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-gray-300 hover:text-white"
-                      >
-                        <rect
-                          width="14"
-                          height="14"
-                          x="8"
-                          y="8"
-                          rx="2"
-                          ry="2"
-                        />
-                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                      </svg>
-                    </button>
-                  );
-
-                  return (
-                    <div className={codeBlockClass}>
-                      {language !== 'text' && (
-                        <div className={styles.codeBlock.header}>
-                          <div className="flex items-center h-full px-2 sm:px-4">
-                            <span className="text-xs text-gray-400">
-                              {language}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      <CopyButton />
-                      <div
-                        className={cn(
-                          styles.codeBlock.wrapper,
-                          language !== 'text' ? 'pt-7 sm:pt-8' : '',
-                          styles.codeBlock.padding,
-                        )}
-                      >
-                        <SyntaxHighlighter
-                          language={language}
-                          style={vscDarkPlus}
-                          customStyle={{
-                            margin: 0,
-                            borderRadius: '0.5rem',
-                            background: 'transparent',
-                            fontSize: 'inherit',
-                            wordBreak: 'break-word',
-                            whiteSpace: 'pre-wrap',
-                            overflowWrap: 'anywhere',
-                          }}
-                          className={styles.codeBlock.fontSize}
-                          wrapLines={true}
-                          wrapLongLines={true}
-                        >
-                          {children}
-                        </SyntaxHighlighter>
-                      </div>
-                    </div>
-                  );
-                },
-              },
-            }}
-            className={cn(styles.prose.base, isUser && styles.prose.user)}
-          >
-            {parsedMessage}
-          </Markdown>
+          <div className={cn(styles.prose.base, isUser && styles.prose.user)}>
+            {parsedContent}
+          </div>
         </div>
 
         {message.sources && message.sources.length > 0 && (
