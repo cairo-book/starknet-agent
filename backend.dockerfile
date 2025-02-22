@@ -1,19 +1,26 @@
 FROM public.ecr.aws/docker/library/node:20.11-bullseye-slim
 
-WORKDIR /home/starknet-agent
+WORKDIR /app
 
+# Copy root workspace files
 COPY pnpm-workspace.yaml ./
 COPY package.json ./
 COPY pnpm-lock.yaml ./
-COPY tsconfig.json ./
-COPY config.toml ./
+COPY turbo.json ./
 
+# Copy backend package
 COPY packages/backend ./packages/backend
 
-RUN mkdir /home/starknet-agent/data
+# Copy shared TypeScript config
+COPY packages/typescript-config ./packages/typescript-config
 
-RUN npm install -g pnpm
-RUN pnpm install
-RUN pnpm --filter @starknet-agent/backend build
+RUN mkdir /app/data
 
-CMD ["pnpm", "--filter", "@starknet-agent/backend", "start"]
+RUN npm install -g pnpm@9.10.0
+RUN pnpm install --frozen-lockfile
+
+# Build the backend package using Turbo
+RUN pnpm turbo run build --filter=@starknet-agent/backend
+
+WORKDIR /app/packages/backend
+CMD ["pnpm", "start"]

@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: backend.dockerfile
     volumes:
-      - backend-dbstore:/home/starknet-agent/data
+      - backend-dbstore:/app/data
     ports:
       - 3001:3001
     extra_hosts:
@@ -12,6 +12,8 @@ services:
     networks:
       - starknet-agent-network
     restart: unless-stopped
+    environment:
+      - NODE_ENV=production
 
   starknet-agent-frontend:
     build:

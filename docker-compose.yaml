@@ -4,7 +4,6 @@ services:
     build:
       context: .
       dockerfile: backend.dockerfile
-      network: host
     deploy:
       resources:
         limits:
@@ -12,7 +11,7 @@ services:
     ports:
       - 3001:3001
     volumes:
-      - backend-dbstore:/home/starknet-agent/data
+      - backend-dbstore:/app/data
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:

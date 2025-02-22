@@ -8,13 +8,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "format:write": "prettier . --write"
+    "format:write": "prettier . --write",
+    "typecheck": "tsc --noEmit",
+    "build:all-ts-errors": "__NEXT_TEST_MODE=true pnpm build"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
     "@icons-pack/react-simple-icons": "^9.4.0",
     "@langchain/core": "^0.2.36",
     "@tailwindcss/typography": "^0.5.12",
+    "autoprefixer": "^10.4.20",
     "clsx": "^2.1.0",
     "lucide-react": "^0.363.0",
     "markdown-to-jsx": "^7.4.5",

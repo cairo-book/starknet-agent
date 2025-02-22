@@ -1,21 +1,34 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 ARG NEXT_PUBLIC_WS_URL
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_HOSTED_MODE
 ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_HOSTED_MODE=${NEXT_PUBLIC_HOSTED_MODE}
 
-WORKDIR /home/starknet-agent
+WORKDIR /app
 
+# Copy root workspace files
 COPY pnpm-workspace.yaml ./
 COPY package.json ./
 COPY pnpm-lock.yaml ./
+COPY turbo.json ./
+
+# Copy UI package
 COPY packages/ui ./packages/ui
 
-RUN npm install -g pnpm
-RUN pnpm install
+# Copy shared TypeScript config
+COPY packages/typescript-config ./packages/typescript-config
+
+RUN npm install -g pnpm@9.10.0
+RUN pnpm install --frozen-lockfile
 RUN echo "Node version: $(node -v)"
 RUN echo "npm version: $(npm -v)"
 RUN echo "pnpm version: $(pnpm -v)"
-RUN pnpm --filter @starknet-agent/ui build
-CMD ["pnpm", "--filter", "@starknet-agent/ui", "start"]
+
+# Build the UI package using Turbo
+RUN pnpm turbo run build --filter=@starknet-agent/ui
+
+WORKDIR /app/packages/ui
+CMD ["pnpm", "start"]
