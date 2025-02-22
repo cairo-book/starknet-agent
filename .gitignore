@@ -33,6 +33,3 @@ logs/
 # Miscellaneous
 .DS_Store
 Thumbs.db
-
-# Db
-db.sqlite

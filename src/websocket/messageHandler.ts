@@ -3,9 +3,6 @@ import { BaseMessage, AIMessage, HumanMessage } from '@langchain/core/messages';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
 import logger from '../utils/logger';
-import db from '../db';
-import { chats, messages } from '../db/schema';
-import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 import {
   getCairoDbConfig,
@@ -86,19 +83,6 @@ const handleEmitterEvents = (
   });
   emitter.on('end', () => {
     ws.send(JSON.stringify({ type: 'messageEnd', messageId: messageId }));
-
-    db.insert(messages)
-      .values({
-        content: recievedMessage,
-        chatId: chatId,
-        messageId: messageId,
-        role: 'assistant',
-        metadata: JSON.stringify({
-          createdAt: new Date(),
-          ...(sources && sources.length > 0 && { sources }),
-        }),
-      })
-      .execute();
   });
   emitter.on('error', (data) => {
     const parsedData = JSON.parse(data);
@@ -183,35 +167,6 @@ export const handleMessage = async (
         );
 
         handleEmitterEvents(emitter, ws, id, parsedMessage.chatId);
-
-        const chat = await db.query.chats.findFirst({
-          where: eq(chats.id, parsedMessage.chatId),
-        });
-
-        if (!chat) {
-          await db
-            .insert(chats)
-            .values({
-              id: parsedMessage.chatId,
-              title: parsedMessage.content,
-              createdAt: new Date().toString(),
-              focusMode: parsedWSMessage.focusMode,
-            })
-            .execute();
-        }
-
-        await db
-          .insert(messages)
-          .values({
-            content: parsedMessage.content,
-            chatId: parsedMessage.chatId,
-            messageId: id,
-            role: 'user',
-            metadata: JSON.stringify({
-              createdAt: new Date(),
-            }),
-          })
-          .execute();
       } else {
         ws.send(
           JSON.stringify({

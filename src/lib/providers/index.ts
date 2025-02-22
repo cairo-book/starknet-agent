@@ -3,7 +3,6 @@ import { loadOllamaChatModels, loadOllamaEmbeddingsModels } from './ollama';
 import { loadOpenAIChatModels, loadOpenAIEmbeddingsModels } from './openai';
 import { loadAnthropicChatModels } from './anthropic';
 import { loadDeepseekChatModels } from './deepseek';
-import { loadTransformersEmbeddingsModels } from './transformers';
 import { getHostedModeConfig, isHostedMode } from '../../config';
 import { loadGeminiChatModels } from './gemini';
 
@@ -18,7 +17,6 @@ const chatModelProviders = {
 
 const embeddingModelProviders = {
   openai: loadOpenAIEmbeddingsModels,
-  local: loadTransformersEmbeddingsModels,
   ollama: loadOllamaEmbeddingsModels,
 };
 
