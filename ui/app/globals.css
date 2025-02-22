@@ -18,59 +18,10 @@ body {
   background-color: #000; /* Set a dark background color */
 }
 
-.starry-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0; /* Ensure it's behind other content */
-  pointer-events: none; /* Allow interaction with elements behind it */
-  overflow: hidden; /* Add this to prevent any overflow */
-}
-
 .content-wrapper {
   position: relative;
-  z-index: 1; /* Ensure content is above the starry background */
+  z-index: 1;
   min-height: 100vh;
-}
-
-.starry-background::before,
-.starry-background::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background-repeat: repeat;
-  animation: rotate 800s linear infinite; /* Slow down rotation */
-}
-
-.starry-background::before {
-  background-image: radial-gradient(
-    white,
-    rgba(255, 255, 255, 0.1) 2px,
-    /* Reduce star brightness */ transparent 15px
-  );
-  background-size: 450px 450px; /* Increase space between stars */
-  animation:
-    rotate 800s linear infinite,
-    scintillate1 5s infinite; /* Slow down animations */
-}
-
-.starry-background::after {
-  background-image:
-    radial-gradient(white, rgba(255, 255, 255, 0.08) 1px, transparent 8px),
-    radial-gradient(white, rgba(255, 255, 255, 0.05) 2px, transparent 10px),
-    radial-gradient(white, rgba(255, 255, 255, 0.03) 1px, transparent 6px);
-  background-size:
-    350px 350px,
-    250px 250px,
-    200px 200px; /* Increase space between stars */
-  animation:
-    rotate 700s linear infinite,
-    scintillate2 6s infinite; /* Slow down animations */
 }
 
 @keyframes rotate {

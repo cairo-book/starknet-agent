@@ -1,19 +1,23 @@
-import { ArrowLeftRight } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const Rewrite = ({
   rewrite,
   messageId,
+  className,
 }: {
   rewrite: (messageId: string) => void;
   messageId: string;
+  className?: string;
 }) => {
   return (
     <button
       onClick={() => rewrite(messageId)}
-      className="py-2 px-3 text-black/70 dark:text-white/70 rounded-xl hover:bg-light-secondary dark:hover:bg-dark-secondary transition duration-200 hover:text-black dark:hover:text-white flex flex-row items-center space-x-1"
+      className={className}
+      aria-label="Regenerate response"
+      title="Regenerate"
     >
-      <ArrowLeftRight size={18} />
-      <p className="text-xs font-medium">Rewrite</p>
+      <RefreshCw size={16} />
     </button>
   );
 };
