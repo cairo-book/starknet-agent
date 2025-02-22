@@ -20,6 +20,7 @@ const Chat = ({
   rewrite: (messageId: string) => void;
 }) => {
   const [dividerWidth, setDividerWidth] = useState(0);
+  const [prevMessageCount, setPrevMessageCount] = useState(messages.length);
   const dividerRef = useRef<HTMLDivElement | null>(null);
   const messageEnd = useRef<HTMLDivElement | null>(null);
 
@@ -31,43 +32,47 @@ const Chat = ({
     };
 
     updateDividerWidth();
-
     window.addEventListener('resize', updateDividerWidth);
+    return () => window.removeEventListener('resize', updateDividerWidth);
+  }, []);
 
-    return () => {
-      window.removeEventListener('resize', updateDividerWidth);
-    };
-  });
+  useEffect(() => {
+    if (messages.length > prevMessageCount) {
+      messageEnd.current?.scrollIntoView({ behavior: 'smooth' });
+      setPrevMessageCount(messages.length);
+    }
+  }, [messages.length, prevMessageCount]);
 
   return (
-    <div className="flex flex-col space-y-6 pt-8 pb-44 lg:pb-32 sm:mx-4 md:mx-8">
-      {messages.map((msg, i) => {
-        const isLast = i === messages.length - 1;
-
-        return (
-          <Fragment key={msg.messageId}>
-            <MessageBox
-              key={i}
-              message={msg}
-              messageIndex={i}
-              history={messages}
-              loading={loading}
-              dividerRef={isLast ? dividerRef : undefined}
-              isLast={isLast}
-              rewrite={rewrite}
-              sendMessage={sendMessage}
-            />
-            {!isLast && msg.role === 'assistant' && (
-              <div className="h-px w-full bg-light-secondary dark:bg-dark-secondary" />
-            )}
-          </Fragment>
-        );
-      })}
-      {loading && !messageAppeared && <MessageBoxLoading />}
-      <div ref={messageEnd} className="h-0" />
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-1 pt-16 sm:pt-20 pb-24 sm:pb-32 px-2 sm:px-4 md:px-8">
+        <div className="flex flex-col space-y-4 max-w-[95%] sm:max-w-[85%] md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto">
+          {messages.map((msg, i) => {
+            const isLast = i === messages.length - 1;
+            return (
+              <Fragment key={msg.messageId}>
+                <MessageBox
+                  message={msg}
+                  messageIndex={i}
+                  history={messages}
+                  loading={loading}
+                  dividerRef={isLast ? dividerRef : undefined}
+                  isLast={isLast}
+                  rewrite={rewrite}
+                  sendMessage={sendMessage}
+                />
+              </Fragment>
+            );
+          })}
+          {loading && !messageAppeared && <MessageBoxLoading />}
+          <div ref={messageEnd} className="h-0" />
+        </div>
+      </div>
       {dividerWidth > 0 && (
-        <div className="bottom-0  fixed z-40" style={{ width: dividerWidth }}>
-          <MessageInput loading={loading} sendMessage={sendMessage} />
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-light-primary dark:bg-dark-primary border-t border-light-200 dark:border-dark-200">
+          <div className="max-w-[95%] sm:max-w-[85%] md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto px-2 sm:px-4 md:px-8">
+            <MessageInput loading={loading} sendMessage={sendMessage} />
+          </div>
         </div>
       )}
     </div>

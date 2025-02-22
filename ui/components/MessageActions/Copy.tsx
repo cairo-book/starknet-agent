@@ -1,27 +1,37 @@
-import { Check, ClipboardList } from 'lucide-react';
-import { Message } from '../ChatWindow';
+import { Check, Copy as CopyIcon } from 'lucide-react';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { Message } from '../ChatWindow';
 
 const Copy = ({
-  message,
   initialMessage,
+  message,
+  className,
 }: {
-  message: Message;
   initialMessage: string;
+  message: Message;
+  className?: string;
 }) => {
   const [copied, setCopied] = useState(false);
 
+  const copy = () => {
+    navigator.clipboard.writeText(initialMessage);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <button
-      onClick={() => {
-        const contentToCopy = `${initialMessage}${message.sources && message.sources.length > 0 && `\n\nCitations:\n${message.sources?.map((source: any, i: any) => `[${i + 1}] ${source.metadata.url}`).join(`\n`)}`}`;
-        navigator.clipboard.writeText(contentToCopy);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1000);
-      }}
-      className="p-2 text-black/70 dark:text-white/70 rounded-xl hover:bg-light-secondary dark:hover:bg-dark-secondary transition duration-200 hover:text-black dark:hover:text-white"
+      onClick={copy}
+      className={className}
+      aria-label={copied ? 'Copied to clipboard' : 'Copy to clipboard'}
+      title={copied ? 'Copied!' : 'Copy'}
     >
-      {copied ? <Check size={18} /> : <ClipboardList size={18} />}
+      {copied ? (
+        <Check size={16} className="text-green-500 dark:text-green-400" />
+      ) : (
+        <CopyIcon size={16} />
+      )}
     </button>
   );
 };

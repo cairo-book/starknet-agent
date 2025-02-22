@@ -13,7 +13,6 @@ export const metadata: Metadata = {
 const Home = () => {
   return (
     <>
-      <div className="starry-background" />
       <div className="content-wrapper">
         <Suspense>
           <ChatWindow />
