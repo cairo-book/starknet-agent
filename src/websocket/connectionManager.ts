@@ -1,15 +1,9 @@
 import { WebSocket } from 'ws';
 import { handleMessage } from './messageHandler';
-import {
-  getAvailableEmbeddingModelProviders,
-  getAvailableChatModelProviders,
-} from '../lib/providers';
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import type { Embeddings } from '@langchain/core/embeddings';
 import type { IncomingMessage } from 'http';
 import logger from '../utils/logger';
-import { ChatOpenAI } from '@langchain/openai';
-import { getHostedModeConfig } from '../config';
+import { Container } from '../types/context';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 
 export interface LLMConfig {
   defaultLLM: BaseChatModel;
@@ -19,58 +13,23 @@ export interface LLMConfig {
 export const handleConnection = async (
   ws: WebSocket,
   request: IncomingMessage,
+  container: Container,
 ) => {
   try {
-    const [chatModelProviders, embeddingModelProviders] = await Promise.all([
-      getAvailableChatModelProviders(),
-      getAvailableEmbeddingModelProviders(),
-    ]);
-
-    const hostedModeConfig = getHostedModeConfig();
-
-    // Default LLM setup
-    const chatModelProvider =
-      chatModelProviders[hostedModeConfig.DEFAULT_CHAT_PROVIDER];
-    const chatModel =
-      chatModelProviders[hostedModeConfig.DEFAULT_CHAT_PROVIDER][
-        hostedModeConfig.DEFAULT_CHAT_MODEL
-      ];
-
-    // Fast LLM setup
-    const fastChatModelProvider =
-      chatModelProviders[hostedModeConfig.DEFAULT_FAST_CHAT_PROVIDER];
-    const fastChatModel =
-      chatModelProviders[hostedModeConfig.DEFAULT_FAST_CHAT_PROVIDER][
-        hostedModeConfig.DEFAULT_FAST_CHAT_MODEL
-      ];
-
-    // Embedding model setup
-    const embeddingModelProvider =
-      embeddingModelProviders[hostedModeConfig.DEFAULT_EMBEDDING_PROVIDER];
-    const embeddingModel =
-      embeddingModelProvider[hostedModeConfig.DEFAULT_EMBEDDING_MODEL];
-
-    let defaultLLM: BaseChatModel | undefined;
-    let fastLLM: BaseChatModel | undefined;
-    let embeddings: Embeddings | undefined;
-
-    // Initialize default LLM
-    defaultLLM = chatModel;
-    fastLLM = fastChatModel;
-    embeddings = embeddingModel;
+    const context = container.getContext();
+    const { defaultLLM, fastLLM, embeddings } = context.config.models;
 
     if (!defaultLLM || !embeddings) {
-      logger.error(
-        'Invalid LLM or embeddings model selected, please refresh the page and try again.',
-      );
+      logger.error('Invalid LLM or embeddings model configuration');
       ws.send(
         JSON.stringify({
           type: 'error',
-          data: 'Invalid LLM or embeddings model selected, please refresh the page and try again.',
-          key: 'INVALID_MODEL_SELECTED',
+          data: 'Invalid LLM or embeddings model configuration',
+          key: 'INVALID_MODEL_CONFIG',
         }),
       );
       ws.close();
+      return;
     }
 
     const llmConfig: LLMConfig = {

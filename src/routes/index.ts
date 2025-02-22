@@ -2,11 +2,13 @@ import express from 'express';
 import configRouter from './config';
 import modelsRouter from './models';
 import suggestionsRouter from './suggestions';
+import openaiRouter from './openai';
 
 const router = express.Router();
 
-router.use('/config', configRouter);
-router.use('/models', modelsRouter);
-router.use('/suggestions', suggestionsRouter);
+router.use('/api/config', configRouter);
+router.use('/api/models', modelsRouter);
+router.use('/api/suggestions', suggestionsRouter);
+router.use('/v1', openaiRouter);
 
 export default router;

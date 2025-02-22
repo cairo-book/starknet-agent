@@ -15,7 +15,8 @@ pub trait IRegistry<TContractState> {
 
 // Define the contract module
 #[starknet::contract]
-mod Registry {
+pub mod Registry {
+    // Always add imports from inside the contract module
     // Always use full paths for core library imports.
     use core::starknet::ContractAddress;
     // Required for interactions with 'map' and the 'entry' method. Don't forget 'StoragePathEntry'!!
@@ -28,7 +29,7 @@ mod Registry {
 
     // Define storage variables
     #[storage]
-    struct Storage {
+    pub struct Storage {
         data_vector: Vec<felt252>, // A vector to store data
         user_data_map: Map<ContractAddress, felt252>, // A mapping to store user-specific data
         foo: usize, // A simple storage variable
@@ -37,19 +38,19 @@ mod Registry {
     // events derive 'Drop, starknet::Event' and the '#[event]' attribute
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         DataRegistered: DataRegistered,
         DataUpdated: DataUpdated,
     }
 
     #[derive(Drop, starknet::Event)]
-    struct DataRegistered {
+    pub struct DataRegistered {
         user: ContractAddress,
         data: felt252,
     }
 
     #[derive(Drop, starknet::Event)]
-    struct DataUpdated {
+    pub struct DataUpdated {
         user: ContractAddress,
         index: u64,
         new_data: felt252,
@@ -58,7 +59,7 @@ mod Registry {
     // Implement the contract interface
     // all these functions are public
     #[abi(embed_v0)]
-    impl RegistryImpl of super::IRegistry<ContractState> {
+    pub impl RegistryImpl of super::IRegistry<ContractState> {
         // Register data and emit an event
         fn register_data(ref self: ContractState, data: felt252) {
             let caller = get_caller_address();
@@ -116,5 +117,6 @@ the syntax of the Cairo language for Starknet Smart Contracts. Follow the import
 - Always define the interface right above the contract module.
 - Always import strictly the required types in the module the interface is implemented in.
 - Always import the required types of the contract inside the contract module.
+- Always make the interface and the contract module 'pub'
 </important_rules>
 `;
