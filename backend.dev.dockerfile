@@ -10,18 +10,19 @@ RUN apt-get update && apt-get install -y \
     python-is-python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy package files
-COPY package.json yarn.lock ./
+# Copy workspace and configuration files
+COPY pnpm-workspace.yaml ./
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+COPY config.toml ./
 
-# Install dependencies
-RUN yarn install
+# Copy backend package
+COPY packages/* packages/
 
-# Copy source code
-COPY . .
-
-# Build TypeScript
-RUN yarn build
+RUN npm install -g pnpm
+RUN pnpm install
+RUN pnpm --filter @starknet-agent/backend build
 
 EXPOSE 3001
 
-CMD ["yarn", "run", "dev"]
+CMD ["pnpm", "--filter", "@starknet-agent/backend", "dev"]

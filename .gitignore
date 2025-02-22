@@ -20,8 +20,11 @@ yarn-error.log
 .env.test.local
 .env.production.local
 
+packages/ui/.env
+
 # Config files
 config.toml
+packages/backend/config.toml
 
 # Log files
 logs/
@@ -33,3 +36,8 @@ logs/
 # Miscellaneous
 .DS_Store
 Thumbs.db
+
+.turbo
+
+packages/**/node_modules
+packages/**/dist

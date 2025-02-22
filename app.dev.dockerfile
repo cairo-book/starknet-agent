@@ -9,10 +9,12 @@ ENV NEXT_PUBLIC_HOSTED_MODE=${NEXT_PUBLIC_HOSTED_MODE}
 
 WORKDIR /home/starknet-agent
 
-COPY ui/package.json ui/yarn.lock ./
+COPY pnpm-workspace.yaml ./
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+COPY packages/ui ./packages/ui
 
-RUN yarn install
+RUN npm install -g pnpm
+RUN pnpm install
 
-COPY ui ./
-
-CMD ["yarn", "dev", "--hostname", "0.0.0.0"]
+CMD ["pnpm", "--filter", "@starknet-agent/ui", "dev", "--hostname", "0.0.0.0"]

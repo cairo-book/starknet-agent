@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: backend.dev.dockerfile
     volumes:
-      - ./src:/home/starknet-agent/src
+      - ./packages/backend:/home/starknet-agent/packages/backend
       - ./config.toml:/home/starknet-agent/config.toml
       - backend-dbstore:/home/starknet-agent/data
     ports:
@@ -17,7 +17,7 @@ services:
       - NODE_ENV=development
       - NEXT_PUBLIC_HOSTED_MODE=true
       - LOG_LEVEL=debug
-    command: yarn run dev
+    command: pnpm --filter @starknet-agent/backend dev
     restart: unless-stopped
 
   starknet-agent-frontend:
@@ -29,7 +29,7 @@ services:
         - NEXT_PUBLIC_WS_URL=ws://127.0.0.1:3001
         - NEXT_PUBLIC_HOSTED_MODE=true
     volumes:
-      - ./ui:/home/starknet-agent
+      - ./packages/ui:/home/starknet-agent/packages/ui
       - /home/starknet-agent/node_modules
       - /home/starknet-agent/.next
     depends_on:
