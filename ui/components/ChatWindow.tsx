@@ -301,6 +301,7 @@ const loadMessages = async (
 
 export type StoredChat = {
   id: string;
+  title: string;
   messages: Message[];
   focusMode: string;
   createdAt: Date;
@@ -319,6 +320,7 @@ const saveMessagesToLocalStorage = (
 
   const updatedChat: StoredChat = {
     id: chatId,
+    title: messages[0].content,
     messages,
     focusMode,
     createdAt: new Date(),

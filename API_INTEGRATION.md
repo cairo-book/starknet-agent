@@ -38,15 +38,6 @@ Currently, the API does not require authentication. However, this may change in 
 }
 ```
 
-### 2. Get Chat History
-
-- **URL**: `/chats`
-- **Method**: GET
-- **Description**: Retrieves the chat history (only available in non-hosted mode).
-- **Response**: JSON array of chat objects.
-
-> Note: Disabled in hosted mode
-
 ### 3. Get Suggestions
 
 - **URL**: `/suggestions`

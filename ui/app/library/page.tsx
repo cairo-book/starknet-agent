@@ -6,56 +6,22 @@ import { formatTimeDifference } from '@/lib/utils';
 import { BookOpenText, ClockIcon, Delete, ScanEye } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
-export interface Chat {
-  id: string;
-  title: string;
-  createdAt: string;
-  focusMode: string;
-}
-
 const Page = () => {
-  const [chats, setChats] = useState<Chat[]>([]);
+  const [chats, setChats] = useState<StoredChat[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const isHostedModel = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
 
   useEffect(() => {
     const fetchChats = async () => {
-      if (isHostedModel) {
-        const storedChats = JSON.parse(
-          localStorage.getItem('chats') || '[]',
-        ) as StoredChat[];
-        setChats(
-          storedChats.map(
-            (chat): Chat => ({
-              id: chat.id,
-              title: chat.messages[0].content,
-              createdAt: chat.createdAt.toString(),
-              focusMode: chat.focusMode,
-            }),
-          ),
-        );
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chats`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await res.json();
-
-      setChats(data?.chats ?? []);
+      const storedChats = JSON.parse(
+        localStorage.getItem('chats') || '[]',
+      ) as StoredChat[];
+      setChats(storedChats);
       setLoading(false);
+      return;
     };
 
     fetchChats();
-  }, [isHostedModel]);
+  }, []);
 
   return loading ? (
     <div className="flex flex-row items-center justify-center min-h-screen">

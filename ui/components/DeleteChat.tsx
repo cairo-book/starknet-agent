@@ -26,38 +26,13 @@ const DeleteChat = ({
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
-    if (process.env.NEXT_PUBLIC_HOSTED_MODE === 'true') {
-      deleteChatFromLocalStorage(chatId);
-      const newChats = chats.filter((chat) => chat.id !== chatId);
-      setChats(newChats);
-      setConfirmationDialogOpen(false);
-      return;
-    }
     setLoading(true);
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      if (res.status != 200) {
-        throw new Error('Failed to delete chat');
-      }
-
-      const newChats = chats.filter((chat) => chat.id !== chatId);
-
-      setChats(newChats);
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setConfirmationDialogOpen(false);
-      setLoading(false);
-    }
+    deleteChatFromLocalStorage(chatId);
+    const newChats = chats.filter((chat) => chat.id !== chatId);
+    setChats(newChats);
+    setConfirmationDialogOpen(false);
+    setLoading(false);
+    return;
   };
 
   return (
