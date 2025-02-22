@@ -29,6 +29,12 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
       active: segments.length === 0 || segments.includes('c'),
       label: 'Home',
     },
+    {
+      icon: BookOpenText,
+      href: '/history',
+      active: segments.includes('history'),
+      label: 'History',
+    },
   ];
 
   return (
