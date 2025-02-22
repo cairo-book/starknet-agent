@@ -1,34 +1,7 @@
-import { startWebSocketServer } from './websocket';
-import express from 'express';
-import cors from 'cors';
-import http from 'http';
-import routes from './routes';
-import { getPort } from './config';
+import { createApplication } from './server';
 import logger from './utils/logger';
 
-const port = getPort();
-
-const app = express();
-const server = http.createServer(app);
-
-const corsOptions = {
-  origin: '*',
-};
-
-app.use(cors(corsOptions));
-app.use(express.json({ limit: '50mb' }));
-
-app.use('/api', routes);
-app.get('/api', (_, res) => {
-  res.status(200).json({ status: 'ok' });
-});
-
-server.listen(port, () => {
-  logger.info(`Server is running on port ${port}`);
-});
-
-startWebSocketServer(server);
-
+// Error handling for uncaught exceptions
 process.on('uncaughtException', (err, origin) => {
   logger.error(`Uncaught Exception at ${origin}: ${err}`);
 });
@@ -36,3 +9,20 @@ process.on('uncaughtException', (err, origin) => {
 process.on('unhandledRejection', (reason, promise) => {
   logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
 });
+
+// Start the application
+async function startApplication() {
+  try {
+    const { server, container } = await createApplication();
+    const { port } = container.getContext().config;
+
+    server.listen(port, () => {
+      logger.info(`Server is running on port ${port}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start application:', error);
+    process.exit(1);
+  }
+}
+
+startApplication();

@@ -3,6 +3,7 @@ import { basicContractTemplate } from './templates/contractTemplate';
 import { VectorStore } from '../db/vectorStore';
 import {
   cairoBookPrompts,
+  cairoCoderPrompts,
   starknetDocsPrompts,
   starknetEcosystemPrompts,
   starknetFoundryPrompts,
@@ -53,7 +54,8 @@ type AvailableAgents =
   | 'starknetDocs'
   | 'starknetEcosystem'
   | 'starknetFoundry'
-  | 'succintCairoBook';
+  | 'succintCairoBook'
+  | 'cairoCoder';
 
 // We'll make this a factory function instead of a static object
 export const createAgentConfigs = (
@@ -112,6 +114,16 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 5,
     similarityThreshold: 0.5,
+  },
+  cairoCoder: {
+    name: 'Cairo Coder',
+    prompts: cairoCoderPrompts,
+    vectorStore,
+    contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
+    queryClassifier: defaultQueryClassifier,
+    maxSourceCount: 15,
+    similarityThreshold: 0.4,
   },
 });
 

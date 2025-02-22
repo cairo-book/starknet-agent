@@ -31,6 +31,11 @@ import {
   SUCCINT_CAIRO_BOOK_RESPONSE_PROMPT,
   SUCCINT_CAIRO_BOOK_NO_SOURCE_PROMPT,
 } from './succintCairoBookPrompts';
+import {
+  CAIROCODER_NO_SOURCE_PROMPT,
+  CAIROCODER_RESPONSE_PROMPT,
+  CAIROCODER_RETRIEVER_PROMPT,
+} from './cairoCoderPrompts';
 
 export const cairoBookPrompts: AgentPrompts = {
   searchRetrieverPrompt: CAIRO_BOOK_RETRIEVER_PROMPT,
@@ -60,6 +65,12 @@ export const succintCairoBookPrompts: AgentPrompts = {
   searchRetrieverPrompt: SUCCINT_CAIRO_BOOK_RETRIEVER_PROMPT,
   searchResponsePrompt: SUCCINT_CAIRO_BOOK_RESPONSE_PROMPT,
   noSourceFoundPrompt: SUCCINT_CAIRO_BOOK_NO_SOURCE_PROMPT,
+};
+
+export const cairoCoderPrompts: AgentPrompts = {
+  searchRetrieverPrompt: CAIROCODER_RETRIEVER_PROMPT,
+  searchResponsePrompt: CAIROCODER_RESPONSE_PROMPT,
+  noSourceFoundPrompt: CAIROCODER_NO_SOURCE_PROMPT,
 };
 
 // Helper function to inject dynamic values into prompts
