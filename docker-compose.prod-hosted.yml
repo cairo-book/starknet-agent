@@ -1,26 +1,12 @@
 services:
-  searxng:
-    image: docker.io/searxng/searxng:latest
-    volumes:
-      - ./searxng:/etc/searxng:rw
-    ports:
-      - 4000:8080
-    networks:
-      - starknet-agent-network
-    restart: unless-stopped
-
   starknet-agent-backend:
     build:
       context: .
       dockerfile: backend.dockerfile
-      args:
-        - SEARXNG_API_URL=http://searxng:8080
     volumes:
       - backend-dbstore:/home/starknet-agent/data
     ports:
       - 3001:3001
-    depends_on:
-      - searxng
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:

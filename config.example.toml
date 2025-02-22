@@ -6,7 +6,6 @@ DEEPSEEK = ""
 
 [API_ENDPOINTS]
 OLLAMA = ""
-SEARXNG = "http://localhost:32768"
 
 [CAIRO_DB]
 MONGODB_URI = ""

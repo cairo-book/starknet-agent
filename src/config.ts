@@ -27,7 +27,6 @@ interface Config {
     GEMINI: string;
   };
   API_ENDPOINTS: {
-    SEARXNG: string;
     OLLAMA: string;
   };
   HOSTED_MODE?: {
@@ -71,8 +70,6 @@ export const getAnthropicApiKey = () => loadConfig().API_KEYS.ANTHROPIC;
 export const getDeepseekApiKey = () => loadConfig().API_KEYS.DEEPSEEK;
 
 export const getGeminiApiKey = () => loadConfig().API_KEYS.GEMINI;
-
-export const getSearxngApiEndpoint = () => loadConfig().API_ENDPOINTS.SEARXNG;
 
 export const getOllamaApiEndpoint = () => loadConfig().API_ENDPOINTS.OLLAMA;
 
