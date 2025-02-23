@@ -1,6 +1,3 @@
-import { AgentPrompts } from '../../types/agent';
-import { getStarknetFoundryVersion, getScarbVersion } from '../../config';
-
 // Import individual prompt files
 import {
   CAIRO_BOOK_RETRIEVER_PROMPT,
@@ -36,6 +33,9 @@ import {
   CAIROCODER_RESPONSE_PROMPT,
   CAIROCODER_RETRIEVER_PROMPT,
 } from './cairoCoderPrompts';
+import { AgentPrompts } from '../../core/types';
+import { getScarbVersion } from '../../config';
+import { getStarknetFoundryVersion } from '../../config';
 
 export const cairoBookPrompts: AgentPrompts = {
   searchRetrieverPrompt: CAIRO_BOOK_RETRIEVER_PROMPT,

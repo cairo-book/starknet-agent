@@ -4,10 +4,10 @@ import {
   ProcessedQuery,
   RetrievedDocuments,
   RagSearchConfig,
+  BookChunk,
 } from '../core/types';
-import logger from '../../utils/logger';
-import computeSimilarity from '../../utils/computeSimilarity';
-import { BookChunk } from '../../types/types';
+import logger from '@starknet-agent/backend/logger';
+import computeSimilarity from '../utils/computeSimilarity';
 /**
  * Retrieves and refines relevant documents based on a processed query.
  */

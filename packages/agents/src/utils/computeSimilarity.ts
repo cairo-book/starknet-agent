@@ -1,6 +1,6 @@
 import dot from 'compute-dot';
 import cosineSimilarity from 'compute-cosine-similarity';
-import { getSimilarityMeasure } from '../config';
+import { getSimilarityMeasure } from '../../../backend/src/config';
 
 const computeSimilarity = (x: number[], y: number[]): number => {
   const similarityMeasure = getSimilarityMeasure();

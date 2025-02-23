@@ -1,11 +1,11 @@
 import { BaseMessage } from '@langchain/core/messages';
 import type { Embeddings } from '@langchain/core/embeddings';
-import { VectorStore } from '../../db/vectorStore';
 import { EventEmitter } from 'events';
 import { RagAgentFactory } from '../ragAgentFactory';
-import { LLMConfig } from '../../websocket/connectionManager';
+import { LLMConfig } from '../config/agentConfigs';
+import { VectorStore } from '../db/vectorStore';
 
-export const handleSuccintCairoBookSearch = (
+export const handleStarknetDocsSearch = (
   message: string,
   history: BaseMessage[],
   llm: LLMConfig,
@@ -13,7 +13,7 @@ export const handleSuccintCairoBookSearch = (
   additionalParams: { vectorStore: VectorStore },
 ): EventEmitter => {
   return RagAgentFactory.createAgent(
-    'succintCairoBook',
+    'starknetDocs',
     message,
     history,
     llm,
@@ -22,4 +22,4 @@ export const handleSuccintCairoBookSearch = (
   );
 };
 
-export default handleSuccintCairoBookSearch;
+export default handleStarknetDocsSearch;

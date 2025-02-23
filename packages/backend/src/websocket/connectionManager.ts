@@ -4,11 +4,7 @@ import type { IncomingMessage } from 'http';
 import logger from '../utils/logger';
 import { Container } from '../types/context';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-
-export interface LLMConfig {
-  defaultLLM: BaseChatModel;
-  fastLLM?: BaseChatModel;
-}
+import { LLMConfig } from '@starknet-agent/agents/config';
 
 export const handleConnection = async (
   ws: WebSocket,

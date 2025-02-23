@@ -4,8 +4,9 @@ import { QueryProcessor } from './queryProcessor';
 import { DocumentRetriever } from './documentRetriever';
 import { AnswerGenerator } from './answerGenerator';
 import EventEmitter from 'events';
-import { LLMConfig } from '../../websocket/connectionManager';
-import logger from '../../utils/logger';
+import logger from '@starknet-agent/backend/logger';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { LLMConfig } from '../config/agentConfigs';
 
 /**
  * Orchestrates the RAG process in a clear, sequential flow.

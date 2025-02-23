@@ -1,5 +1,5 @@
 {
-  "name": "@starknet-agent/backend",
+  "name": "@starknet-agent/agents",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -31,12 +31,14 @@
     "zod": "^3.24.2"
   },
   "exports": {
-    "./types": "./src/types/types.ts",
-    "./logger": "./src/utils/logger.ts"
+    "./types": "./src/core/types.ts",
+    "./config": "./src/config/agentConfigs.ts",
+    "./factory": "./src/ragAgentFactory.ts",
+    "./vectorStore": "./src/db/vectorStore.ts",
+    "./suggestionGenerator": "./src/suggestionGeneratorAgent.ts"
   },
   "devDependencies": {
     "@starknet-agent/typescript-config": "workspace:*",
-    "@starknet-agent/agents": "workspace:*",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "jest": "^29.7.0",

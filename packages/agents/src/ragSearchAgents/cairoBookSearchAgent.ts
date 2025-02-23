@@ -19,10 +19,10 @@
 
 import { BaseMessage } from '@langchain/core/messages';
 import type { Embeddings } from '@langchain/core/embeddings';
-import { VectorStore } from '../../db/vectorStore';
 import { EventEmitter } from 'events';
-import { LLMConfig } from '../../websocket/connectionManager';
 import { RagAgentFactory } from '../ragAgentFactory';
+import { LLMConfig } from '../config/agentConfigs';
+import { VectorStore } from '../db/vectorStore';
 
 export const handleCairoBookSearch = (
   message: string,

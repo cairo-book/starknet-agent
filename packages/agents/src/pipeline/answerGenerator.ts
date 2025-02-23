@@ -6,8 +6,8 @@ import {
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RetrievedDocuments, RagInput, RagSearchConfig } from '../core/types';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
-import logger from '../../utils/logger';
-import formatChatHistoryAsString from '../../utils/formatHistory';
+import logger from '../utils/logger';
+import formatChatHistoryAsString from '../utils/formatHistory';
 import { BaseMessage } from '@langchain/core/messages';
 
 /**

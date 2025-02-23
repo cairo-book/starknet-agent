@@ -23,8 +23,8 @@
     "./vectorStore": "./src/db/vectorStore.ts"
   },
   "devDependencies": {
-    "@starknet-agent/backend": "workspace:*",
     "@starknet-agent/typescript-config": "workspace:*",
+    "@starknet-agent/agents": "workspace:*",
     "@types/jest": "^29.5.14",
     "jest": "^29.7.0",
     "nodemon": "^3.1.9",
