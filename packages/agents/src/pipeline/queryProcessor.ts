@@ -2,9 +2,9 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ProcessedQuery, RagInput, RagSearchConfig } from '../core/types';
-import formatChatHistoryAsString from '../../utils/formatHistory';
-import logger from '../../utils/logger';
-import { parseXMLContent } from '../../config/agentConfigs';
+import formatChatHistoryAsString from '../utils/formatHistory';
+import { parseXMLContent } from '../config/agentConfigs';
+import logger from '../utils/logger';
 /**
  * Transforms a raw user query into an actionable form (e.g., rephrased query or search terms).
  */

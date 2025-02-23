@@ -1,6 +1,6 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { Document } from '@langchain/core/documents';
-import { VectorStore } from '@langchain/core/vectorstores';
+import { VectorStore } from '../db/vectorStore';
 
 export interface AgentPrompts {
   searchRetrieverPrompt: string;
@@ -51,4 +51,19 @@ export interface RagSearchConfig extends AgentConfig {
   testTemplate?: string;
   maxSourceCount?: number;
   similarityThreshold?: number;
+}
+
+export type BookChunk = {
+  name: string;
+  title: string;
+  chunkNumber: number;
+  contentHash: string;
+  uniqueId: string;
+  sourceLink: string;
+};
+
+export interface ParsedSection {
+  title: string;
+  content: string;
+  anchor?: string; // Optional custom anchor
 }

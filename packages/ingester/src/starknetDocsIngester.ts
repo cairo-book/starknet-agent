@@ -3,10 +3,8 @@ import * as path from 'path';
 import downdoc from 'downdoc';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
-import { VectorStore } from '@starknet-agent/backend/vectorStore';
+import { BookChunk, VectorStore } from '@starknet-agent/agents/index';
 import { Document } from '@langchain/core/documents';
-import logger from '@starknet-agent/backend/logger';
-import { BookChunk } from '@starknet-agent/backend/types';
 import {
   addSectionWithSizeLimit,
   BookConfig,
@@ -19,6 +17,7 @@ import {
   processDocFiles,
 } from './shared';
 import { splitMarkdownIntoSections } from './cairoBookIngester';
+import logger from '@starknet-agent/agents/utils/logger';
 
 // Configuration
 const STARKNET_DOCS_CONFIG: BookConfig = {

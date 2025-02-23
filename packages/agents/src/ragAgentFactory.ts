@@ -1,10 +1,13 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { Embeddings } from '@langchain/core/embeddings';
-import { LLMConfig } from '../websocket/connectionManager';
-import { AvailableAgents, getAgentConfig } from '../config/agentConfigs';
+import {
+  AvailableAgents,
+  getAgentConfig,
+  LLMConfig,
+} from './config/agentConfigs';
 import EventEmitter from 'events';
-import { VectorStore } from '../db/vectorStore';
 import { RagPipeline } from './pipeline/ragPipeline';
+import { VectorStore } from './db/vectorStore';
 
 export class RagAgentFactory {
   static createAgent(

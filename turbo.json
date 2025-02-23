@@ -1,6 +1,12 @@
 {
   "$schema": "https://turborepo.org/schema.json",
   "tasks": {
+    "topo": {
+      "dependsOn": ["^topo"]
+    },
+    "check-types": {
+      "dependsOn": ["topo"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**", "out/**", ".next/**"]
@@ -10,6 +16,11 @@
       "persistent": true
     },
     "lint": {},
-    "test": {}
+    "test": {},
+    "start": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true
+    }
   }
 }

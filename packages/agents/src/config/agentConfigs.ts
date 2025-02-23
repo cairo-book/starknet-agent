@@ -1,6 +1,4 @@
-import { RagSearchConfig } from '../types/agent';
 import { basicContractTemplate } from './templates/contractTemplate';
-import { VectorStore } from '../db/vectorStore';
 import {
   cairoBookPrompts,
   cairoCoderPrompts,
@@ -10,6 +8,14 @@ import {
   succintCairoBookPrompts,
 } from './prompts';
 import { basicTestTemplate } from './templates/testTemplate';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { VectorStore } from '../db/vectorStore';
+import { RagSearchConfig } from '../core/types';
+
+export interface LLMConfig {
+  defaultLLM: BaseChatModel;
+  fastLLM?: BaseChatModel;
+}
 
 export const parseXMLContent = (xml: string, tag: string): string[] => {
   const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 'gs');

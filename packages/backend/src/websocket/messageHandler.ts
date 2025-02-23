@@ -11,14 +11,13 @@ import {
   getStarknetFoundryDbConfig,
   VectorStoreConfig,
 } from '../config';
-import { VectorStore } from '../db/vectorStore';
-import handleCairoBookSearch from '../agents/ragSearchAgents/cairoBookSearchAgent';
 import { HandlerOptions, SearchHandler } from '../types/types';
-import handleStarknetDocsSearch from '../agents/ragSearchAgents/starknetDocsSearchAgent';
-import handleStarknetEcosystemSearch from '../agents/ragSearchAgents/starknetEcosystemSearchAgent';
-import handleSuccintCairoBookSearch from '../agents/ragSearchAgents/succintCairoBookSearchAgent';
-import handleStarknetFoundrySearch from '../agents/ragSearchAgents/starknetFoundrySearchAgent';
-import { LLMConfig } from './connectionManager';
+import {
+  LLMConfig,
+  VectorStore,
+  RagAgentFactory,
+  AvailableAgents,
+} from '@starknet-agent/agents/index';
 
 type Message = {
   messageId: string;
@@ -32,15 +31,6 @@ type WSMessage = {
   type: string;
   focusMode: string;
   history: Array<[string, string]>;
-};
-
-//TODO: refactor to use RagAgentFactory
-const searchHandlers: Record<string, SearchHandler> = {
-  cairoBookSearch: handleCairoBookSearch,
-  succintCairoBookSearch: handleSuccintCairoBookSearch,
-  starknetDocsSearch: handleStarknetDocsSearch,
-  starknetEcosystemSearch: handleStarknetEcosystemSearch,
-  starknetFoundrySearch: handleStarknetFoundrySearch,
 };
 
 const searchDatabases: Record<string, () => VectorStoreConfig> = {
@@ -97,6 +87,43 @@ const handleEmitterEvents = (
   });
 };
 
+// Remove the searchHandlers mapping and replace with a function that creates handlers on demand
+const getSearchHandler = (focusMode: string): SearchHandler => {
+  // Map focus modes to agent names
+  const agentMapping: Record<string, AvailableAgents> = {
+    cairoBookSearch: 'cairoBook',
+    succintCairoBookSearch: 'succintCairoBook',
+    starknetDocsSearch: 'starknetDocs',
+    starknetEcosystemSearch: 'starknetEcosystem',
+    starknetFoundrySearch: 'starknetFoundry',
+  };
+
+  const agentName = agentMapping[focusMode];
+  if (!agentName) {
+    throw new Error(`Invalid focus mode: ${focusMode}`);
+  }
+
+  return (
+    message: string,
+    history: BaseMessage[],
+    llm: LLMConfig,
+    embeddings: Embeddings,
+    options: HandlerOptions,
+  ) => {
+    if (!options.vectorStore) {
+      throw new Error('Vector store is required');
+    }
+    return RagAgentFactory.createAgent(
+      agentName,
+      message,
+      history,
+      llm,
+      embeddings,
+      options.vectorStore,
+    );
+  };
+};
+
 export const handleMessage = async (
   message: string,
   ws: WebSocket,
@@ -131,11 +158,9 @@ export const handleMessage = async (
     });
 
     if (parsedWSMessage.type === 'message') {
-      const handler = searchHandlers[parsedWSMessage.focusMode];
-      const dbConfigGetter = searchDatabases[parsedWSMessage.focusMode];
-
-      if (handler) {
-        let handlerOptions: HandlerOptions = {};
+      try {
+        const handler = getSearchHandler(parsedWSMessage.focusMode);
+        const dbConfigGetter = searchDatabases[parsedWSMessage.focusMode];
 
         if (dbConfigGetter) {
           const dbConfig = dbConfigGetter();
@@ -145,7 +170,15 @@ export const handleMessage = async (
               embeddings,
             );
             logger.info('VectorStore initialized successfully');
-            handlerOptions.vectorStore = vectorStore;
+            const emitter = handler(
+              parsedMessage.content,
+              history,
+              llmConfig,
+              embeddings,
+              { vectorStore },
+            );
+
+            handleEmitterEvents(emitter, ws, id, parsedMessage.chatId);
           } catch (error) {
             logger.error('Failed to initialize VectorStore:', error);
             ws.send(
@@ -157,22 +190,20 @@ export const handleMessage = async (
             );
             return; // Stop execution if there's an error
           }
+        } else {
+          ws.send(
+            JSON.stringify({
+              type: 'error',
+              data: 'Invalid focus mode',
+              key: 'INVALID_FOCUS_MODE',
+            }),
+          );
         }
-
-        const emitter = handler(
-          parsedMessage.content,
-          history,
-          llmConfig,
-          embeddings,
-          handlerOptions,
-        );
-
-        handleEmitterEvents(emitter, ws, id, parsedMessage.chatId);
-      } else {
+      } catch (error) {
         ws.send(
           JSON.stringify({
             type: 'error',
-            data: 'Invalid focus mode',
+            data: error.message,
             key: 'INVALID_FOCUS_MODE',
           }),
         );

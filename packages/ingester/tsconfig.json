@@ -4,8 +4,7 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "moduleResolution": "Bundler",
-    "module": "ESNext",
-    "declarationMap": true
+    "module": "ESNext"
   },
   "include": ["src"],
   "exclude": ["node_modules"]
