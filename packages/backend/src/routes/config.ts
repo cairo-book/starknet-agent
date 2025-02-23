@@ -12,7 +12,7 @@ import {
   updateConfig,
   isHostedMode,
   getGeminiApiKey,
-} from '../config';
+} from '@starknet-agent/agents/config';
 
 const router: Router = express.Router();
 

@@ -1,4 +1,4 @@
-import { getDeepseekApiKey } from '../../config';
+import { getDeepseekApiKey } from '@starknet-agent/agents/config';
 import logger from '../../utils/logger';
 import { ChatOpenAI, OpenAI } from '@langchain/openai';
 

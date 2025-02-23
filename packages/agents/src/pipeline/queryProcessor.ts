@@ -100,8 +100,6 @@ const cleanConversation = (text: string): string => {
   const cleanedConversation =
     header + '\nConversation:\n' + humanMessages.join('\n');
 
-  console.log('cleanedConversation', cleanedConversation);
-
   // Remove the custom instructions from the conversation
   return cleanedConversation.replace(
     /<custom_instructions>.*?<\/custom_instructions>/,

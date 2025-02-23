@@ -3,7 +3,7 @@ import http from 'http';
 import cors from 'cors';
 import { initializeWebSocket } from './websocket';
 import { initializeLLMConfig } from './lib/modelProviderService';
-import { getPort } from './config';
+import { getPort } from '@starknet-agent/agents/config';
 import logger from './utils/logger';
 import { initializeHTTP } from './http';
 import { Container } from './types/context';

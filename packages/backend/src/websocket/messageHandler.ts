@@ -10,7 +10,7 @@ import {
   getStarknetEcosystemDbConfig,
   getStarknetFoundryDbConfig,
   VectorStoreConfig,
-} from '../config';
+} from '@starknet-agent/agents/config';
 import { HandlerOptions, SearchHandler } from '../types/types';
 import {
   LLMConfig,

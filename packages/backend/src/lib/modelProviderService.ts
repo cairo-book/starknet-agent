@@ -4,7 +4,7 @@ import {
   getAvailableEmbeddingModelProviders,
   getAvailableChatModelProviders,
 } from './providers';
-import { getHostedModeConfig } from '../config';
+import { getHostedModeConfig } from '@starknet-agent/agents/config';
 import logger from '../utils/logger';
 
 export interface ModelConfig {

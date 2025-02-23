@@ -3,7 +3,10 @@ import { loadOllamaChatModels, loadOllamaEmbeddingsModels } from './ollama';
 import { loadOpenAIChatModels, loadOpenAIEmbeddingsModels } from './openai';
 import { loadAnthropicChatModels } from './anthropic';
 import { loadDeepseekChatModels } from './deepseek';
-import { getHostedModeConfig, isHostedMode } from '../../config';
+import {
+  getHostedModeConfig,
+  isHostedMode,
+} from '@starknet-agent/agents/config';
 import { loadGeminiChatModels } from './gemini';
 
 const chatModelProviders = {

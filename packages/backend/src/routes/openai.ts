@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 import logger from '../utils/logger';
-import { getHostedModeConfig } from '../config';
+import { getHostedModeConfig } from '@starknet-agent/agents/config';
 import { chatEndpoint } from './openai/chat';
 
 const router: Router = express.Router();

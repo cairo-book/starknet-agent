@@ -1,4 +1,4 @@
-import { getGeminiApiKey } from '../../config';
+import { getGeminiApiKey } from '@starknet-agent/agents/config';
 import logger from '../../utils/logger';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 

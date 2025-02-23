@@ -1,5 +1,5 @@
 import { OllamaEmbeddings } from '@langchain/community/embeddings/ollama';
-import { getOllamaApiEndpoint } from '../../config';
+import { getOllamaApiEndpoint } from '@starknet-agent/agents/config';
 import logger from '../../utils/logger';
 import { ChatOllama } from '@langchain/community/chat_models/ollama';
 const fetch = require('node-fetch');

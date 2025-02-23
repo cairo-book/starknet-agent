@@ -87,8 +87,7 @@ pub mod Registry {
             for i in 0..self.data_vector.len() {
                 all_data.append(self.data_vector.at(i).read());
             };
-            // for loops have an ending `;
-`
+            // for loops have an ending ';'
             all_data
         }
 

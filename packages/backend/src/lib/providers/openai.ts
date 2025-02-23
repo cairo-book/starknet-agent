@@ -1,5 +1,5 @@
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
-import { getOpenaiApiKey } from '../../config';
+import { getOpenaiApiKey } from '@starknet-agent/agents/config';
 import logger from '../../utils/logger';
 
 export const loadOpenAIChatModels = async () => {
