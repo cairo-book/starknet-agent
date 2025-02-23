@@ -8,8 +8,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { LLMConfig } from '../../websocket/connectionManager';
 import { VectorStore } from '../../db/vectorStore';
 import { getAgentConfig } from '../../config/agentConfigs';
-import { basicRagSearch } from '../../agents/ragSearchAgent';
 import { Request, Response } from 'express';
+import { RagAgentFactory } from '../../agents/ragAgentFactory';
 
 interface ChatCompletionRequest {
   model: string;
@@ -111,16 +111,16 @@ export const chatEndpoint = async (req, res) => {
     //TODO: this should likely not be done here
     const dbConfig = getCairoDbConfig();
     const vectorStore = await VectorStore.getInstance(dbConfig, embeddings);
-    const config = getAgentConfig('cairoCoder', vectorStore);
     let response_text = '';
 
     // Stream the response
-    const handler = basicRagSearch(
+    const handler = RagAgentFactory.createAgent(
+      'cairoCoder',
       lastUserMessage.content,
       langChainMessages,
       llmConfig,
       embeddings,
-      config,
+      vectorStore,
     );
 
     if (stream) {

@@ -5,6 +5,7 @@
   "dependencies": {
     "@antora/lunr-extension": "1.0.0-alpha.10",
     "@asciidoctor/tabs": "1.0.0-beta.6",
+    "@langchain/core": "^0.2.36",
     "adm-zip": "^0.5.16",
     "asciidoctor": "^3.0.4",
     "axios": "^1.7.9",
