@@ -49,7 +49,7 @@ const defaultQueryClassifier = {
   },
 };
 
-type AvailableAgents =
+export type AvailableAgents =
   | 'cairoBook'
   | 'starknetDocs'
   | 'starknetEcosystem'

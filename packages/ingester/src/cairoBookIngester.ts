@@ -3,7 +3,7 @@ import * as path from 'path';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
 import { VectorStore } from '@starknet-agent/backend/vectorStore';
-import { Document } from 'langchain/document';
+import { Document } from '@langchain/core/documents';
 import logger from '@starknet-agent/backend/logger';
 import { BookChunk } from '@starknet-agent/backend/types';
 import {

@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { Document } from 'langchain/document';
+import { Document } from '@langchain/core/documents';
 import logger from '@starknet-agent/backend/logger';
 import * as fs from 'fs/promises';
 import * as path from 'path';

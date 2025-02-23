@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "nodemon src/app.ts",
+    "dev": "LOG_LEVEL=debug nodemon src/app.ts",
     "start": "node dist/app.js",
     "test": "jest"
   },
@@ -16,6 +16,7 @@
     "@langchain/google-genai": "^0.1.8",
     "@langchain/mongodb": "^0.0.5",
     "@langchain/openai": "^0.0.25",
+    "@types/node": "^20",
     "compute-cosine-similarity": "^1.1.0",
     "compute-dot": "^1.1.0",
     "cors": "^2.8.5",
@@ -23,6 +24,7 @@
     "express": "^4.21.2",
     "html-to-text": "^9.0.5",
     "mongodb": "^6.13.1",
+    "node-fetch": "^3.3.2",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
     "ws": "^8.18.1",

@@ -1,21 +1,25 @@
 import { BaseMessage } from '@langchain/core/messages';
-import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
 import { VectorStore } from '../../db/vectorStore';
-import eventEmitter from 'events';
-import { basicRagSearch } from '../ragSearchAgent';
-import { getAgentConfig } from '../../config/agentConfigs';
+import { EventEmitter } from 'events';
 import { LLMConfig } from '../../websocket/connectionManager';
+import { RagAgentFactory } from '../ragAgentFactory';
 
-const handleStarknetDocsSearch = (
+export const handleStarknetDocsSearch = (
   message: string,
   history: BaseMessage[],
   llm: LLMConfig,
   embeddings: Embeddings,
   additionalParams: { vectorStore: VectorStore },
-): eventEmitter => {
-  const config = getAgentConfig('starknetDocs', additionalParams.vectorStore);
-  return basicRagSearch(message, history, llm, embeddings, config);
+): EventEmitter => {
+  return RagAgentFactory.createAgent(
+    'starknetDocs',
+    message,
+    history,
+    llm,
+    embeddings,
+    additionalParams.vectorStore,
+  );
 };
 
 export default handleStarknetDocsSearch;

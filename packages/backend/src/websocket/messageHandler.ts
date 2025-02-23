@@ -34,6 +34,7 @@ type WSMessage = {
   history: Array<[string, string]>;
 };
 
+//TODO: refactor to use RagAgentFactory
 const searchHandlers: Record<string, SearchHandler> = {
   cairoBookSearch: handleCairoBookSearch,
   succintCairoBookSearch: handleSuccintCairoBookSearch,
