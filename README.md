@@ -71,7 +71,7 @@ There are mainly 2 ways of installing Starknet Agent - With Docker, Without Dock
      }
      ```
 
-5. Copy the `sample.config.toml` file to a `config.toml`. For Docker setups, you need only fill in the following fields:
+5. Inside the packages/backend package, copy the `sample.config.toml` file to a `config.toml`. For development setups, you need only fill in the following fields:
 
    - `OPENAI`: Your OpenAI API key. **You only need to fill this if you wish to use OpenAI's models**.
    - `ANTHROPIC`: Your Anthropic API key. **You only need to fill this if you wish to use Anthropic models**.
@@ -101,13 +101,13 @@ There are mainly 2 ways of installing Starknet Agent - With Docker, Without Dock
 6. Generate the embeddings for the databases. You can do this by running the `generateEmbeddings.ts` script with bun. If you followed the example above, you will need to run the script with option `4 (Everything)` for the `starknet-ecosystem` database.
 
    ```bash
-   bun run src/scripts/generateEmbeddings.ts
+   bun run packages/ingester/src/scripts/generateEmbeddings.ts
    ```
 
-7. Ensure you are in the directory containing the `docker-compose.yaml` file and execute:
+7. Run the development server with turbo.
 
    ```bash
-      docker-compose -f docker-compose.dev-hosted.yml up
+   turbo dev
    ```
 
 8. Wait a few minutes for the setup to complete. You can access Starknet Agent at http://localhost:3000 in your web browser.
