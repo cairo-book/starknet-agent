@@ -78,9 +78,6 @@ importers:
         specifier: ^3.24.2
         version: 3.24.2
     devDependencies:
-      '@starknet-agent/backend':
-        specifier: workspace:*
-        version: link:../backend
       '@starknet-agent/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config

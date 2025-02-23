@@ -10,6 +10,7 @@ COPY turbo.json ./
 
 # Copy backend package
 COPY packages/backend ./packages/backend
+COPY packages/agents ./packages/agents
 
 # Copy shared TypeScript config
 COPY packages/typescript-config ./packages/typescript-config
