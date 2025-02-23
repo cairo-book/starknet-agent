@@ -1,9 +1,7 @@
 import eventEmitter from 'events';
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { VectorStore } from '../../../agents/src/db/vectorStore';
 import { BaseMessage } from '@langchain/core/messages';
 import { Embeddings } from '@langchain/core/embeddings';
-import { LLMConfig } from '@starknet-agent/agents/config';
+import { LLMConfig, VectorStore } from '@starknet-agent/agents/index';
 
 export interface HandlerOptions {
   vectorStore?: VectorStore;

@@ -2,9 +2,9 @@ import { MongoDBAtlasVectorSearch } from '@langchain/mongodb';
 import { MongoClient, Collection, ObjectId } from 'mongodb';
 import { DocumentInterface } from '@langchain/core/documents';
 import { OpenAIEmbeddings } from '@langchain/openai';
-import logger from '../../../backend/src/utils/logger';
-import { VectorStoreConfig } from '../../../backend/src/config';
 import { Embeddings } from '@langchain/core/embeddings';
+import logger from '../utils/logger';
+import { VectorStoreConfig } from '../config';
 
 /**
  * VectorStore class for managing document storage and similarity search

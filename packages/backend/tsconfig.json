@@ -1,8 +1,6 @@
 {
   "extends": "@starknet-agent/typescript-config/base.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "outDir": "dist",
     "sourceMap": true,
     "esModuleInterop": true,

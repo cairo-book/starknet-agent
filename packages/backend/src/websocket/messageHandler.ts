@@ -11,10 +11,13 @@ import {
   getStarknetFoundryDbConfig,
   VectorStoreConfig,
 } from '../config';
-import { VectorStore } from '../../../agents/src/db/vectorStore';
 import { HandlerOptions, SearchHandler } from '../types/types';
-import { RagAgentFactory } from '@starknet-agent/agents/factory';
-import { AvailableAgents, LLMConfig } from '@starknet-agent/agents/config';
+import {
+  LLMConfig,
+  VectorStore,
+  RagAgentFactory,
+  AvailableAgents,
+} from '@starknet-agent/agents/index';
 
 type Message = {
   messageId: string;

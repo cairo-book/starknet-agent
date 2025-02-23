@@ -5,10 +5,12 @@ import { BaseMessage } from '@langchain/core/messages';
 import { getCairoDbConfig, getStarknetEcosystemDbConfig } from '../../config';
 import logger from '../../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
-import { VectorStore } from '../../../../agents/src/db/vectorStore';
 import { Request, Response } from 'express';
-import { LLMConfig } from '@starknet-agent/agents/config';
-import { RagAgentFactory } from '@starknet-agent/agents/factory';
+import {
+  LLMConfig,
+  VectorStore,
+  RagAgentFactory,
+} from '@starknet-agent/agents/index';
 
 interface ChatCompletionRequest {
   model: string;

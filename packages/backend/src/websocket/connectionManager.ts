@@ -4,7 +4,7 @@ import type { IncomingMessage } from 'http';
 import logger from '../utils/logger';
 import { Container } from '../types/context';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { LLMConfig } from '@starknet-agent/agents/config';
+import { LLMConfig } from '@starknet-agent/agents/index';
 
 export const handleConnection = async (
   ws: WebSocket,
