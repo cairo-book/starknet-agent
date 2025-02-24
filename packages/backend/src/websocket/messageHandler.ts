@@ -26,7 +26,7 @@ type Message = {
   content: string;
 };
 
-type WSMessage = {
+export type WSMessage = {
   message: Message;
   copilot: boolean;
   type: string;

@@ -87,6 +87,9 @@ export class QueryProcessor {
 const cleanConversation = (text: string): string => {
   // Split at "Conversation:" to keep header
   const [header, conversation] = text.split('Conversation:\n');
+  if (!conversation) {
+    return text;
+  }
 
   // Get all messages by splitting on message type indicators
   const messages = conversation.split(/\n(?=system:|human:)/);
