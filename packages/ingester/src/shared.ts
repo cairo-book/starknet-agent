@@ -1,10 +1,10 @@
 import { createHash } from 'crypto';
 import { Document } from '@langchain/core/documents';
-import logger from '@starknet-agent/backend/logger';
+import logger from '@starknet-agent/agents/utils/logger';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { VectorStore } from '@starknet-agent/backend/vectorStore';
-import { BookChunk } from '@starknet-agent/backend/types';
+import { VectorStore } from '@starknet-agent/agents/index';
+import { BookChunk } from '@starknet-agent/agents/index';
 
 export const MAX_SECTION_SIZE = 20000;
 

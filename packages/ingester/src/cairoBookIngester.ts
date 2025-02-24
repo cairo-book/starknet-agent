@@ -2,10 +2,9 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
-import { VectorStore } from '@starknet-agent/backend/vectorStore';
+import { BookChunk, VectorStore } from '@starknet-agent/agents/index';
 import { Document } from '@langchain/core/documents';
-import logger from '@starknet-agent/backend/logger';
-import { BookChunk } from '@starknet-agent/backend/types';
+import logger from '@starknet-agent/agents/utils/logger';
 import {
   BookConfig,
   BookPageDto,

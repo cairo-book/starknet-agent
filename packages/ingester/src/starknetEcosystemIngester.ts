@@ -11,7 +11,7 @@ import {
   createChunks as createSNDocsChunks,
 } from './starknetDocsIngester';
 import {
-  downloadAndExtractFoundryDocs,
+  downloadAndProcessFoundryDocs,
   cleanupDownloadedFiles as cleanupFoundryFiles,
 } from './starknetFoundryIngester';
 
@@ -22,7 +22,7 @@ export const ingestStarknetEcosystem = async (vectorStore: VectorStore) => {
     const snDocsChunks = await createSNDocsChunks(snDocsPages);
     const cairoBookPages = await downloadAndExtractCairoBook();
     const cairoBookChunks = await createMdBookChunks(cairoBookPages);
-    const starknetFoundryPages = await downloadAndExtractFoundryDocs();
+    const starknetFoundryPages = await downloadAndProcessFoundryDocs();
     const starknetFoundryChunks =
       await createMdBookChunks(starknetFoundryPages);
     const chunks = [

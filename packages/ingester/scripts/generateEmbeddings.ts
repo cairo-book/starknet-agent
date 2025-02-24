@@ -1,19 +1,19 @@
+import { ingestCairoBook } from '../src/cairoBookIngester';
+import { ingestStarknetDocs } from '../src/starknetDocsIngester';
+import dotenv from 'dotenv';
+import { createInterface } from 'readline';
+import logger from '@starknet-agent/agents/utils/logger';
+import { ingestStarknetEcosystem } from '../src/starknetEcosystemIngester';
+import { ingestStarknetFoundry } from '../src/starknetFoundryIngester';
+import { VectorStore } from '@starknet-agent/agents/index';
 import {
   getCairoDbConfig,
   getStarknetDbConfig,
   getStarknetEcosystemDbConfig,
   getStarknetFoundryDbConfig,
   VectorStoreConfig,
-} from '../../backend/src/config';
-import { loadOpenAIEmbeddingsModels } from '../../backend/src/lib/providers/openai';
-import { ingestCairoBook } from '../src/cairoBookIngester';
-import { ingestStarknetDocs } from '../src/starknetDocsIngester';
-import { VectorStore } from '@starknet-agent/backend/vectorStore';
-import dotenv from 'dotenv';
-import { createInterface } from 'readline';
-import logger from '@starknet-agent/backend/logger';
-import { ingestStarknetEcosystem } from '../src/starknetEcosystemIngester';
-import { ingestStarknetFoundry } from '../src/starknetFoundryIngester';
+} from '@starknet-agent/agents/config';
+import { loadOpenAIEmbeddingsModels } from '@starknet-agent/backend/lib/providers/openai';
 
 dotenv.config();
 
