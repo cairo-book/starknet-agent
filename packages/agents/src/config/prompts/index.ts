@@ -33,6 +33,11 @@ import {
   CAIROCODER_RESPONSE_PROMPT,
   CAIROCODER_RETRIEVER_PROMPT,
 } from './cairoCoderPrompts';
+import {
+  CAIRO_BY_EXAMPLE_RETRIEVER_PROMPT,
+  CAIRO_BY_EXAMPLE_RESPONSE_PROMPT,
+  CAIRO_BY_EXAMPLE_NO_SOURCE_PROMPT,
+} from './cairoByExamplePrompts';
 import { AgentPrompts } from '../../core/types';
 import { getScarbVersion } from '../../config';
 import { getStarknetFoundryVersion } from '../../config';
@@ -71,6 +76,12 @@ export const cairoCoderPrompts: AgentPrompts = {
   searchRetrieverPrompt: CAIROCODER_RETRIEVER_PROMPT,
   searchResponsePrompt: CAIROCODER_RESPONSE_PROMPT,
   noSourceFoundPrompt: CAIROCODER_NO_SOURCE_PROMPT,
+};
+
+export const cairoByExamplePrompts: AgentPrompts = {
+  searchRetrieverPrompt: CAIRO_BY_EXAMPLE_RETRIEVER_PROMPT,
+  searchResponsePrompt: CAIRO_BY_EXAMPLE_RESPONSE_PROMPT,
+  noSourceFoundPrompt: CAIRO_BY_EXAMPLE_NO_SOURCE_PROMPT,
 };
 
 // Helper function to inject dynamic values into prompts

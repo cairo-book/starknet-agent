@@ -5,12 +5,14 @@ import { createInterface } from 'readline';
 import logger from '@starknet-agent/agents/utils/logger';
 import { ingestStarknetEcosystem } from '../src/starknetEcosystemIngester';
 import { ingestStarknetFoundry } from '../src/starknetFoundryIngester';
+import { ingestCairoByExample } from '../src/cairoByExampleIngester';
 import { VectorStore } from '@starknet-agent/agents/index';
 import {
   getCairoDbConfig,
   getStarknetDbConfig,
   getStarknetEcosystemDbConfig,
   getStarknetFoundryDbConfig,
+  getCairoByExampleDbConfig,
   VectorStoreConfig,
 } from '@starknet-agent/agents/config';
 import { loadOpenAIEmbeddingsModels } from '@starknet-agent/backend/lib/providers/openai';
@@ -85,6 +87,18 @@ async function ingestFoundryData() {
   }
 }
 
+async function ingestCairoByExampleData() {
+  console.log('Starting Cairo By Example ingestion process...');
+  try {
+    const store = await setupVectorStore(getCairoByExampleDbConfig());
+    await ingestCairoByExample(store);
+    console.log('Cairo By Example ingestion completed successfully.');
+  } catch (error) {
+    console.error('Error during Cairo By Example ingestion:', error);
+    throw error;
+  }
+}
+
 async function promptForTarget(): Promise<string> {
   const rl = createInterface({
     input: process.stdin,
@@ -93,16 +107,17 @@ async function promptForTarget(): Promise<string> {
 
   return new Promise((resolve) => {
     rl.question(
-      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Starknet Foundry, 4: Everything): ',
+      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Starknet Foundry, 4: Cairo By Example, 5: Everything): ',
       (answer) => {
         rl.close();
         const targets = [
           'Cairo Book',
           'Starknet Docs',
           'Starknet Foundry',
+          'Cairo By Example',
           'Everything',
         ];
-        resolve(targets[parseInt(answer) - 1] || 'Both');
+        resolve(targets[parseInt(answer) - 1] || 'Everything');
       },
     );
   });
@@ -125,8 +140,13 @@ async function main() {
       await ingestFoundryData();
     }
 
+    if (target === 'Cairo By Example') {
+      await ingestCairoByExampleData();
+    }
+
     if (target === 'Everything') {
       await ingestEcosystemData();
+      await ingestCairoByExampleData();
     }
 
     console.log('All specified ingestion processes completed successfully.');

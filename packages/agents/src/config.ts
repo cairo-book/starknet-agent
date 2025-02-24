@@ -21,6 +21,7 @@ interface Config {
   STARKNET_DB: VectorStoreConfig;
   ECOSYSTEM_DB: VectorStoreConfig;
   STARKNET_FOUNDRY_DB: VectorStoreConfig;
+  CAIRO_BY_EXAMPLE_DB: VectorStoreConfig;
   API_KEYS: {
     OPENAI: string;
     GROQ: string;
@@ -83,6 +84,8 @@ export const getStarknetFoundryDbConfig = () =>
 export const getStarknetDbConfig = () => loadConfig().STARKNET_DB;
 
 export const getStarknetEcosystemDbConfig = () => loadConfig().ECOSYSTEM_DB;
+
+export const getCairoByExampleDbConfig = () => loadConfig().CAIRO_BY_EXAMPLE_DB;
 
 export const updateConfig = (config: RecursivePartial<Config>) => {
   const currentConfig = loadConfig();

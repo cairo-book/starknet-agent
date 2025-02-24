@@ -6,6 +6,7 @@ import {
   starknetEcosystemPrompts,
   starknetFoundryPrompts,
   succintCairoBookPrompts,
+  cairoByExamplePrompts,
 } from './prompts';
 import { basicTestTemplate } from './templates/testTemplate';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
@@ -61,7 +62,8 @@ export type AvailableAgents =
   | 'starknetEcosystem'
   | 'starknetFoundry'
   | 'succintCairoBook'
-  | 'cairoCoder';
+  | 'cairoCoder'
+  | 'cairoByExample';
 
 // We'll make this a factory function instead of a static object
 export const createAgentConfigs = (
@@ -121,6 +123,7 @@ export const createAgentConfigs = (
     maxSourceCount: 5,
     similarityThreshold: 0.5,
   },
+
   cairoCoder: {
     name: 'Cairo Coder',
     prompts: cairoCoderPrompts,
@@ -129,6 +132,17 @@ export const createAgentConfigs = (
     testTemplate: basicTestTemplate,
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 15,
+    similarityThreshold: 0.4,
+  },
+
+  cairoByExample: {
+    name: 'Cairo By Example',
+    prompts: cairoByExamplePrompts,
+    vectorStore,
+    contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
+    queryClassifier: defaultQueryClassifier,
+    maxSourceCount: 10,
     similarityThreshold: 0.4,
   },
 });
