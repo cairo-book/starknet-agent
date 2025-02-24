@@ -10,7 +10,8 @@
     "moduleDetection": "force",
     "isolatedModules": true,
     "noUncheckedIndexedAccess": true,
-    "module": "NodeNext"
+    "module": "NodeNext",
+    "types": ["jest"]
   },
   "exclude": ["node_modules", "dist"]
 }
