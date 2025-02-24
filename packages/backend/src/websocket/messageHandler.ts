@@ -9,6 +9,7 @@ import {
   getStarknetDbConfig,
   getStarknetEcosystemDbConfig,
   getStarknetFoundryDbConfig,
+  getCairoByExampleDbConfig,
   VectorStoreConfig,
 } from '@starknet-agent/agents/config';
 import { HandlerOptions, SearchHandler } from '../types/types';
@@ -39,6 +40,7 @@ const searchDatabases: Record<string, () => VectorStoreConfig> = {
   starknetEcosystemSearch: getStarknetEcosystemDbConfig,
   succintCairoBookSearch: getCairoDbConfig,
   starknetFoundrySearch: getStarknetFoundryDbConfig,
+  cairoByExampleSearch: getCairoByExampleDbConfig,
 };
 
 const handleEmitterEvents = (
@@ -96,6 +98,7 @@ const getSearchHandler = (focusMode: string): SearchHandler => {
     starknetDocsSearch: 'starknetDocs',
     starknetEcosystemSearch: 'starknetEcosystem',
     starknetFoundrySearch: 'starknetFoundry',
+    cairoByExampleSearch: 'cairoByExample',
   };
 
   const agentName = agentMapping[focusMode];

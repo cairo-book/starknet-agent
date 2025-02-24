@@ -6,6 +6,7 @@ import {
   ScanEye,
   SwatchBook,
   BookOpen,
+  Code,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, Transition } from '@headlessui/react';
@@ -31,16 +32,16 @@ const focusModes = [
     icon: <BookOpen size={20} />,
   },
   {
-    key: 'starknetDocsSearch',
-    title: 'Starknet Docs',
-    description: 'Search in Starknet Docs',
-    icon: <BookOpen size={20} />,
-  },
-  {
     key: 'starknetFoundrySearch',
     title: 'Starknet Foundry',
     description: 'Search in Starknet Foundry',
     icon: <BookOpen size={20} />,
+  },
+  {
+    key: 'cairoByExampleSearch',
+    title: 'Cairo By Example',
+    description: 'Search practical Cairo examples',
+    icon: <Code size={20} />,
   },
 ];
 
