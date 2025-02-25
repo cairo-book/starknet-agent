@@ -4,13 +4,26 @@
 import React, { MutableRefObject, useEffect, useState } from 'react';
 import { Message } from './ChatWindow';
 import { cn } from '@/lib/utils';
-import { BookCopy, Layers3, User, Bot } from 'lucide-react';
+import {
+  BookCopy,
+  Layers3,
+  User,
+  Bot,
+  ThumbsUp,
+  ThumbsDown,
+  X,
+} from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
 import Copy from './MessageActions/Copy';
 import Rewrite from './MessageActions/Rewrite';
 import MessageSources from './MessageSources';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import {
+  trackAnswerFeedback,
+  trackDetailedFeedback,
+  updateUserFeedbackStats,
+} from '@/lib/posthog';
 
 // Common styling patterns (unchanged)
 const styles = {
@@ -178,6 +191,123 @@ const CodeBlock = ({
           {children}
         </SyntaxHighlighter>
       </div>
+    </div>
+  );
+};
+
+// Update the MessageFeedback component to use our utility functions
+const MessageFeedback = ({
+  messageId,
+  content,
+  chatId,
+  sources,
+}: {
+  messageId: string;
+  content: string;
+  chatId: string;
+  sources?: Document[];
+}) => {
+  const [feedback, setFeedback] = useState<'positive' | 'negative' | null>(
+    null,
+  );
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+
+  const handleFeedback = (type: 'positive' | 'negative') => {
+    // Don't set the same feedback twice
+    if (feedback === type) return;
+
+    setFeedback(type);
+
+    // Track the feedback using our utility function
+    trackAnswerFeedback(messageId, chatId, type, content, sources);
+    updateUserFeedbackStats(type);
+
+    // If negative feedback, show the modal for additional comments
+    if (type === 'negative') {
+      setShowFeedbackModal(true);
+    }
+  };
+
+  const submitFeedbackText = () => {
+    // Track the detailed feedback using our utility function
+    if (feedbackText.trim()) {
+      trackDetailedFeedback(messageId, chatId, feedbackText);
+    }
+
+    setShowFeedbackModal(false);
+  };
+
+  return (
+    <div className="mt-2">
+      <div className="flex items-center gap-2">
+        <div className="text-xs text-gray-500 dark:text-gray-400 mr-1">
+          Was this response helpful?
+        </div>
+        <button
+          onClick={() => handleFeedback('positive')}
+          className={cn(
+            'p-1 rounded-md transition-colors',
+            feedback === 'positive'
+              ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+              : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300',
+          )}
+          aria-label="Thumbs up"
+        >
+          <ThumbsUp size={16} />
+        </button>
+        <button
+          onClick={() => handleFeedback('negative')}
+          className={cn(
+            'p-1 rounded-md transition-colors',
+            feedback === 'negative'
+              ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+              : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300',
+          )}
+          aria-label="Thumbs down"
+        >
+          <ThumbsDown size={16} />
+        </button>
+        {feedback && (
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+            {feedback === 'positive'
+              ? 'Thanks for your feedback!'
+              : 'Thanks for your feedback.'}
+          </span>
+        )}
+      </div>
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-sm font-medium">
+              What was wrong with this response?
+            </h4>
+            <button
+              onClick={() => setShowFeedbackModal(false)}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <textarea
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            className="w-full p-2 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            placeholder="Please describe the issue (optional)"
+            rows={3}
+          />
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={submitFeedbackText}
+              className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -393,6 +523,15 @@ const MessageBox = ({
               )}
             </div>
           )}
+
+        {!isUser && !loading && (
+          <MessageFeedback
+            messageId={message.messageId}
+            content={message.content}
+            chatId={message.chatId}
+            sources={message.sources}
+          />
+        )}
       </div>
       {isUser && (
         <div

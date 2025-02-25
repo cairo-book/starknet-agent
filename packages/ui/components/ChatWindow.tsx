@@ -10,6 +10,11 @@ import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
 import Error from 'next/error';
+import {
+  trackConversationStart,
+  trackUserMessage,
+  initUserFeedbackStats,
+} from '@/lib/posthog';
 
 export type Message = {
   messageId: string;
@@ -431,6 +436,21 @@ const ChatWindow = ({ id }: { id?: string }) => {
     }
   }, [isMessagesLoaded, isWSReady]);
 
+  useEffect(() => {
+    // Initialize PostHog user feedback stats when the component mounts
+    initUserFeedbackStats();
+  }, []);
+
+  useEffect(() => {
+    if (isMessagesLoaded && isWSReady && chatId) {
+      // Track conversation start if this is a new chat
+      if (newChatCreated) {
+        trackConversationStart(chatId, focusMode);
+      }
+      setIsReady(true);
+    }
+  }, [isMessagesLoaded, isWSReady, chatId, newChatCreated, focusMode]);
+
   const sendMessage = async (message: string) => {
     if (loading) return;
     setLoading(true);
@@ -453,6 +473,9 @@ const ChatWindow = ({ id }: { id?: string }) => {
         history: [...chatHistory, ['human', message]],
       }),
     );
+
+    // Track user message
+    trackUserMessage(chatId!, messageId, message.length);
 
     setMessages((prevMessages) => [
       ...prevMessages,
