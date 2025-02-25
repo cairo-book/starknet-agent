@@ -10,6 +10,11 @@ import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
 import Error from 'next/error';
+import {
+  trackConversationStart,
+  trackUserMessage,
+  initUserFeedbackStats,
+} from '@/lib/posthog';
 
 export type Message = {
   messageId: string;
@@ -419,6 +424,21 @@ const ChatWindow = ({ id }: { id?: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    // Initialize PostHog user feedback stats when the component mounts
+    initUserFeedbackStats();
+  }, []);
+
+  useEffect(() => {
+    if (isMessagesLoaded && isWSReady && chatId) {
+      // Track conversation start if this is a new chat
+      if (newChatCreated) {
+        trackConversationStart(focusMode, chatId);
+      }
+      setIsReady(true);
+    }
+  }, [isMessagesLoaded, isWSReady, chatId, newChatCreated, focusMode]);
+
   const messagesRef = useRef<Message[]>([]);
 
   useEffect(() => {
@@ -453,6 +473,9 @@ const ChatWindow = ({ id }: { id?: string }) => {
         history: [...chatHistory, ['human', message]],
       }),
     );
+
+    // Emit event when a user message is sent.
+    trackUserMessage(message.length);
 
     setMessages((prevMessages) => [
       ...prevMessages,

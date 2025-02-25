@@ -4,17 +4,23 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DeleteChat from '@/components/DeleteChat';
 import { StoredChat } from '@/components/ChatWindow';
+import { trackHistoryPageViewed, trackHistoryItemClicked } from '@/lib/posthog';
+import { v4 as uuidv4 } from 'uuid';
 
 const ChatHistory = () => {
   const [chats, setChats] = useState<StoredChat[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sessionId] = useState(() => uuidv4());
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedChats = JSON.parse(localStorage.getItem('chats') || '[]');
       setChats(storedChats);
+
+      // Track history page view
+      trackHistoryPageViewed(sessionId);
     }
-  }, []);
+  }, [sessionId]);
 
   // Sort chats so the most recent (by chat.createdAt) comes first.
   const sortedChats = [...chats].sort(
@@ -27,6 +33,11 @@ const ChatHistory = () => {
       .toLowerCase()
       .includes(searchTerm.toLowerCase()),
   );
+
+  // Handle chat item click
+  const handleChatClick = (chatId: string) => {
+    trackHistoryItemClicked(chatId);
+  };
 
   return (
     <div className="p-4">
@@ -63,7 +74,11 @@ const ChatHistory = () => {
               className="flex items-center justify-between p-4 bg-light-secondary dark:bg-dark-secondary rounded-lg border border-light-200 dark:border-dark-200"
             >
               <div>
-                <Link href={`/c/${chat.id}`} className="text-lg font-medium">
+                <Link
+                  href={`/c/${chat.id}`}
+                  className="text-lg font-medium"
+                  onClick={() => handleChatClick(chat.id)}
+                >
                   {chat.title || `Chat ${chat.id}`}
                 </Link>
                 {chat.createdAt && (
