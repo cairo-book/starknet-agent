@@ -11,6 +11,8 @@ import Rewrite from './MessageActions/Rewrite';
 import MessageSources from './MessageSources';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import 'katex/dist/katex.min.css';
+import { InlineMath, BlockMath } from 'react-katex';
 
 // Common styling patterns (unchanged)
 const styles = {
@@ -99,7 +101,86 @@ const styles = {
       'transition-colors',
     ),
   },
+  latex: {
+    inline: 'mx-1 text-current',
+    block: 'my-4 text-center overflow-x-auto py-2 px-4',
+    container: 'bg-gray-50 dark:bg-gray-900 rounded-lg',
+  },
 } as const;
+
+// Custom component for rendering LaTeX formulas
+const LatexRenderer = ({
+  isBlock = false,
+  children,
+}: {
+  isBlock?: boolean;
+  children: React.ReactNode;
+}) => {
+  // Ensure children is a string, handling different React child types
+  const getFormulaText = (children: React.ReactNode): string => {
+    if (typeof children === 'string') {
+      return children.trim();
+    } else if (Array.isArray(children)) {
+      return children.map((child) => getFormulaText(child)).join('');
+    } else if (React.isValidElement(children)) {
+      return getFormulaText(children.props.children || '');
+    } else if (children === null || children === undefined) {
+      return '';
+    } else {
+      return String(children).trim();
+    }
+  };
+
+  const formula = getFormulaText(children);
+
+  const CopyButton = () => (
+    <button
+      onClick={() => navigator.clipboard.writeText(formula)}
+      className={cn(styles.copyButton.base)}
+      title="Copy formula"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-gray-300 hover:text-white"
+      >
+        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+      </svg>
+    </button>
+  );
+
+  try {
+    return isBlock ? (
+      <div
+        className={cn(
+          styles.codeBlock.base,
+          styles.codeBlock.border,
+          'relative group',
+        )}
+      >
+        <CopyButton />
+        <div className={cn(styles.latex.block, styles.latex.container)}>
+          <BlockMath math={formula} />
+        </div>
+      </div>
+    ) : (
+      <span className={styles.latex.inline}>
+        <InlineMath math={formula} />
+      </span>
+    );
+  } catch (error) {
+    console.error('LaTeX rendering error:', error);
+    return <code>{formula}</code>;
+  }
+};
 
 // Custom component for rendering code blocks
 const CodeBlock = ({
@@ -211,39 +292,88 @@ const MessageBox = ({
       const parts: React.ReactNode[] = [];
       const lines = content.split('\n');
       let inCodeBlock = false;
+      let inLatexBlock = false;
       let codeContent = '';
+      let latexContent = '';
       let codeLanguage = 'text';
       let currentText = '';
 
       for (const line of lines) {
-        if (line.trim().startsWith('```') && !inCodeBlock) {
+        if (line.trim().startsWith('```') && !inCodeBlock && !inLatexBlock) {
           // Start of code block
           if (currentText) {
             parts.push(<Markdown key={parts.length}>{currentText}</Markdown>);
             currentText = '';
           }
-          inCodeBlock = true;
-          codeLanguage = line.trim().replace('```', '') || 'text';
-          codeContent = '';
-        } else if (line.trim() === '```' && inCodeBlock) {
-          // End of code block
-          inCodeBlock = false;
+
+          const language = line.trim().replace('```', '').trim();
+
+          // Check if this is a math block
+          if (language === 'math' || language === 'latex') {
+            inLatexBlock = true;
+            latexContent = '';
+          } else {
+            inCodeBlock = true;
+            codeLanguage = language || 'text';
+            codeContent = '';
+          }
+        } else if (line.trim() === '```' && (inCodeBlock || inLatexBlock)) {
+          // End of code or LaTeX block
+          if (inCodeBlock) {
+            inCodeBlock = false;
+            parts.push(
+              <CodeBlock
+                key={parts.length}
+                language={codeLanguage}
+                isComplete={true}
+              >
+                {codeContent.trim()}
+              </CodeBlock>,
+            );
+            codeContent = '';
+          } else if (inLatexBlock) {
+            inLatexBlock = false;
+            parts.push(
+              <LatexRenderer key={parts.length} isBlock={true}>
+                {latexContent.trim()}
+              </LatexRenderer>,
+            );
+            latexContent = '';
+          }
+        } else if (
+          line.trim().startsWith('$$') &&
+          !inLatexBlock &&
+          !inCodeBlock
+        ) {
+          // Start of LaTeX block
+          if (currentText) {
+            parts.push(<Markdown key={parts.length}>{currentText}</Markdown>);
+            currentText = '';
+          }
+          inLatexBlock = true;
+          latexContent = line.trim().substring(2).trim();
+        } else if (line.trim().endsWith('$$') && inLatexBlock) {
+          // End of LaTeX block
+          const endContent = line.trim();
+          const endIndex = endContent.lastIndexOf('$$');
+          latexContent += ' ' + endContent.substring(0, endIndex).trim();
+          inLatexBlock = false;
           parts.push(
-            <CodeBlock
-              key={parts.length}
-              language={codeLanguage}
-              isComplete={true}
-            >
-              {codeContent.trim()}
-            </CodeBlock>,
+            <LatexRenderer key={parts.length} isBlock={true}>
+              {latexContent}
+            </LatexRenderer>,
           );
-          codeContent = '';
+          latexContent = '';
         } else if (inCodeBlock) {
           // Inside code block
           codeContent += line + '\n';
+        } else if (inLatexBlock) {
+          // Inside LaTeX block
+          latexContent += line + '\n';
         } else {
-          // Regular text
-          currentText += line + '\n';
+          // Regular text with possible inline LaTeX
+          const processedLine = processInlineLatex(line);
+          currentText += processedLine + '\n';
         }
       }
 
@@ -252,6 +382,7 @@ const MessageBox = ({
         parts.push(<Markdown key={parts.length}>{currentText}</Markdown>);
       }
       if (inCodeBlock && codeContent) {
+        // Handle incomplete code block
         parts.push(
           <CodeBlock
             key={parts.length}
@@ -262,8 +393,50 @@ const MessageBox = ({
           </CodeBlock>,
         );
       }
+      if (inLatexBlock && latexContent) {
+        // Handle incomplete LaTeX block (from either $$ or ```math)
+        parts.push(
+          <LatexRenderer key={parts.length} isBlock={true}>
+            {latexContent.trim()}
+          </LatexRenderer>,
+        );
+      }
 
       return parts;
+    };
+
+    // Process inline LaTeX expressions ($...$)
+    const processInlineLatex = (text: string) => {
+      // Replace inline LaTeX with placeholders to avoid conflicts with markdown
+      const latexPlaceholders: { placeholder: string; formula: string }[] = [];
+      let placeholderIndex = 0;
+
+      // Find all inline LaTeX expressions ($...$) that are not escaped
+      // This regex looks for $ that is not preceded by a backslash,
+      // then captures everything until the next unescaped $
+      const processedText = text.replace(
+        /(?<!\\\$)\$((?:[^\$\\]|\\[\s\S])+?)\$/g,
+        (match, formula) => {
+          const placeholder = `__LATEX_PLACEHOLDER_${placeholderIndex}__`;
+          latexPlaceholders.push({ placeholder, formula: formula.trim() });
+          placeholderIndex++;
+          return placeholder;
+        },
+      );
+
+      // If no LaTeX formulas found, return the original text
+      if (latexPlaceholders.length === 0) {
+        return text;
+      }
+
+      // Replace placeholders with actual LaTeX components in the rendered markdown
+      return processedText.replace(
+        /__LATEX_PLACEHOLDER_(\d+)__/g,
+        (match, index) => {
+          const { formula } = latexPlaceholders[parseInt(index, 10)];
+          return `<latex-inline>${formula}</latex-inline>`;
+        },
+      );
     };
 
     const contentWithSources =
@@ -286,6 +459,17 @@ const MessageBox = ({
       setShowSuggestions(true);
     }
   }, [isLast]);
+
+  // Custom overrides for markdown-to-jsx to handle LaTeX
+  const markdownOptions = {
+    overrides: {
+      'latex-inline': {
+        component: ({ children }: { children: string }) => (
+          <LatexRenderer>{children}</LatexRenderer>
+        ),
+      },
+    },
+  };
 
   return (
     <div
@@ -321,7 +505,18 @@ const MessageBox = ({
           role={isUser ? 'user message' : 'assistant message'}
         >
           <div className={cn(styles.prose.base, isUser && styles.prose.user)}>
-            {parsedContent}
+            {parsedContent.map((part, index) => {
+              if (React.isValidElement(part) && part.type === Markdown) {
+                return (
+                  <Markdown key={index} options={markdownOptions}>
+                    {part.props.children}
+                  </Markdown>
+                );
+              }
+              return React.cloneElement(part as React.ReactElement, {
+                key: index,
+              });
+            })}
           </div>
         </div>
 

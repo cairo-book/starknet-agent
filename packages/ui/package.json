@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "format:write": "prettier . --write",
-    "typecheck": "tsc --noEmit",
+    "check-types": "tsc --noEmit",
     "build:all-ts-errors": "__NEXT_TEST_MODE=true pnpm build"
   },
   "dependencies": {
@@ -19,6 +19,7 @@
     "@tailwindcss/typography": "^0.5.12",
     "autoprefixer": "^10.4.20",
     "clsx": "^2.1.0",
+    "katex": "^0.16.21",
     "lucide-react": "^0.363.0",
     "markdown-to-jsx": "^7.4.5",
     "next": "15.1.7",
@@ -26,6 +27,7 @@
     "posthog-js": "^1.224.0",
     "react": "^18",
     "react-dom": "^18",
+    "react-katex": "^3.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-text-to-speech": "^0.14.5",
     "react-textarea-autosize": "^8.5.3",
@@ -35,9 +37,11 @@
   },
   "devDependencies": {
     "@starknet-agent/typescript-config": "workspace:*",
+    "@types/katex": "^0.16.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/react-katex": "^3.0.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^9.21.0",
     "eslint-config-next": "15.1.7",

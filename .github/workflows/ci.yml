@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [cairo-chatbot, main]
   pull_request:
-    branches: [main]
+    branches: [cairo-chatbot, main]
 
 permissions:
   contents: read
