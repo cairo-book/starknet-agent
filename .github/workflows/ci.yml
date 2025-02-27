@@ -46,5 +46,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Install turbo
+        run: pnpm add turbo@latest -g
       - name: Build
         run: turbo build
