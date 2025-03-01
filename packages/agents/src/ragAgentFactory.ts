@@ -20,6 +20,10 @@ export class RagAgentFactory {
   ): EventEmitter {
     const config = getAgentConfig(name, vectorStore);
     const pipeline = new RagPipeline(llm, embeddings, config);
-    return pipeline.execute({ query: message, chatHistory: history });
+    return pipeline.execute({
+      query: message,
+      chatHistory: history,
+      sources: config.sources,
+    });
   }
 }

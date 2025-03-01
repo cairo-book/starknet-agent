@@ -2,7 +2,11 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
-import { BookChunk, VectorStore } from '@starknet-agent/agents/index';
+import {
+  BookChunk,
+  DocumentSource,
+  VectorStore,
+} from '@starknet-agent/agents/index';
 import { Document } from '@langchain/core/documents';
 import logger from '@starknet-agent/agents/utils/logger';
 import {
@@ -27,11 +31,14 @@ const config: BookConfig = {
   baseUrl: 'https://enitrat.github.io/cairo-by-example',
 };
 
-export const ingestCairoByExample = async (vectorStore: VectorStore) => {
+export const ingestCairoByExample = async (
+  vectorStore: VectorStore,
+  source: DocumentSource = 'cairo_by_example',
+) => {
   try {
     const pages = await downloadAndExtractCairoByExample();
     const chunks = await createChunks(pages);
-    await updateVectorStore(vectorStore, chunks);
+    await updateVectorStore(vectorStore, chunks, source);
     await cleanupDownloadedFiles();
   } catch (error) {
     console.error('Error processing Cairo By Example:', error);
@@ -88,6 +95,7 @@ export async function downloadAndExtractCairoByExample(): Promise<
  */
 export async function createChunks(
   pages: BookPageDto[],
+  source: DocumentSource = 'cairo_by_example',
 ): Promise<Document<BookChunk>[]> {
   logger.info('Creating chunks from book pages based on markdown sections');
   const chunks: Document[] = [];
@@ -109,6 +117,7 @@ export async function createChunks(
             contentHash: hash,
             uniqueId: `${page.name}-${index}`,
             sourceLink: `${config.baseUrl}/${page.name}.html#${createAnchor(section.title)}`,
+            source: source,
           },
         }),
       );

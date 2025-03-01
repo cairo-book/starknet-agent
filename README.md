@@ -68,6 +68,10 @@ There are mainly 2 ways of installing Starknet Agent - With Docker, Without Dock
            "path": "embedding",
            "similarity": "cosine",
            "type": "vector"
+         },
+         {
+           "path": "source",
+           "type": "filter"
          }
        ]
      }

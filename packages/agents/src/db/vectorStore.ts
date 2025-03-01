@@ -1,10 +1,11 @@
 import { MongoDBAtlasVectorSearch } from '@langchain/mongodb';
-import { MongoClient, Collection, ObjectId } from 'mongodb';
+import { MongoClient, Collection, ObjectId, Filter } from 'mongodb';
 import { DocumentInterface } from '@langchain/core/documents';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { Embeddings } from '@langchain/core/embeddings';
 import logger from '../utils/logger';
 import { VectorStoreConfig } from '../config';
+import { DocumentSource } from '../core/types';
 
 /**
  * VectorStore class for managing document storage and similarity search
@@ -57,13 +58,24 @@ export class VectorStore {
    * Perform similarity search
    * @param query - The query string
    * @param k - Number of results to return
+   * @param sources - Optional source filter
    * @returns Promise<Document[]>
    */
   async similaritySearch(
     query: string,
     k: number = 5,
+    sources: DocumentSource | DocumentSource[],
   ): Promise<DocumentInterface[]> {
-    return this.vectorSearch.similaritySearch(query, k);
+    if (!sources) {
+      return this.vectorSearch.similaritySearch(query, k);
+    }
+
+    const sourcesArray = Array.isArray(sources) ? sources : [sources];
+    const filter: Filter<any> = {
+      preFilter: { source: { $in: sourcesArray } },
+    };
+
+    return this.vectorSearch.similaritySearch(query, k, filter);
   }
 
   /**
@@ -103,24 +115,33 @@ export class VectorStore {
   /**
    * Remove book pages by their unique IDs
    * @param uniqueIds - Array of unique IDs to remove
+   * @param source - Optional source filter
    * @returns Promise<void>
    */
-  async removeBookPages(uniqueIds: string[]): Promise<void> {
-    logger.info('Removing book pages with unique IDs', uniqueIds);
-    await this.collection.deleteMany({
+  async removeBookPages(
+    uniqueIds: string[],
+    source: DocumentSource,
+  ): Promise<void> {
+    const filter: Filter<any> = {
       uniqueId: { $in: uniqueIds },
-    });
+      source: { $in: [source] },
+    };
+
+    logger.info('Removing book pages with filter', filter);
+    await this.collection.deleteMany(filter);
   }
 
   /**
    * Get hashes of stored book pages
+   * @param source - Optional source filter
    * @returns Promise<Array<{uniqueId: string, contentHash: string}>>
    */
-  async getStoredBookPagesHashes(): Promise<
-    Array<{ uniqueId: string; contentHash: string }>
-  > {
+  async getStoredBookPagesHashes(
+    source: DocumentSource,
+  ): Promise<Array<{ uniqueId: string; contentHash: string }>> {
+    const filter: Filter<any> = { source: { $in: [source] } };
     const documents = await this.collection
-      .find({}, { projection: { uniqueId: 1, contentHash: 1 } })
+      .find(filter, { projection: { uniqueId: 1, contentHash: 1 } })
       .toArray();
 
     return documents.map((doc) => ({

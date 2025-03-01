@@ -78,6 +78,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 15,
     similarityThreshold: 0.4,
+    sources: ['cairo_book'],
   },
 
   starknetDocs: {
@@ -89,6 +90,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 10,
     similarityThreshold: 0.4,
+    sources: ['starknet_docs'],
   },
 
   starknetEcosystem: {
@@ -100,6 +102,12 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 15,
     similarityThreshold: 0.4,
+    sources: [
+      'cairo_book',
+      'starknet_docs',
+      'cairo_by_example',
+      'starknet_foundry',
+    ],
   },
 
   starknetFoundry: {
@@ -111,6 +119,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 10,
     similarityThreshold: 0.4,
+    sources: ['starknet_foundry'],
   },
 
   succintCairoBook: {
@@ -122,6 +131,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 5,
     similarityThreshold: 0.5,
+    sources: ['cairo_book'],
   },
 
   cairoCoder: {
@@ -133,6 +143,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 15,
     similarityThreshold: 0.4,
+    sources: ['cairo_book', 'cairo_by_example', 'starknet_foundry'],
   },
 
   cairoByExample: {
@@ -144,6 +155,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 10,
     similarityThreshold: 0.4,
+    sources: ['cairo_by_example'],
   },
 });
 

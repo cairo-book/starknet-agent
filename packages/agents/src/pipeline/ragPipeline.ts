@@ -55,7 +55,10 @@ export class RagPipeline {
       logger.debug('Processed query:', processedQuery);
 
       // Step 2: Retrieve documents
-      const retrieved = await this.documentRetriever.retrieve(processedQuery);
+      const retrieved = await this.documentRetriever.retrieve(
+        processedQuery,
+        input.sources,
+      );
       handler.emitSources(retrieved.documents);
 
       // Step 3: Generate the answer as a stream

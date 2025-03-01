@@ -37,6 +37,7 @@ export interface RetrievedDocuments {
 export interface RagInput {
   query: string;
   chatHistory: BaseMessage[];
+  sources?: DocumentSource | DocumentSource[];
 }
 
 export interface StreamHandler {
@@ -51,7 +52,15 @@ export interface RagSearchConfig extends AgentConfig {
   testTemplate?: string;
   maxSourceCount?: number;
   similarityThreshold?: number;
+  sources?: DocumentSource | DocumentSource[];
 }
+
+export type DocumentSource =
+  | 'cairo_book'
+  | 'starknet_docs'
+  | 'starknet_ecosystem'
+  | 'starknet_foundry'
+  | 'cairo_by_example';
 
 export type BookChunk = {
   name: string;
@@ -60,6 +69,7 @@ export type BookChunk = {
   contentHash: string;
   uniqueId: string;
   sourceLink: string;
+  source: DocumentSource;
 };
 
 export interface ParsedSection {

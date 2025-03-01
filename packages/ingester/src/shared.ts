@@ -4,7 +4,7 @@ import logger from '@starknet-agent/agents/utils/logger';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { VectorStore } from '@starknet-agent/agents/index';
-import { BookChunk } from '@starknet-agent/agents/index';
+import { BookChunk, DocumentSource } from '@starknet-agent/agents/index';
 
 export const MAX_SECTION_SIZE = 20000;
 
@@ -151,18 +151,19 @@ export function addSectionWithSizeLimit(
 export async function updateVectorStore(
   vectorStore: VectorStore,
   chunks: Document<BookChunk>[],
+  source: DocumentSource,
 ) {
-  const storedChunkHashes = await vectorStore.getStoredBookPagesHashes();
+  const storedChunkHashes = await vectorStore.getStoredBookPagesHashes(source);
   const { chunksToUpdate, chunksToRemove } = findChunksToUpdateAndRemove(
     chunks,
     storedChunkHashes,
   );
   logger.info(
-    `Found ${chunksToUpdate.length} chunks to update and ${chunksToRemove.length} chunks to remove`,
+    `Found ${chunksToUpdate.length} chunks to update and ${chunksToRemove.length} chunks to remove for source: ${source}`,
   );
 
   if (chunksToRemove.length > 0) {
-    await vectorStore.removeBookPages(chunksToRemove);
+    await vectorStore.removeBookPages(chunksToRemove, source);
   }
   if (chunksToUpdate.length > 0) {
     await vectorStore.addDocuments(
@@ -172,6 +173,6 @@ export async function updateVectorStore(
   }
 
   logger.info(
-    `Updated ${chunksToUpdate.length} chunks and removed ${chunksToRemove.length} chunks.`,
+    `Updated ${chunksToUpdate.length} chunks and removed ${chunksToRemove.length} chunks for source: ${source}.`,
   );
 }

@@ -17,7 +17,7 @@ import {
 } from './shared';
 import { createChunks } from './cairoBookIngester';
 import logger from '@starknet-agent/agents/utils/logger';
-import { VectorStore } from '@starknet-agent/agents/index';
+import { DocumentSource, VectorStore } from '@starknet-agent/agents/index';
 
 const config: BookConfig = {
   repoOwner: 'foundry-rs',
@@ -28,11 +28,14 @@ const config: BookConfig = {
   baseUrl: 'https://foundry-rs.github.io/starknet-foundry',
 };
 
-export const ingestStarknetFoundry = async (vectorStore: VectorStore) => {
+export const ingestStarknetFoundry = async (
+  vectorStore: VectorStore,
+  source: DocumentSource = 'starknet_foundry',
+) => {
   try {
     const pages = await downloadAndProcessFoundryDocs();
-    const chunks = await createChunks(pages);
-    await updateVectorStore(vectorStore, chunks);
+    const chunks = await createChunks(pages, source);
+    await updateVectorStore(vectorStore, chunks, source);
     await cleanupDownloadedFiles();
   } catch (error) {
     console.error('Error processing Starknet Foundry docs:', error);

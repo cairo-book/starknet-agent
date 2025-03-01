@@ -5,6 +5,7 @@ import {
   RetrievedDocuments,
   RagSearchConfig,
   BookChunk,
+  DocumentSource,
 } from '../core/types';
 import computeSimilarity from '../utils/computeSimilarity';
 import logger from '../utils/logger';
@@ -17,9 +18,12 @@ export class DocumentRetriever {
     private config: RagSearchConfig,
   ) {}
 
-  async retrieve(processedQuery: ProcessedQuery): Promise<RetrievedDocuments> {
-    logger.debug('Retrieving documents', { processedQuery });
-    const docs = await this.fetchDocuments(processedQuery);
+  async retrieve(
+    processedQuery: ProcessedQuery,
+    sources: DocumentSource | DocumentSource[],
+  ): Promise<RetrievedDocuments> {
+    logger.debug('Retrieving documents', { processedQuery, sources });
+    const docs = await this.fetchDocuments(processedQuery, sources);
     const refinedDocs = (await this.rerankDocuments(
       processedQuery.transformed,
       docs,
@@ -28,7 +32,10 @@ export class DocumentRetriever {
     return { documents: attachedDocs, processedQuery };
   }
 
-  private async fetchDocuments(query: ProcessedQuery): Promise<Document[]> {
+  private async fetchDocuments(
+    query: ProcessedQuery,
+    sources: DocumentSource | DocumentSource[],
+  ): Promise<Document[]> {
     const searchQuery = Array.isArray(query.transformed)
       ? query.transformed
       : [query.transformed];
@@ -36,6 +43,7 @@ export class DocumentRetriever {
       this.config.vectorStore.similaritySearch(
         q,
         this.config.maxSourceCount || 10,
+        sources,
       ),
     );
     const results = await Promise.all(searchPromises);

@@ -2,7 +2,11 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
-import { BookChunk, VectorStore } from '@starknet-agent/agents/index';
+import {
+  BookChunk,
+  VectorStore,
+  DocumentSource,
+} from '@starknet-agent/agents/index';
 import { Document } from '@langchain/core/documents';
 import logger from '@starknet-agent/agents/utils/logger';
 import {
@@ -27,11 +31,14 @@ const config: BookConfig = {
   baseUrl: 'https://book.cairo-lang.org',
 };
 
-export const ingestCairoBook = async (vectorStore: VectorStore) => {
+export const ingestCairoBook = async (
+  vectorStore: VectorStore,
+  source: DocumentSource = 'cairo_book',
+) => {
   try {
     const pages = await downloadAndExtractCairoBook();
-    const chunks = await createChunks(pages);
-    await updateVectorStore(vectorStore, chunks);
+    const chunks = await createChunks(pages, source);
+    await updateVectorStore(vectorStore, chunks, source);
     await cleanupDownloadedFiles();
   } catch (error) {
     console.error('Error processing Cairo Book:', error);
@@ -82,10 +89,12 @@ export async function downloadAndExtractCairoBook(): Promise<BookPageDto[]> {
 /**
  * Creates chunks from book pages based on markdown sections
  * @param pages - Array of BookPageDto objects
+ * @param source - The source identifier for the documents
  * @returns Promise<Document[]> - Array of Document objects representing chunks
  */
 export async function createChunks(
   pages: BookPageDto[],
+  source: DocumentSource,
 ): Promise<Document<BookChunk>[]> {
   logger.info('Creating chunks from book pages based on markdown sections');
   const chunks: Document[] = [];
@@ -107,6 +116,7 @@ export async function createChunks(
             contentHash: hash,
             uniqueId: `${page.name}-${index}`,
             sourceLink: `${config.baseUrl}/${page.name}.html#${createAnchor(section.title)}`,
+            source: source,
           },
         }),
       );

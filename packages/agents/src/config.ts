@@ -17,11 +17,7 @@ interface Config {
     PORT: number;
     SIMILARITY_MEASURE: string;
   };
-  CAIRO_DB: VectorStoreConfig;
-  STARKNET_DB: VectorStoreConfig;
-  ECOSYSTEM_DB: VectorStoreConfig;
-  STARKNET_FOUNDRY_DB: VectorStoreConfig;
-  CAIRO_BY_EXAMPLE_DB: VectorStoreConfig;
+  VECTOR_DB: VectorStoreConfig;
   API_KEYS: {
     OPENAI: string;
     GROQ: string;
@@ -76,16 +72,14 @@ export const getGeminiApiKey = () => loadConfig().API_KEYS.GEMINI;
 
 export const getOllamaApiEndpoint = () => loadConfig().API_ENDPOINTS.OLLAMA;
 
-export const getCairoDbConfig = () => loadConfig().CAIRO_DB;
+export const getVectorDbConfig = () => loadConfig().VECTOR_DB;
 
-export const getStarknetFoundryDbConfig = () =>
-  loadConfig().STARKNET_FOUNDRY_DB;
-
-export const getStarknetDbConfig = () => loadConfig().STARKNET_DB;
-
-export const getStarknetEcosystemDbConfig = () => loadConfig().ECOSYSTEM_DB;
-
-export const getCairoByExampleDbConfig = () => loadConfig().CAIRO_BY_EXAMPLE_DB;
+// Legacy methods for backward compatibility
+export const getCairoDbConfig = () => getVectorDbConfig();
+export const getStarknetFoundryDbConfig = () => getVectorDbConfig();
+export const getStarknetDbConfig = () => getVectorDbConfig();
+export const getStarknetEcosystemDbConfig = () => getVectorDbConfig();
+export const getCairoByExampleDbConfig = () => getVectorDbConfig();
 
 export const updateConfig = (config: RecursivePartial<Config>) => {
   const currentConfig = loadConfig();

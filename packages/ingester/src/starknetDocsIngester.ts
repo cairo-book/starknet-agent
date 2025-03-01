@@ -3,7 +3,11 @@ import * as path from 'path';
 import downdoc from 'downdoc';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
-import { BookChunk, VectorStore } from '@starknet-agent/agents/index';
+import {
+  BookChunk,
+  DocumentSource,
+  VectorStore,
+} from '@starknet-agent/agents/index';
 import { Document } from '@langchain/core/documents';
 import {
   addSectionWithSizeLimit,
@@ -39,7 +43,10 @@ const DOCS_COMMON_CONFIG: BookConfig = {
 };
 
 // Main ingestion function
-export const ingestStarknetDocs = async (vectorStore: VectorStore) => {
+export const ingestStarknetDocs = async (
+  vectorStore: VectorStore,
+  source: DocumentSource = 'starknet_docs',
+) => {
   try {
     const pages = await downloadAndExtractStarknetDocs();
     const chunks = await createChunks(pages);
@@ -384,6 +391,7 @@ function createChunk(
       contentHash: hash,
       uniqueId: `${page.name}-${index}`,
       sourceLink: `${STARKNET_DOCS_CONFIG.baseUrl}/${page_name}#${anchor}`,
+      source: 'starknet_docs',
     },
   });
 }
@@ -392,7 +400,8 @@ async function updateVectorStore(
   vectorStore: VectorStore,
   chunks: Document<BookChunk>[],
 ) {
-  const storedChunkHashes = await vectorStore.getStoredBookPagesHashes();
+  const storedChunkHashes =
+    await vectorStore.getStoredBookPagesHashes('starknet_docs');
   const { chunksToUpdate, chunksToRemove } = findChunksToUpdateAndRemove(
     chunks,
     storedChunkHashes,
@@ -402,7 +411,7 @@ async function updateVectorStore(
   );
 
   if (chunksToRemove.length > 0) {
-    await vectorStore.removeBookPages(chunksToRemove);
+    await vectorStore.removeBookPages(chunksToRemove, 'starknet_docs');
   }
   if (chunksToUpdate.length > 0) {
     await vectorStore.addDocuments(
