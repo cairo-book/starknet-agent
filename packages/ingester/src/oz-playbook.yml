@@ -1,3 +1,4 @@
+# Source: https://github.com/OpenZeppelin/docs.openzeppelin.com. I kept cairo-contracts only.
 site:
   title: OpenZeppelin Docs
   url: https://docs.openzeppelin.com
@@ -21,6 +22,7 @@ content:
       start_path: docs
 ui:
   bundle:
+    # A Zip made from the docs.openzeppelin.com ui/theme.
     url: ./oz-ui-bundle.zip
 asciidoc:
   attributes:

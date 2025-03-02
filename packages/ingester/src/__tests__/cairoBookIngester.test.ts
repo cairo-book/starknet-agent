@@ -121,7 +121,7 @@ describe('createChunks', () => {
       },
     ];
 
-    const result = await createChunks(pages);
+    const result = await createChunks(pages, 'cairo_book');
 
     expect(result).toHaveLength(3);
     expect(result[0].pageContent).toBe('# Title 1\nContent 1');
@@ -147,7 +147,7 @@ describe('createChunks', () => {
   it('should handle empty pages', async () => {
     const pages: BookPageDto[] = [{ name: 'empty', content: '' }];
 
-    const result = await createChunks(pages);
+    const result = await createChunks(pages, 'cairo_book');
 
     expect(result).toHaveLength(0);
   });
