@@ -1,32 +1,42 @@
-import { ingestCairoBook } from '../src/cairoBookIngester';
-import { ingestStarknetDocs } from '../src/starknetDocsIngester';
 import dotenv from 'dotenv';
 import { createInterface } from 'readline';
 import logger from '@starknet-agent/agents/utils/logger';
-import { ingestStarknetFoundry } from '../src/starknetFoundryIngester';
-import { ingestCairoByExample } from '../src/cairoByExampleIngester';
-import { ingestOpenZeppelinDocs } from '../src/ozDocsIngester';
 import { VectorStore } from '@starknet-agent/agents/index';
-import {
-  getVectorDbConfig,
-  VectorStoreConfig,
-} from '@starknet-agent/agents/config';
+import { getVectorDbConfig } from '@starknet-agent/agents/config';
 import { loadOpenAIEmbeddingsModels } from '@starknet-agent/backend/lib/providers/openai';
 import { DocumentSource } from '@starknet-agent/agents/core/types';
+import { IngesterFactory } from '../src/IngesterFactory';
 
+/**
+ * Initialize environment variables
+ */
 dotenv.config();
 
+/**
+ * Global vector store instance
+ */
 let vectorStore: VectorStore | null = null;
 
+/**
+ * Set up the vector store with the appropriate configuration and embedding model
+ *
+ * @returns Promise<VectorStore> - The initialized vector store
+ * @throws Error if initialization fails
+ */
 async function setupVectorStore(): Promise<VectorStore> {
   if (vectorStore) {
     return vectorStore;
   }
 
   try {
+    // Get database configuration
     const dbConfig = getVectorDbConfig();
+
+    // Load embedding models
     const embeddingModels = await loadOpenAIEmbeddingsModels();
     const textEmbedding3Large = embeddingModels['Text embedding 3 large'];
+
+    // Initialize vector store
     vectorStore = await VectorStore.getInstance(dbConfig, textEmbedding3Large);
     logger.info('VectorStore initialized successfully');
     return vectorStore;
@@ -36,128 +46,101 @@ async function setupVectorStore(): Promise<VectorStore> {
   }
 }
 
-async function ingestCairoBookData() {
-  console.log('Starting Cairo Book ingestion process...');
-  try {
-    const store = await setupVectorStore();
-    await ingestCairoBook(store, 'cairo_book');
-    console.log('Cairo Book ingestion completed successfully.');
-  } catch (error) {
-    console.error('Error during Cairo Book ingestion:', error);
-    throw error;
-  }
-}
-
-async function ingestStarknetDocsData() {
-  console.log('Starting Starknet Docs ingestion process...');
-  try {
-    const store = await setupVectorStore();
-    await ingestStarknetDocs(store, 'starknet_docs');
-    console.log('Starknet Docs ingestion completed successfully.');
-  } catch (error) {
-    console.error('Error during Starknet Docs ingestion:', error);
-    throw error;
-  }
-}
-
-async function ingestFoundryData() {
-  console.log('Starting Starknet Foundry ingestion process...');
-  try {
-    const store = await setupVectorStore();
-    await ingestStarknetFoundry(store, 'starknet_foundry');
-    console.log('Starknet Foundry ingestion completed successfully.');
-  } catch (error) {
-    console.error('Error during Starknet Foundry ingestion:', error);
-    throw error;
-  }
-}
-
-async function ingestCairoByExampleData() {
-  console.log('Starting Cairo By Example ingestion process...');
-  try {
-    const store = await setupVectorStore();
-    await ingestCairoByExample(store, 'cairo_by_example');
-    console.log('Cairo By Example ingestion completed successfully.');
-  } catch (error) {
-    console.error('Error during Cairo By Example ingestion:', error);
-    throw error;
-  }
-}
-
-async function ingestOpenZeppelinDocsData() {
-  console.log('Starting OpenZeppelin Docs ingestion process...');
-  try {
-    const store = await setupVectorStore();
-    await ingestOpenZeppelinDocs(store, 'openzeppelin_docs');
-    console.log('OpenZeppelin Docs ingestion completed successfully.');
-  } catch (error) {
-    console.error('Error during OpenZeppelin Docs ingestion:', error);
-    throw error;
-  }
-}
-
-async function promptForTarget(): Promise<string> {
+/**
+ * Prompt the user to select an ingestion target
+ *
+ * @returns Promise<string> - The selected target
+ */
+async function promptForTarget(): Promise<DocumentSource | 'Everything'> {
   const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
   });
 
+  // Get available sources from the factory
+  const availableSources = IngesterFactory.getAvailableSources();
+
+  // Build the prompt string
+  const sourcesPrompt = availableSources
+    .map((source, index) => `${index + 1}: ${source}`)
+    .join(', ');
+
+  const prompt = `Select the ingestion target (${sourcesPrompt}, ${
+    availableSources.length + 1
+  }: Everything): `;
+
   return new Promise((resolve) => {
-    rl.question(
-      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Starknet Foundry, 4: Cairo By Example, 5: OpenZeppelin Docs, 6: Everything): ',
-      (answer) => {
-        rl.close();
-        const targets = [
-          'Cairo Book',
-          'Starknet Docs',
-          'Starknet Foundry',
-          'Cairo By Example',
-          'OpenZeppelin Docs',
-          'Everything',
-        ];
-        resolve(targets[parseInt(answer) - 1] || 'Everything');
-      },
-    );
+    rl.question(prompt, (answer) => {
+      rl.close();
+
+      const selectedIndex = parseInt(answer) - 1;
+
+      // Check if the selection is valid
+      if (selectedIndex >= 0 && selectedIndex < availableSources.length) {
+        resolve(availableSources[selectedIndex]);
+      } else if (selectedIndex === availableSources.length) {
+        resolve('Everything');
+      } else {
+        logger.error(
+          `Invalid selection: ${answer}, defaulting to 'Everything'`,
+        );
+        process.exit(1);
+      }
+    });
   });
 }
 
-async function main() {
-  const target = await promptForTarget();
-  console.log(`Selected target: ${target}`);
+/**
+ * Ingest documentation for a specific source
+ *
+ * @param source - The document source to ingest
+ */
+async function ingestSource(source: DocumentSource): Promise<void> {
+  logger.info(`Starting ingestion process for ${source}...`);
 
   try {
-    if (target === 'Cairo Book') {
-      await ingestCairoBookData();
-    }
+    // Get vector store
+    const store = await setupVectorStore();
 
-    if (target === 'Starknet Docs') {
-      await ingestStarknetDocsData();
-    }
+    // Create ingester using factory
+    const ingester = IngesterFactory.createIngester(source);
 
-    if (target === 'Starknet Foundry') {
-      await ingestFoundryData();
-    }
+    // Run ingestion using the process method
+    await ingester.process(store);
 
-    if (target === 'Cairo By Example') {
-      await ingestCairoByExampleData();
-    }
-
-    if (target === 'OpenZeppelin Docs') {
-      await ingestOpenZeppelinDocsData();
-    }
-
-    if (target === 'Everything') {
-      await ingestCairoBookData();
-      await ingestStarknetDocsData();
-      await ingestFoundryData();
-      await ingestCairoByExampleData();
-      await ingestOpenZeppelinDocsData();
-    }
-
-    console.log('All specified ingestion processes completed successfully.');
+    logger.info(`${source} ingestion completed successfully.`);
   } catch (error) {
-    console.error('An error occurred during the ingestion process:', error);
+    logger.error(`Error during ${source} ingestion:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Main function to run the ingestion process
+ */
+async function main() {
+  try {
+    // Prompt user for target
+    const target = await promptForTarget();
+    logger.info(`Selected target: ${target}`);
+
+    // Process the selected target
+    if (target === 'Everything') {
+      // Ingest all sources
+      const sources = IngesterFactory.getAvailableSources();
+      for (const source of sources) {
+        await ingestSource(source);
+      }
+    } else {
+      // Ingest specific source
+      await ingestSource(target);
+    }
+
+    logger.info('All specified ingestion processes completed successfully.');
+  } catch (error) {
+    logger.error('An error occurred during the ingestion process:', error);
   } finally {
+    // Clean up resources
     if (vectorStore) {
       await vectorStore.close();
       process.exit(0);
@@ -165,4 +148,5 @@ async function main() {
   }
 }
 
+// Run the main function
 main();
