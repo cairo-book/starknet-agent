@@ -1,7 +1,9 @@
 {
   "name": "@starknet-agent/ingester",
   "version": "1.0.0",
-  "scripts": {},
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
     "@antora/lunr-extension": "1.0.0-alpha.10",
     "@asciidoctor/tabs": "1.0.0-beta.6",

@@ -1,4 +1,4 @@
-import { createAnchor } from '../shared';
+import { createAnchor } from '../src/utils/contentUtils';
 
 describe('createAnchor', () => {
   it('should handle undefined input', () => {

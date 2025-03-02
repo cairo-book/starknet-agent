@@ -289,6 +289,7 @@ export abstract class AsciiDocIngester extends BaseIngester {
    * @param split - Whether to split the content
    * @returns ParsedSection[] - Array of parsed sections
    */
+  //TODO: check whether we can improve this by avoiding sub-subsections (H3)
   private splitAsciiDocIntoSections(
     content: string,
     split: boolean = false,
