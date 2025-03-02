@@ -37,7 +37,7 @@ export interface RetrievedDocuments {
 export interface RagInput {
   query: string;
   chatHistory: BaseMessage[];
-  sources?: DocumentSource | DocumentSource[];
+  sources: DocumentSource | DocumentSource[];
 }
 
 export interface StreamHandler {
@@ -60,7 +60,8 @@ export type DocumentSource =
   | 'starknet_docs'
   | 'starknet_ecosystem'
   | 'starknet_foundry'
-  | 'cairo_by_example';
+  | 'cairo_by_example'
+  | 'openzeppelin_docs';
 
 export type BookChunk = {
   name: string;

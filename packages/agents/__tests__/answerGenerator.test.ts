@@ -79,6 +79,7 @@ describe('AnswerGenerator', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
+        sources: ['cairo_book'],
       };
 
       const processedQuery: ProcessedQuery = {
@@ -124,6 +125,7 @@ describe('AnswerGenerator', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
+        sources: ['cairo_book'],
       };
 
       const processedQuery: ProcessedQuery = {
@@ -177,6 +179,7 @@ describe('AnswerGenerator', () => {
       const input: RagInput = {
         query: 'How do I test a Cairo contract?',
         chatHistory: [],
+        sources: ['cairo_book'],
       };
 
       const processedQuery: ProcessedQuery = {
@@ -231,6 +234,7 @@ describe('AnswerGenerator', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
+        sources: ['cairo_book'],
       };
 
       const processedQuery: ProcessedQuery = {

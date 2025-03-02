@@ -50,6 +50,7 @@ describe('QueryProcessor', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
+        sources: ['cairo_book'],
       };
 
       // Act
@@ -73,6 +74,7 @@ describe('QueryProcessor', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
+        sources: ['cairo_book'],
       };
 
       // Create a processor without LLM
@@ -96,6 +98,7 @@ describe('QueryProcessor', () => {
       const input: RagInput = {
         query: 'How to write tests for Cairo?',
         chatHistory: [],
+        sources: ['cairo_book'],
       };
 
       // Mock LLM to return a test-related response
@@ -115,6 +118,7 @@ describe('QueryProcessor', () => {
       const input: RagInput = {
         query: 'How do I build on Starknet?',
         chatHistory: [],
+        sources: ['cairo_book'],
       };
 
       // Mock LLM to return a direct answer instead of terms

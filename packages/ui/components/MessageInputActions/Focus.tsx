@@ -43,6 +43,12 @@ const focusModes = [
     description: 'Search practical Cairo examples',
     icon: <Code size={20} />,
   },
+  {
+    key: 'openZeppelinDocsSearch',
+    title: 'OpenZeppelin Docs',
+    description: 'Search in OpenZeppelin Docs',
+    icon: <Code size={20} />,
+  },
 ];
 
 const Focus = ({

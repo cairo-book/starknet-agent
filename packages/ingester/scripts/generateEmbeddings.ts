@@ -5,6 +5,7 @@ import { createInterface } from 'readline';
 import logger from '@starknet-agent/agents/utils/logger';
 import { ingestStarknetFoundry } from '../src/starknetFoundryIngester';
 import { ingestCairoByExample } from '../src/cairoByExampleIngester';
+import { ingestOpenZeppelinDocs } from '../src/ozDocsIngester';
 import { VectorStore } from '@starknet-agent/agents/index';
 import {
   getVectorDbConfig,
@@ -83,6 +84,18 @@ async function ingestCairoByExampleData() {
   }
 }
 
+async function ingestOpenZeppelinDocsData() {
+  console.log('Starting OpenZeppelin Docs ingestion process...');
+  try {
+    const store = await setupVectorStore();
+    await ingestOpenZeppelinDocs(store, 'openzeppelin_docs');
+    console.log('OpenZeppelin Docs ingestion completed successfully.');
+  } catch (error) {
+    console.error('Error during OpenZeppelin Docs ingestion:', error);
+    throw error;
+  }
+}
+
 async function promptForTarget(): Promise<string> {
   const rl = createInterface({
     input: process.stdin,
@@ -91,7 +104,7 @@ async function promptForTarget(): Promise<string> {
 
   return new Promise((resolve) => {
     rl.question(
-      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Starknet Foundry, 4: Cairo By Example, 5: Everything): ',
+      'Select the ingestion target (1: Cairo Book, 2: Starknet Docs, 3: Starknet Foundry, 4: Cairo By Example, 5: OpenZeppelin Docs, 6: Everything): ',
       (answer) => {
         rl.close();
         const targets = [
@@ -99,6 +112,7 @@ async function promptForTarget(): Promise<string> {
           'Starknet Docs',
           'Starknet Foundry',
           'Cairo By Example',
+          'OpenZeppelin Docs',
           'Everything',
         ];
         resolve(targets[parseInt(answer) - 1] || 'Everything');
@@ -128,11 +142,16 @@ async function main() {
       await ingestCairoByExampleData();
     }
 
+    if (target === 'OpenZeppelin Docs') {
+      await ingestOpenZeppelinDocsData();
+    }
+
     if (target === 'Everything') {
       await ingestCairoBookData();
       await ingestStarknetDocsData();
       await ingestFoundryData();
       await ingestCairoByExampleData();
+      await ingestOpenZeppelinDocsData();
     }
 
     console.log('All specified ingestion processes completed successfully.');

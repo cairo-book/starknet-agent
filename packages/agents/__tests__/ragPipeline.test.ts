@@ -84,6 +84,7 @@ describe('RagPipeline', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
+        sources: ['cairo_book'],
       };
 
       const processedQuery = {
@@ -142,6 +143,7 @@ describe('RagPipeline', () => {
       expect(mockQueryProcessor.process).toHaveBeenCalledWith(input);
       expect(mockDocumentRetriever.retrieve).toHaveBeenCalledWith(
         processedQuery,
+        ['cairo_book'],
       );
       expect(mockAnswerGenerator.generate).toHaveBeenCalledWith(
         input,

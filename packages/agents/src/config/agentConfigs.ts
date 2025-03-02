@@ -63,7 +63,8 @@ export type AvailableAgents =
   | 'starknetFoundry'
   | 'succintCairoBook'
   | 'cairoCoder'
-  | 'cairoByExample';
+  | 'cairoByExample'
+  | 'openZeppelinDocs';
 
 // We'll make this a factory function instead of a static object
 export const createAgentConfigs = (
@@ -107,6 +108,7 @@ export const createAgentConfigs = (
       'starknet_docs',
       'cairo_by_example',
       'starknet_foundry',
+      'openzeppelin_docs',
     ],
   },
 
@@ -156,6 +158,19 @@ export const createAgentConfigs = (
     maxSourceCount: 10,
     similarityThreshold: 0.4,
     sources: ['cairo_by_example'],
+  },
+
+  openZeppelinDocs: {
+    name: 'OpenZeppelin Docs',
+    //TODO: make special prompts for openzeppelin docs
+    prompts: cairoBookPrompts,
+    vectorStore,
+    contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
+    queryClassifier: defaultQueryClassifier,
+    maxSourceCount: 10,
+    similarityThreshold: 0.4,
+    sources: ['openzeppelin_docs'],
   },
 });
 

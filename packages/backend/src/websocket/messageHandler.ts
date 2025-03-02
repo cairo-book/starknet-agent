@@ -5,12 +5,8 @@ import type { Embeddings } from '@langchain/core/embeddings';
 import logger from '../utils/logger';
 import crypto from 'crypto';
 import {
-  getCairoDbConfig,
-  getStarknetDbConfig,
-  getStarknetEcosystemDbConfig,
-  getStarknetFoundryDbConfig,
-  getCairoByExampleDbConfig,
   VectorStoreConfig,
+  getVectorDbConfig,
 } from '@starknet-agent/agents/config';
 import { HandlerOptions, SearchHandler } from '../types/types';
 import {
@@ -35,12 +31,13 @@ export type WSMessage = {
 };
 
 const searchDatabases: Record<string, () => VectorStoreConfig> = {
-  cairoBookSearch: getCairoDbConfig,
-  starknetDocsSearch: getStarknetDbConfig,
-  starknetEcosystemSearch: getStarknetEcosystemDbConfig,
-  succintCairoBookSearch: getCairoDbConfig,
-  starknetFoundrySearch: getStarknetFoundryDbConfig,
-  cairoByExampleSearch: getCairoByExampleDbConfig,
+  cairoBookSearch: getVectorDbConfig,
+  starknetDocsSearch: getVectorDbConfig,
+  starknetEcosystemSearch: getVectorDbConfig,
+  succintCairoBookSearch: getVectorDbConfig,
+  starknetFoundrySearch: getVectorDbConfig,
+  cairoByExampleSearch: getVectorDbConfig,
+  openZeppelinDocsSearch: getVectorDbConfig,
 };
 
 const handleEmitterEvents = (
@@ -99,6 +96,7 @@ const getSearchHandler = (focusMode: string): SearchHandler => {
     starknetEcosystemSearch: 'starknetEcosystem',
     starknetFoundrySearch: 'starknetFoundry',
     cairoByExampleSearch: 'cairoByExample',
+    openZeppelinDocsSearch: 'openZeppelinDocs',
   };
 
   const agentName = agentMapping[focusMode];

@@ -54,9 +54,17 @@ export async function processDocFiles(
         ) {
           // Process markdown files
           const content = await fs.readFile(fullPath, 'utf8');
+          // inject cairo-contracts/1.0.0 in the fullPath to reflect online website directory structure
+          //TODO: find a better way to do this than hardcoded here...
+          const adaptedFullPageName = path.join(
+            dir,
+            'contracts-cairo',
+            '1.0.0',
+            entry.name,
+          );
           pages.push({
             name: path
-              .relative(directory, fullPath)
+              .relative(directory, adaptedFullPageName)
               .replace(config.fileExtension, ''),
             content,
           });

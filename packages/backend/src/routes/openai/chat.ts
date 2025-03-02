@@ -2,10 +2,7 @@ import { AIMessage } from '@langchain/core/messages';
 import { HumanMessage } from '@langchain/core/messages';
 import { SystemMessage } from '@langchain/core/messages';
 import { BaseMessage } from '@langchain/core/messages';
-import {
-  getCairoDbConfig,
-  getStarknetEcosystemDbConfig,
-} from '@starknet-agent/agents/config';
+import { getVectorDbConfig } from '@starknet-agent/agents/config';
 import logger from '../../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
@@ -113,7 +110,7 @@ export const chatEndpoint = async (req, res) => {
     };
 
     //TODO: this should likely not be done here
-    const dbConfig = getCairoDbConfig();
+    const dbConfig = getVectorDbConfig();
     const vectorStore = await VectorStore.getInstance(dbConfig, embeddings);
     let response_text = '';
 

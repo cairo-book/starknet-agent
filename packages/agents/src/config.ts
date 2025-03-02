@@ -74,13 +74,6 @@ export const getOllamaApiEndpoint = () => loadConfig().API_ENDPOINTS.OLLAMA;
 
 export const getVectorDbConfig = () => loadConfig().VECTOR_DB;
 
-// Legacy methods for backward compatibility
-export const getCairoDbConfig = () => getVectorDbConfig();
-export const getStarknetFoundryDbConfig = () => getVectorDbConfig();
-export const getStarknetDbConfig = () => getVectorDbConfig();
-export const getStarknetEcosystemDbConfig = () => getVectorDbConfig();
-export const getCairoByExampleDbConfig = () => getVectorDbConfig();
-
 export const updateConfig = (config: RecursivePartial<Config>) => {
   const currentConfig = loadConfig();
 

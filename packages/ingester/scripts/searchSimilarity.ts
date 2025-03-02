@@ -1,7 +1,7 @@
-import { getCairoDbConfig } from '../../backend/src/config';
-import { VectorStore } from '@starknet-agent/backend/vectorStore';
-import { loadOpenAIEmbeddingsModels } from '../../backend/src/lib/providers/openai';
-import logger from '@starknet-agent/backend/logger';
+import { getVectorDbConfig } from '@starknet-agent/agents/config';
+import { VectorStore } from '@starknet-agent/agents/index';
+import { loadOpenAIEmbeddingsModels } from '@starknet-agent/backend/lib/providers/openai';
+import logger from '@starknet-agent/agents/utils/logger';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,7 +11,7 @@ let vectorStore: VectorStore;
 async function setupVectorStore() {
   try {
     vectorStore = await VectorStore.getInstance(
-      getCairoDbConfig(),
+      getVectorDbConfig(),
       await loadOpenAIEmbeddingsModels()['Text embedding 3 large'],
     );
     logger.info('VectorStore initialized successfully');
