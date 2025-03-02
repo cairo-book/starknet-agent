@@ -31,12 +31,16 @@ export interface ParsedSection {
   anchor?: string;
 }
 
+/**
+ * Process documentation files from a directory
+ * This is a generic version without OpenZeppelin-specific path injection
+ */
 export async function processDocFiles(
   config: BookConfig,
   directory: string,
 ): Promise<BookPageDto[]> {
   try {
-    logger.info(`Processing markdown files in ${directory}`);
+    logger.info(`Processing documentation files in ${directory}`);
     const pages: BookPageDto[] = [];
 
     async function processDirectory(dir: string) {
@@ -52,19 +56,12 @@ export async function processDocFiles(
           entry.isFile() &&
           path.extname(entry.name).toLowerCase() === config.fileExtension
         ) {
-          // Process markdown files
+          // Process documentation files
           const content = await fs.readFile(fullPath, 'utf8');
-          // inject cairo-contracts/1.0.0 in the fullPath to reflect online website directory structure
-          //TODO: find a better way to do this than hardcoded here...
-          const adaptedFullPageName = path.join(
-            dir,
-            'contracts-cairo',
-            '1.0.0',
-            entry.name,
-          );
+
           pages.push({
             name: path
-              .relative(directory, adaptedFullPageName)
+              .relative(directory, fullPath)
               .replace(config.fileExtension, ''),
             content,
           });
@@ -167,7 +164,7 @@ export async function updateVectorStore(
     storedChunkHashes,
   );
   logger.info(
-    `Found ${chunksToUpdate.length} chunks to update and ${chunksToRemove.length} chunks to remove for source: ${source}`,
+    `Found ${storedChunkHashes.length} stored chunks for source: ${source}. ${chunksToUpdate.length} chunks to update and ${chunksToRemove.length} chunks to remove`,
   );
 
   if (chunksToRemove.length > 0) {
