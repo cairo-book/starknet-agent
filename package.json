@@ -6,7 +6,9 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "start": "turbo run start"
+    "start": "turbo run start",
+    "generate-embeddings": "turbo run generate-embeddings",
+    "generate-embeddings:yes": "turbo run generate-embeddings:yes"
   },
   "devDependencies": {
     "turbo": "latest",

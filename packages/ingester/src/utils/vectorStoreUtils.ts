@@ -6,6 +6,7 @@ import {
   DocumentSource,
 } from '@starknet-agent/agents/index';
 import logger from '@starknet-agent/agents/utils/logger';
+import { YES_MODE } from '../generateEmbeddings';
 
 /**
  * Find chunks that need to be updated or removed based on content hashes
@@ -82,20 +83,30 @@ export async function updateVectorStore(
     return;
   }
 
-  // prompt user to confirm
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  const confirm = await new Promise<string>((resolve) => {
-    rl.question(
-      'Are you sure you want to update the vector store? (y/n)',
-      (answer) => {
-        rl.close();
-        resolve(answer.trim().toLowerCase());
-      },
+  // Skip prompt if YES_MODE is enabled
+  let confirm = 'n';
+  if (YES_MODE) {
+    logger.info(
+      'Yes mode enabled, automatically confirming vector store update',
     );
-  });
+    confirm = 'y';
+  } else {
+    // prompt user to confirm
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    confirm = await new Promise<string>((resolve) => {
+      rl.question(
+        'Are you sure you want to update the vector store? (y/n)',
+        (answer) => {
+          rl.close();
+          resolve(answer.trim().toLowerCase());
+        },
+      );
+    });
+  }
+
   if (confirm !== 'y') {
     logger.info('Update cancelled');
     return;

@@ -8,7 +8,8 @@
     "start": "node dist/src/app.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
@@ -29,7 +30,7 @@
   "exports": {
     "./*": {
       "types": "./src/*.ts",
-      "default": "./dist/*.js"
+      "default": "./dist/src/*.js"
     }
   },
   "devDependencies": {

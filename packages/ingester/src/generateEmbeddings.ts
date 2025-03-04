@@ -18,6 +18,12 @@ dotenv.config();
 let vectorStore: VectorStore | null = null;
 
 /**
+ * Global flag for yes mode (skip all prompts)
+ */
+export const YES_MODE =
+  process.argv.includes('-y') || process.argv.includes('--yes');
+
+/**
  * Set up the vector store with the appropriate configuration and embedding model
  *
  * @returns Promise<VectorStore> - The initialized vector store
@@ -52,6 +58,12 @@ async function setupVectorStore(): Promise<VectorStore> {
  * @returns Promise<string> - The selected target
  */
 async function promptForTarget(): Promise<DocumentSource | 'Everything'> {
+  // If yes mode is enabled, return 'Everything' without prompting
+  if (YES_MODE) {
+    logger.info('Yes mode enabled, ingesting everything without prompts');
+    return 'Everything';
+  }
+
   const rl = createInterface({
     input: process.stdin,
     output: process.stdout,

@@ -46,10 +46,24 @@ type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
 };
 
-const loadConfig = () =>
-  toml.parse(
-    fs.readFileSync(path.join(__dirname, `../${configFileName}`), 'utf-8'),
+const loadConfig = () => {
+  // Find the package root by looking for package.json
+  let packageRoot = __dirname;
+  while (
+    !fs.existsSync(path.join(packageRoot, 'package.json')) &&
+    packageRoot !== '/'
+  ) {
+    packageRoot = path.dirname(packageRoot);
+  }
+
+  if (packageRoot === '/') {
+    throw new Error('Could not find package.json in any parent directory');
+  }
+
+  return toml.parse(
+    fs.readFileSync(path.join(packageRoot, configFileName), 'utf-8'),
   ) as any as Config;
+};
 
 export const isHostedMode = () => loadConfig().HOSTED_MODE !== undefined;
 
@@ -95,8 +109,21 @@ export const updateConfig = (config: RecursivePartial<Config>) => {
     }
   }
 
+  // Find the package root by looking for package.json
+  let packageRoot = __dirname;
+  while (
+    !fs.existsSync(path.join(packageRoot, 'package.json')) &&
+    packageRoot !== '/'
+  ) {
+    packageRoot = path.dirname(packageRoot);
+  }
+
+  if (packageRoot === '/') {
+    throw new Error('Could not find package.json in any parent directory');
+  }
+
   fs.writeFileSync(
-    path.join(__dirname, `../${configFileName}`),
+    path.join(packageRoot, configFileName),
     toml.stringify(config),
   );
 };

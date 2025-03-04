@@ -197,7 +197,8 @@ For development, you can use the following commands:
 - **Start Development Server**: `turbo dev`
 - **Build for Production**: `turbo build`
 - **Run Tests**: `turbo test`
-- **Generate Embeddings**: `bun run packages/ingester/scripts/generateEmbeddings.ts`
+- **Generate Embeddings**: `turbo generate-embeddings`
+- **Generate Embeddings (Non-Interactive)**: `turbo generate-embeddings:yes`
 
 To add a new documentation source:
 
@@ -205,6 +206,16 @@ To add a new documentation source:
 2. Implement the required methods for downloading and processing the documentation
 3. Register the new ingester in the `IngesterFactory`
 4. Update the configuration to include the new database
+
+### Automated Embedding Generation
+
+The project includes a GitHub Actions workflow that automatically generates embeddings:
+
+- Runs weekly (Sunday at 00:00 UTC)
+- Can be manually triggered from the GitHub Actions UI
+- Uses repository secrets for configuration
+
+For more information about the CI workflows, see the [GitHub Workflows README](.github/workflows/README.md).
 
 ## Upcoming Features
 
