@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "jest"
+    "test": "jest",
+    "test-doc-quality": "ts-node src/testDocQuality.ts"
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
@@ -15,6 +16,7 @@
     "@langchain/mongodb": "^0.0.5",
     "@langchain/openai": "^0.0.25",
     "@types/node": "^20",
+    "commander": "^11.1.0",
     "compute-cosine-similarity": "^1.1.0",
     "compute-dot": "^1.1.0",
     "mongodb": "^6.13.1",

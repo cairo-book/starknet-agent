@@ -41,6 +41,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.0.0
+      commander:
+        specifier: ^11.1.0
+        version: 11.1.0
       compute-cosine-similarity:
         specifier: ^1.1.0
         version: 1.1.0
@@ -2015,6 +2018,10 @@ packages:
   commander@10.0.1:
     resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
     engines: {node: '>=14'}
+
+  commander@11.1.0:
+    resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
+    engines: {node: '>=16'}
 
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
@@ -6807,6 +6814,8 @@ snapshots:
   comma-separated-tokens@1.0.8: {}
 
   commander@10.0.1: {}
+
+  commander@11.1.0: {}
 
   commander@4.1.1: {}
 

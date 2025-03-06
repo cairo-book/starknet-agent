@@ -55,13 +55,14 @@ export interface RagSearchConfig extends AgentConfig {
   sources?: DocumentSource | DocumentSource[];
 }
 
-export type DocumentSource =
-  | 'cairo_book'
-  | 'starknet_docs'
-  | 'starknet_ecosystem'
-  | 'starknet_foundry'
-  | 'cairo_by_example'
-  | 'openzeppelin_docs';
+export enum DocumentSource {
+  CAIRO_BOOK = 'cairo_book',
+  STARKNET_DOCS = 'starknet_docs',
+  STARKNET_ECOSYSTEM = 'starknet_ecosystem',
+  STARKNET_FOUNDRY = 'starknet_foundry',
+  CAIRO_BY_EXAMPLE = 'cairo_by_example',
+  OPENZEPPELIN_DOCS = 'openzeppelin_docs',
+}
 
 export type BookChunk = {
   name: string;
@@ -77,4 +78,78 @@ export interface ParsedSection {
   title: string;
   content: string;
   anchor?: string; // Optional custom anchor
+}
+
+// Documentation Quality Testing Types
+export interface DocTestSet {
+  source: DocumentSource;
+  version: string; // Documentation version being tested
+  testCases: TestCase[]; // Collection of test cases
+  metadata?: {
+    // Optional metadata
+    owner: string;
+    repository: string;
+    commitHash?: string;
+  };
+}
+
+export interface TestCase {
+  query: string; // User query to test
+  expectedTopics: string[]; // Key topics that should be covered
+  expectedContent?: string; // Free text area for detailed content expectations
+  groundTruth?: string; // Optional reference answer
+  type: 'factual' | 'procedural' | 'conceptual'; // Query type
+  difficulty: 'basic' | 'intermediate' | 'advanced';
+  tags: string[]; // Custom tags for categorization
+}
+
+export interface TestResults {
+  source: DocumentSource;
+  version: string;
+  executedAt: Date;
+  metrics: {
+    overall: QualityMetrics;
+    byType: Record<string, QualityMetrics>;
+    byDifficulty: Record<string, QualityMetrics>;
+    byTag?: Record<string, QualityMetrics>;
+  };
+  caseResults: TestCaseResult[];
+}
+
+export interface TestCaseResult {
+  query: string;
+  retrievedDocuments: Document[];
+  answer: string;
+  metrics: TestCaseMetrics;
+  recommendations?: string[];
+}
+
+export interface TestCaseMetrics {
+  isAnswered: boolean; // Whether the question is answered
+  notAnsweredReason?: string; // Explanation when question is not answered
+  clarityScore: number; // 0-1 score of answer clarity
+  sourceAlignment: number; // 0-1 score of alignment with retrieved context
+  contentSatisfaction?: number; // 0-1 score of how well the answer satisfies expectedContent
+  contentFeedback?: string; // Feedback on how well expectedContent criteria are met
+}
+
+export interface QualityMetrics {
+  percentAnswered: number; // Percentage of questions answered
+  avgClarityScore: number; // Average clarity score
+  avgSourceAlignment: number; // Average source alignment score
+  avgContentSatisfaction?: number; // Average content satisfaction score (when expectedContent is provided)
+}
+
+export interface QualityReport {
+  results: TestResults;
+  summary: string;
+  recommendations: DocumentationRecommendation[];
+}
+
+export interface DocumentationRecommendation {
+  type: 'content' | 'structure' | 'terminology' | 'examples';
+  priority: 'high' | 'medium' | 'low';
+  description: string;
+  examples?: string[];
+  affectedTopics: string[];
 }

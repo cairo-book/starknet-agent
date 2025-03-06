@@ -11,7 +11,7 @@ import {
 import { basicTestTemplate } from './templates/testTemplate';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { VectorStore } from '../db/vectorStore';
-import { RagSearchConfig } from '../core/types';
+import { DocumentSource, RagSearchConfig } from '../core/types';
 
 export interface LLMConfig {
   defaultLLM: BaseChatModel;
@@ -66,6 +66,14 @@ export type AvailableAgents =
   | 'cairoByExample'
   | 'openZeppelinDocs';
 
+const agent_to_source = {
+  cairoBook: DocumentSource.CAIRO_BOOK,
+  starknetDocs: DocumentSource.STARKNET_DOCS,
+  starknetEcosystem: DocumentSource.STARKNET_ECOSYSTEM,
+  starknetFoundry: DocumentSource.STARKNET_FOUNDRY,
+  succintCairoBook: DocumentSource.CAIRO_BOOK,
+};
+
 // We'll make this a factory function instead of a static object
 export const createAgentConfigs = (
   vectorStore: VectorStore,
@@ -79,7 +87,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 15,
     similarityThreshold: 0.4,
-    sources: ['cairo_book'],
+    sources: [DocumentSource.CAIRO_BOOK],
   },
 
   starknetDocs: {
@@ -91,7 +99,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 10,
     similarityThreshold: 0.4,
-    sources: ['starknet_docs'],
+    sources: [DocumentSource.STARKNET_DOCS],
   },
 
   starknetEcosystem: {
@@ -104,11 +112,11 @@ export const createAgentConfigs = (
     maxSourceCount: 15,
     similarityThreshold: 0.4,
     sources: [
-      'cairo_book',
-      'starknet_docs',
-      'cairo_by_example',
-      'starknet_foundry',
-      'openzeppelin_docs',
+      DocumentSource.CAIRO_BOOK,
+      DocumentSource.STARKNET_DOCS,
+      DocumentSource.CAIRO_BY_EXAMPLE,
+      DocumentSource.STARKNET_FOUNDRY,
+      DocumentSource.OPENZEPPELIN_DOCS,
     ],
   },
 
@@ -121,7 +129,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 10,
     similarityThreshold: 0.4,
-    sources: ['starknet_foundry'],
+    sources: [DocumentSource.STARKNET_FOUNDRY],
   },
 
   succintCairoBook: {
@@ -133,7 +141,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 5,
     similarityThreshold: 0.5,
-    sources: ['cairo_book'],
+    sources: [DocumentSource.CAIRO_BOOK],
   },
 
   cairoCoder: {
@@ -145,7 +153,11 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 15,
     similarityThreshold: 0.4,
-    sources: ['cairo_book', 'cairo_by_example', 'starknet_foundry'],
+    sources: [
+      DocumentSource.CAIRO_BOOK,
+      DocumentSource.CAIRO_BY_EXAMPLE,
+      DocumentSource.STARKNET_FOUNDRY,
+    ],
   },
 
   cairoByExample: {
@@ -157,7 +169,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 10,
     similarityThreshold: 0.4,
-    sources: ['cairo_by_example'],
+    sources: [DocumentSource.CAIRO_BY_EXAMPLE],
   },
 
   openZeppelinDocs: {
@@ -170,7 +182,7 @@ export const createAgentConfigs = (
     queryClassifier: defaultQueryClassifier,
     maxSourceCount: 10,
     similarityThreshold: 0.4,
-    sources: ['openzeppelin_docs'],
+    sources: [DocumentSource.OPENZEPPELIN_DOCS],
   },
 });
 

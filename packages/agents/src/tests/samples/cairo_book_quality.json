@@ -1,0 +1,24 @@
+{
+  "source": "cairo_book",
+  "version": "2.10.0",
+  "metadata": {
+    "owner": "cairo-lang",
+    "repository": "cairo-book"
+  },
+  "testCases": [
+    {
+      "query": "How do you declare a mutable variable in Cairo 1?",
+      "expectedTopics": ["let keyword", "mut", "variables", "immutability"],
+      "type": "procedural",
+      "difficulty": "basic",
+      "tags": ["variables", "basics"]
+    },
+    {
+      "query": "How do you write a comment in Cairo 1?",
+      "expectedTopics": ["comments", "//", "documentation"],
+      "type": "procedural",
+      "difficulty": "basic",
+      "tags": ["syntax", "basics"]
+    }
+  ]
+}

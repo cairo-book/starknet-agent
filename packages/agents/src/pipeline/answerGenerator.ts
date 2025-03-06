@@ -8,7 +8,7 @@ import { RetrievedDocuments, RagInput, RagSearchConfig } from '../core/types';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
 import logger from '../utils/logger';
 import formatChatHistoryAsString from '../utils/formatHistory';
-import { BaseMessage } from '@langchain/core/messages';
+import { BaseMessage, HumanMessage } from '@langchain/core/messages';
 
 /**
  * Synthesizes a response based on retrieved documents and query context.
@@ -64,6 +64,9 @@ export class AnswerGenerator {
     input: RagInput,
     context: string,
   ): Promise<string> {
+    if (!input.chatHistory || input.chatHistory.length === 0) {
+      input.chatHistory = [new HumanMessage('You are a helpful assistant.')];
+    }
     const promptTemplate = ChatPromptTemplate.fromMessages([
       ['system', this.config.prompts.searchResponsePrompt],
       new MessagesPlaceholder('chat_history'),

@@ -1,0 +1,71 @@
+{
+  "source": "starknet_docs",
+  "version": "1.0.0",
+  "metadata": {
+    "owner": "starknet-team",
+    "repository": "starknet-docs"
+  },
+  "testCases": [
+    {
+      "query": "How do I deploy a smart contract on Starknet?",
+      "expectedTopics": [
+        "deploy",
+        "contract",
+        "declare",
+        "starknet_cli",
+        "transaction"
+      ],
+      "expectedContent": "include step-by-step instructions that cover the entire deployment process, mention pre-requisites, and explain any required configuration",
+      "type": "procedural",
+      "difficulty": "basic",
+      "tags": ["deployment", "contracts", "basics"]
+    },
+    {
+      "query": "What is account abstraction in Starknet?",
+      "expectedTopics": [
+        "account abstraction",
+        "accounts",
+        "transaction",
+        "signature"
+      ],
+      "type": "conceptual",
+      "difficulty": "intermediate",
+      "tags": ["accounts", "concepts"]
+    },
+    {
+      "query": "How do Starknet fees work?",
+      "expectedTopics": ["fees", "gas", "calculation", "pricing", "eth"],
+      "expectedContent": "explain the fee model, how gas is calculated, and provide examples of typical transaction costs",
+      "type": "conceptual",
+      "difficulty": "basic",
+      "tags": ["fees", "economics"]
+    },
+    {
+      "query": "How to implement ERC-20 token in Cairo?",
+      "expectedTopics": [
+        "erc20",
+        "token",
+        "implementation",
+        "interface",
+        "transfer"
+      ],
+      "expectedContent": "provide code examples and explain each required function in the ERC-20 standard implementation",
+      "type": "procedural",
+      "difficulty": "intermediate",
+      "tags": ["tokens", "standards", "implementation"]
+    },
+    {
+      "query": "Explain the difference between Cairo 0 and Cairo 1",
+      "expectedTopics": [
+        "cairo 0",
+        "cairo 1",
+        "differences",
+        "migration",
+        "sierra"
+      ],
+      "type": "factual",
+      "difficulty": "advanced",
+      "tags": ["cairo", "languages"]
+    }
+  ]
+}
