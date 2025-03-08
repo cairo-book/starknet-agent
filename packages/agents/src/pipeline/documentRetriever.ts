@@ -90,7 +90,7 @@ export class DocumentRetriever {
 
   private async attachSources(
     docs: Document<BookChunk>[],
-  ): Promise<Document[]> {
+  ): Promise<Document<BookChunk>[]> {
     return docs.map((doc) => ({
       pageContent: doc.pageContent,
       metadata: {

@@ -1,6 +1,6 @@
 {
   "source": "cairo_book",
-  "version": "2.10.0",
+  "version": "1.0.0",
   "metadata": {
     "owner": "cairo-lang",
     "repository": "cairo-book"
@@ -14,11 +14,145 @@
       "tags": ["variables", "basics"]
     },
     {
+      "query": "What happens if you try to reassign a variable declared without `mut` in Cairo 1?",
+      "expectedTopics": ["immutability", "let keyword", "compile error"],
+      "type": "conceptual",
+      "difficulty": "basic",
+      "tags": ["variables", "errors"]
+    },
+    {
+      "query": "What is the default data type in Cairo 1 if no type is specified, and how does it behave with division?",
+      "expectedTopics": [
+        "felt252",
+        "field elements",
+        "division",
+        "type inference"
+      ],
+      "type": "conceptual",
+      "difficulty": "intermediate",
+      "tags": ["data types", "arithmetic"]
+    },
+    {
+      "query": "How do you declare an unsigned 8-bit integer in Cairo 1?",
+      "expectedTopics": ["u8", "integer types", "type annotation"],
+      "type": "procedural",
+      "difficulty": "basic",
+      "tags": ["data types", "basics"]
+    },
+    {
+      "query": "What is the range of values for an `i128` type in Cairo 1?",
+      "expectedTopics": ["i128", "signed integers", "range", "2^127"],
+      "type": "factual",
+      "difficulty": "intermediate",
+      "tags": ["data types", "integers"]
+    },
+    {
+      "query": "How do you define a function with a generic parameter in Cairo 1?",
+      "expectedTopics": ["fn keyword", "generics", "type parameters", "traits"],
+      "type": "procedural",
+      "difficulty": "intermediate",
+      "tags": ["functions", "generics"]
+    },
+    {
+      "query": "What keyword is used to declare a function in Cairo 1?",
+      "expectedTopics": ["fn keyword", "function declaration"],
+      "type": "factual",
+      "difficulty": "basic",
+      "tags": ["functions", "basics"]
+    },
+    {
       "query": "How do you write a comment in Cairo 1?",
       "expectedTopics": ["comments", "//", "documentation"],
       "type": "procedural",
       "difficulty": "basic",
       "tags": ["syntax", "basics"]
+    },
+    {
+      "query": "How do you create an array in Cairo 1 with initial values?",
+      "expectedTopics": ["array!", "arrays", "collections", "immutable memory"],
+      "type": "procedural",
+      "difficulty": "basic",
+      "tags": ["collections", "arrays"]
+    },
+    {
+      "query": "Why can’t you mutate an array after moving it in Cairo 1?",
+      "expectedTopics": [
+        "ownership",
+        "move semantics",
+        "arrays",
+        "immutable memory"
+      ],
+      "type": "conceptual",
+      "difficulty": "advanced",
+      "tags": ["ownership", "collections"]
+    },
+    {
+      "query": "How do you access the first element of an array in Cairo 1 safely?",
+      "expectedTopics": ["get", "Option", "arrays", "desnap"],
+      "type": "procedural",
+      "difficulty": "intermediate",
+      "tags": ["collections", "safety"]
+    },
+    {
+      "query": "What is the purpose of the `Felt252Dict` type in Cairo 1?",
+      "expectedTopics": [
+        "Felt252Dict",
+        "dictionaries",
+        "mutable data",
+        "immutable memory"
+      ],
+      "type": "conceptual",
+      "difficulty": "intermediate",
+      "tags": ["collections", "dictionaries"]
+    },
+    {
+      "query": "How do you insert a key-value pair into a `Felt252Dict` in Cairo 1?",
+      "expectedTopics": ["insert", "Felt252Dict", "key-value", "dictionaries"],
+      "type": "procedural",
+      "difficulty": "intermediate",
+      "tags": ["collections", "dictionaries"]
+    },
+    {
+      "query": "What happens when you try to access a non-existent key in a `Felt252Dict`?",
+      "expectedTopics": ["get", "Felt252Dict", "default value", "dictionaries"],
+      "type": "conceptual",
+      "difficulty": "intermediate",
+      "tags": ["collections", "dictionaries"]
+    },
+    {
+      "query": "How do you use a `for` loop to iterate over a range in Cairo 1?",
+      "expectedTopics": ["for", "range", "control flow", "iteration"],
+      "type": "procedural",
+      "difficulty": "basic",
+      "tags": ["control flow", "loops"]
+    },
+    {
+      "query": "What is the difference between `loop` and `while` in Cairo 1?",
+      "expectedTopics": ["loop", "while", "control flow", "break"],
+      "type": "conceptual",
+      "difficulty": "intermediate",
+      "tags": ["control flow", "loops"]
+    },
+    {
+      "query": "How do you define a struct in Cairo 1 with two fields?",
+      "expectedTopics": ["struct", "fields", "data structure"],
+      "type": "procedural",
+      "difficulty": "basic",
+      "tags": ["structs", "basics"]
+    },
+    {
+      "query": "What does the `#[derive(Copy, Drop)]` attribute do in Cairo 1?",
+      "expectedTopics": ["derive", "Copy", "Drop", "traits"],
+      "type": "conceptual",
+      "difficulty": "intermediate",
+      "tags": ["structs", "traits"]
+    },
+    {
+      "query": "How do you define a method for a struct in Cairo 1?",
+      "expectedTopics": ["impl", "method syntax", "self", "traits"],
+      "type": "procedural",
+      "difficulty": "intermediate",
+      "tags": ["structs", "methods"]
     }
   ]
 }

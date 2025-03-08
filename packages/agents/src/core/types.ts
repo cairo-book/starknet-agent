@@ -30,7 +30,7 @@ export interface ProcessedQuery {
 }
 
 export interface RetrievedDocuments {
-  documents: Document[];
+  documents: Document<BookChunk>[];
   processedQuery: ProcessedQuery;
 }
 
@@ -118,7 +118,7 @@ export interface TestResults {
 
 export interface TestCaseResult {
   query: string;
-  retrievedDocuments: Document[];
+  retrievedDocuments: Document<BookChunk>[];
   answer: string;
   metrics: TestCaseMetrics;
   recommendations?: string[];
