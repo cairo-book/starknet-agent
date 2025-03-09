@@ -1,6 +1,40 @@
 // Basic contract template used for contract-related queries
 export const basicContractTemplate = `
 <contract>
+#[starknet::contract]
+mod MyToken {
+    use openzeppelin_token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
+    use starknet::ContractAddress;
+
+    component!(path: ERC20Component, storage: erc20, event: ERC20Event);
+
+    // ERC20 Mixin
+    #[abi(embed_v0)]
+    impl ERC20MixinImpl = ERC20Component::ERC20MixinImpl<ContractState>;
+    impl ERC20InternalImpl = ERC20Component::InternalImpl<ContractState>;
+
+    #[storage]
+    struct Storage {
+        #[substorage(v0)]
+        erc20: ERC20Component::Storage,
+    }
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        #[flat]
+        ERC20Event: ERC20Component::Event,
+    }
+
+    #[constructor]
+    fn constructor(ref self: ContractState, initial_supply: u256, recipient: ContractAddress) {
+        let name = "MyToken";
+        let symbol = "MTK";
+
+        self.erc20.initializer(name, symbol);
+        self.erc20.mint(recipient, initial_supply);
+    }
+}
 use core::starknet::ContractAddress;
 
 // Define the contract interface
@@ -11,7 +45,17 @@ pub trait IRegistry<TContractState> {
     fn get_data(self: @TContractState, index: u64) -> felt252;
     fn get_all_data(self: @TContractState) -> Array<felt252>;
     fn get_user_data(self: @TContractState, user: ContractAddress) -> felt252;
+    fn get_rounds(self: @TContractState) -> Array<Round>;
 }
+
+
+// The non-storage version of the Round struct - can't be stored in storage, but can be instanciated in memory.
+#[derive(Drop, Serde)]
+struct Round {
+    winner: ContractAddress,
+    participants: Array<ContractAddress>,
+}
+
 
 // Define the contract module
 #[starknet::contract]
@@ -27,12 +71,22 @@ pub mod Registry {
     use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use core::starknet::get_caller_address;
 
+    use super::Round;
+
     // Define storage variables
     #[storage]
     pub struct Storage {
         data_vector: Vec<felt252>, // A vector to store data
         user_data_map: Map<ContractAddress, felt252>, // A mapping to store user-specific data
         foo: usize, // A simple storage variable
+        rounds: Vec<StorageRound>,
+    }
+
+    // The "storage node" version of Round - a storage-only struct that can contain Map and Vec and other storage nodes
+    #[starknet::storage_node]
+    struct StorageRound {
+        winner: ContractAddress,
+        participants: Vec<ContractAddress>,
     }
 
     // events derive 'Drop, starknet::Event' and the '#[event]' attribute
@@ -94,6 +148,22 @@ pub mod Registry {
         // Retrieve data for a specific user
         fn get_user_data(self: @ContractState, user: ContractAddress) -> felt252 {
             self.user_data_map.entry(user).read()
+        }
+
+        /// Retrieves all rounds from storage and returns them as an array of non-storage Round structs.
+        /// We need to collect the participants from the participants vec in the StorageRound struct, and
+        /// append them to an in-memory 'Array', which is then appended to the rounds array.
+        fn get_rounds(self: @ContractState) -> Array<Round> {
+            let mut rounds = array![];
+            for i in 0..self.rounds.len() {
+                let winner = self.rounds.at(i).winner.read();
+                let mut participants = array![];
+                for j in 0..self.rounds.at(i).participants.len() {
+                    participants.append(self.rounds.at(i).participants.at(j).read());
+                };
+                rounds.append(Round { winner, participants });
+            };
+            rounds
         }
     }
 
