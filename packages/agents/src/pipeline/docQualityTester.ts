@@ -558,7 +558,7 @@ Return ONLY a JSON object with your evaluation, no other text:
     const byTag: Record<string, TestCaseResult[]> = {};
     testSet.testCases.forEach((testCase, index) => {
       testCase.tags?.forEach((tag) => {
-        if (!byTag[tag]) {
+        if (!byTag[tag] || !Array.isArray(byTag[tag])) {
           byTag[tag] = [];
         }
         byTag[tag].push(caseResults[index]);
@@ -1327,6 +1327,10 @@ Provide a concise 2-3 paragraph summary comparing the baseline and current versi
         });
         // Show what the answer was
         console.log(` ${YELLOW}Answer:${RESET} ${result.answer}`);
+        // Show the title of the sources used
+        console.log(
+          ` ${YELLOW}Sources:${RESET} ${result.retrievedDocuments.map((s) => s.metadata.title).join(', ')}`,
+        );
       }
     });
 
