@@ -20,6 +20,12 @@ const focusModes = [
     icon: <Globe size={20} />,
   },
   {
+    key: 'cairoCoder',
+    title: 'Cairo Coder',
+    description: 'A mode specifically made for coding tasks',
+    icon: <Code size={20} />,
+  },
+  {
     key: 'cairoBookSearch',
     title: 'Cairo Book',
     description: 'Search in Cairo Book',
