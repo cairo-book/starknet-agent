@@ -63,8 +63,13 @@ describe('QueryProcessor', () => {
       expect(result).toEqual(
         expect.objectContaining({
           original: input.query,
-          transformed: ['cairo contract', 'starknet'],
+          transformed: [
+            'How do I write a Cairo contract?',
+            'cairo contract',
+            'starknet',
+          ],
           isContractRelated: true,
+          isTestRelated: false,
         }),
       );
     });

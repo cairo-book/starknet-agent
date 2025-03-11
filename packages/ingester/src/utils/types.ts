@@ -41,6 +41,9 @@ export type BookConfig = {
 
   /** The base URL for the documentation */
   baseUrl: string;
+
+  /** The suffix for the documentation files */
+  urlSuffix: string;
 };
 
 /**

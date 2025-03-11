@@ -21,6 +21,7 @@ export class CairoByExampleIngester extends MarkdownIngester {
       chunkSize: 4096,
       chunkOverlap: 512,
       baseUrl: 'https://enitrat.github.io/cairo-by-example',
+      urlSuffix: '.html',
     };
 
     super(config, 'cairo_by_example');

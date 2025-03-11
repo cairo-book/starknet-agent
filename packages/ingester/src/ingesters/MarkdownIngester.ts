@@ -122,7 +122,9 @@ export abstract class MarkdownIngester extends BaseIngester {
               chunkNumber: index,
               contentHash: hash,
               uniqueId: `${page.name}-${index}`,
-              sourceLink: `${this.config.baseUrl}/${page.name}.html#${createAnchor(section.title)}`,
+              sourceLink: `${this.config.baseUrl}/${page.name}${this.config.urlSuffix}${
+                section.anchor ? '#' + section.anchor : ''
+              }`,
               source: this.source,
             },
           }),

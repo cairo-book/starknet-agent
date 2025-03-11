@@ -17,6 +17,7 @@ const markdownIngester = new TestMarkdownIngester(
     repoName: 'test',
     baseUrl: 'https://test.com',
     fileExtension: 'md',
+    urlSuffix: '.html',
     chunkSize: 1000,
     chunkOverlap: 100,
   },

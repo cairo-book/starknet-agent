@@ -21,6 +21,7 @@ export class CairoBookIngester extends MarkdownIngester {
       chunkSize: 4096,
       chunkOverlap: 512,
       baseUrl: 'https://book.cairo-lang.org',
+      urlSuffix: '.html',
     };
 
     super(config, 'cairo_book');
