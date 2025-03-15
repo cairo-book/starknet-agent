@@ -3,6 +3,7 @@ import { BookConfig, BookPageDto, ParsedSection } from '../utils/types';
 import { AsciiDocIngester, AsciiDocIngesterConfig } from './AsciiDocIngester';
 import { processDocFiles } from '../utils/fileUtils';
 import * as fs from 'fs';
+import { DocumentSource } from '@starknet-agent/agents/index';
 
 /**
  * Ingester for the Starknet documentation
@@ -43,7 +44,7 @@ export class StarknetDocsIngester extends AsciiDocIngester {
       playbookPath: path.join(packageRoot, 'asciidoc', 'playbook.yml'),
       outputDir: path.join(packageRoot, 'antora-output'),
       restructuredDir: path.join(packageRoot, 'starknet-docs-restructured'),
-      source: 'starknet_docs',
+      source: DocumentSource.STARKNET_DOCS,
     };
 
     super(asciiDocIngesterConfig);

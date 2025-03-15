@@ -5,6 +5,7 @@ import { StarknetFoundryIngester } from '../src/ingesters/StarknetFoundryIngeste
 import { CairoByExampleIngester } from '../src/ingesters/CairoByExampleIngester';
 import { OpenZeppelinDocsIngester } from '../src/ingesters/OpenZeppelinDocsIngester';
 import { BaseIngester } from '../src/BaseIngester';
+import { DocumentSource } from '@starknet-agent/agents/index';
 
 // Mock the ingesters
 jest.mock('../src/ingesters/CairoBookIngester');
@@ -20,35 +21,45 @@ describe('IngesterFactory', () => {
 
   describe('createIngester', () => {
     it('should create a CairoBookIngester for cairo_book source', () => {
-      const ingester = IngesterFactory.createIngester('cairo_book');
+      const ingester = IngesterFactory.createIngester(
+        DocumentSource.CAIRO_BOOK,
+      );
 
       expect(ingester).toBeInstanceOf(CairoBookIngester);
       expect(CairoBookIngester).toHaveBeenCalledTimes(1);
     });
 
     it('should create a StarknetDocsIngester for starknet_docs source', () => {
-      const ingester = IngesterFactory.createIngester('starknet_docs');
+      const ingester = IngesterFactory.createIngester(
+        DocumentSource.STARKNET_DOCS,
+      );
 
       expect(ingester).toBeInstanceOf(StarknetDocsIngester);
       expect(StarknetDocsIngester).toHaveBeenCalledTimes(1);
     });
 
     it('should create a StarknetFoundryIngester for starknet_foundry source', () => {
-      const ingester = IngesterFactory.createIngester('starknet_foundry');
+      const ingester = IngesterFactory.createIngester(
+        DocumentSource.STARKNET_FOUNDRY,
+      );
 
       expect(ingester).toBeInstanceOf(StarknetFoundryIngester);
       expect(StarknetFoundryIngester).toHaveBeenCalledTimes(1);
     });
 
     it('should create a CairoByExampleIngester for cairo_by_example source', () => {
-      const ingester = IngesterFactory.createIngester('cairo_by_example');
+      const ingester = IngesterFactory.createIngester(
+        DocumentSource.CAIRO_BY_EXAMPLE,
+      );
 
       expect(ingester).toBeInstanceOf(CairoByExampleIngester);
       expect(CairoByExampleIngester).toHaveBeenCalledTimes(1);
     });
 
     it('should create an OpenZeppelinDocsIngester for openzeppelin_docs source', () => {
-      const ingester = IngesterFactory.createIngester('openzeppelin_docs');
+      const ingester = IngesterFactory.createIngester(
+        DocumentSource.OPENZEPPELIN_DOCS,
+      );
 
       expect(ingester).toBeInstanceOf(OpenZeppelinDocsIngester);
       expect(OpenZeppelinDocsIngester).toHaveBeenCalledTimes(1);

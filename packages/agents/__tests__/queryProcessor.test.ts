@@ -1,6 +1,11 @@
 import { QueryProcessor } from '../src/pipeline/queryProcessor';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { RagInput, ProcessedQuery, RagSearchConfig } from '../src/core/types';
+import {
+  RagInput,
+  ProcessedQuery,
+  RagSearchConfig,
+  DocumentSource,
+} from '../src/core/types';
 import { mockDeep, MockProxy } from 'jest-mock-extended';
 import { AIMessage } from '@langchain/core/messages';
 
@@ -50,7 +55,7 @@ describe('QueryProcessor', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
-        sources: ['cairo_book'],
+        sources: [DocumentSource.CAIRO_BOOK],
       };
 
       // Act
@@ -63,8 +68,13 @@ describe('QueryProcessor', () => {
       expect(result).toEqual(
         expect.objectContaining({
           original: input.query,
-          transformed: ['cairo contract', 'starknet'],
+          transformed: [
+            'How do I write a Cairo contract?',
+            'cairo contract',
+            'starknet',
+          ],
           isContractRelated: true,
+          isTestRelated: false,
         }),
       );
     });
@@ -74,7 +84,7 @@ describe('QueryProcessor', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
-        sources: ['cairo_book'],
+        sources: [DocumentSource.CAIRO_BOOK],
       };
 
       // Create a processor without LLM
@@ -98,7 +108,7 @@ describe('QueryProcessor', () => {
       const input: RagInput = {
         query: 'How to write tests for Cairo?',
         chatHistory: [],
-        sources: ['cairo_book'],
+        sources: [DocumentSource.CAIRO_BOOK],
       };
 
       // Mock LLM to return a test-related response
@@ -118,7 +128,7 @@ describe('QueryProcessor', () => {
       const input: RagInput = {
         query: 'How do I build on Starknet?',
         chatHistory: [],
-        sources: ['cairo_book'],
+        sources: [DocumentSource.CAIRO_BOOK],
       };
 
       // Mock LLM to return a direct answer instead of terms

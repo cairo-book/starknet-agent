@@ -38,7 +38,7 @@ export class StarknetFoundryIngester extends MarkdownIngester {
       baseUrl: 'https://foundry-rs.github.io/starknet-foundry',
     };
 
-    super(config, 'starknet_foundry');
+    super(config, DocumentSource.STARKNET_FOUNDRY);
   }
 
   /**

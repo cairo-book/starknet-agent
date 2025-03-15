@@ -1,6 +1,10 @@
 import { DocumentRetriever } from '../src/pipeline/documentRetriever';
 import { Embeddings } from '@langchain/core/embeddings';
-import { ProcessedQuery, RagSearchConfig } from '../src/core/types';
+import {
+  DocumentSource,
+  ProcessedQuery,
+  RagSearchConfig,
+} from '../src/core/types';
 import { Document } from '@langchain/core/documents';
 import { mockDeep, MockProxy } from 'jest-mock-extended';
 
@@ -81,14 +85,14 @@ describe('DocumentRetriever', () => {
       // Act
       const result = await documentRetriever.retrieve(
         processedQuery,
-        'cairo_book',
+        DocumentSource.CAIRO_BOOK,
       );
 
       // Assert
       expect(mockConfig.vectorStore.similaritySearch).toHaveBeenCalledWith(
         'cairo contract',
         5,
-        'cairo_book',
+        DocumentSource.CAIRO_BOOK,
       );
       expect(result.documents.length).toBe(2);
       expect(result.processedQuery).toBe(processedQuery);
@@ -113,7 +117,7 @@ describe('DocumentRetriever', () => {
       // Act
       const result = await documentRetriever.retrieve(
         processedQuery,
-        'cairo_book',
+        DocumentSource.CAIRO_BOOK,
       );
 
       // Assert
@@ -122,17 +126,17 @@ describe('DocumentRetriever', () => {
       expect(mockConfig.vectorStore.similaritySearch).toHaveBeenCalledWith(
         'cairo',
         5,
-        'cairo_book',
+        DocumentSource.CAIRO_BOOK,
       );
       expect(mockConfig.vectorStore.similaritySearch).toHaveBeenCalledWith(
         'starknet',
         5,
-        'cairo_book',
+        DocumentSource.CAIRO_BOOK,
       );
       expect(mockConfig.vectorStore.similaritySearch).toHaveBeenCalledWith(
         'contract',
         5,
-        'cairo_book',
+        DocumentSource.CAIRO_BOOK,
       );
 
       // Should deduplicate documents
@@ -167,7 +171,7 @@ describe('DocumentRetriever', () => {
       // Act
       const result = await documentRetriever.retrieve(
         processedQuery,
-        'cairo_book',
+        DocumentSource.CAIRO_BOOK,
       );
 
       // Assert
@@ -189,14 +193,14 @@ describe('DocumentRetriever', () => {
       // Act
       const result = await documentRetriever.retrieve(
         processedQuery,
-        'cairo_book',
+        DocumentSource.CAIRO_BOOK,
       );
 
       // Assert
       expect(mockConfig.vectorStore.similaritySearch).toHaveBeenCalledWith(
         'Summarize',
         5,
-        'cairo_book',
+        DocumentSource.CAIRO_BOOK,
       );
 
       // Should skip reranking for "Summarize" queries

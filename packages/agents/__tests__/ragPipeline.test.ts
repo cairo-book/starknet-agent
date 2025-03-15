@@ -4,6 +4,8 @@ import { DocumentRetriever } from '../src/pipeline/documentRetriever';
 import { AnswerGenerator } from '../src/pipeline/answerGenerator';
 import { Embeddings } from '@langchain/core/embeddings';
 import {
+  BookChunk,
+  DocumentSource,
   RagInput,
   RagSearchConfig,
   RetrievedDocuments,
@@ -84,7 +86,7 @@ describe('RagPipeline', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
-        sources: ['cairo_book'],
+        sources: [DocumentSource.CAIRO_BOOK],
       };
 
       const processedQuery = {
@@ -93,12 +95,17 @@ describe('RagPipeline', () => {
         isContractRelated: true,
       };
 
-      const mockDocuments: Document[] = [
+      const mockDocuments: Document<BookChunk>[] = [
         new Document({
           pageContent: 'Cairo contracts are written in the Cairo language.',
           metadata: {
+            name: 'Cairo Programming',
             title: 'Cairo Programming',
+            chunkNumber: 1,
+            contentHash: '1234567890',
+            uniqueId: '1234567890',
             sourceLink: 'https://example.com/cairo',
+            source: DocumentSource.CAIRO_BOOK,
           },
         }),
       ];
@@ -143,7 +150,7 @@ describe('RagPipeline', () => {
       expect(mockQueryProcessor.process).toHaveBeenCalledWith(input);
       expect(mockDocumentRetriever.retrieve).toHaveBeenCalledWith(
         processedQuery,
-        ['cairo_book'],
+        [DocumentSource.CAIRO_BOOK],
       );
       expect(mockAnswerGenerator.generate).toHaveBeenCalledWith(
         input,

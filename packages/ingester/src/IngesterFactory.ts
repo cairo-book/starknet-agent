@@ -60,11 +60,11 @@ export class IngesterFactory {
    */
   public static getAvailableSources(): DocumentSource[] {
     return [
-      'cairo_book',
-      'starknet_docs',
-      'starknet_foundry',
-      'cairo_by_example',
-      'openzeppelin_docs',
+      DocumentSource.CAIRO_BOOK,
+      DocumentSource.STARKNET_DOCS,
+      DocumentSource.STARKNET_FOUNDRY,
+      DocumentSource.CAIRO_BY_EXAMPLE,
+      DocumentSource.OPENZEPPELIN_DOCS,
     ];
   }
 }

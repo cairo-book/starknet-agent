@@ -31,7 +31,7 @@ The system can test various documentation sources in the Starknet ecosystem:
 
 ## 2. Sequence Diagram / Testing Flow
 
-```
+```txt
 ┌─────────────┐      ┌───────────────┐      ┌────────────────┐      ┌────────────────┐      ┌────────────────┐
 │ Test Runner │      │DocQualityTester│      │  RAG Pipeline  │      │ Evaluation LLM │      │  Report Engine │
 └──────┬──────┘      └───────┬───────┘      └────────┬───────┘      └────────┬───────┘      └────────┬───────┘
@@ -267,7 +267,7 @@ The test results include:
 
 When running tests with detailed output, you'll see an output like:
 
-```
+```txt
 Documentation Quality Report
 ===========================
 

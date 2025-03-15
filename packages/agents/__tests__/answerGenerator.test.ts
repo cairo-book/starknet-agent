@@ -5,6 +5,7 @@ import {
   ProcessedQuery,
   RetrievedDocuments,
   RagSearchConfig,
+  DocumentSource,
 } from '../src/core/types';
 import { Document } from '@langchain/core/documents';
 import { mockDeep, MockProxy } from 'jest-mock-extended';
@@ -79,7 +80,7 @@ describe('AnswerGenerator', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
-        sources: ['cairo_book'],
+        sources: [DocumentSource.CAIRO_BOOK],
       };
 
       const processedQuery: ProcessedQuery = {
@@ -92,8 +93,13 @@ describe('AnswerGenerator', () => {
         new Document({
           pageContent: 'Cairo is a programming language for Starknet.',
           metadata: {
+            name: 'Cairo Programming',
             title: 'Cairo Programming',
+            chunkNumber: 1,
+            contentHash: '1234567890',
+            uniqueId: '1234567890',
             sourceLink: 'https://example.com/cairo',
+            source: DocumentSource.CAIRO_BOOK,
           },
         }),
       ];
@@ -125,7 +131,7 @@ describe('AnswerGenerator', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
-        sources: ['cairo_book'],
+        sources: [DocumentSource.CAIRO_BOOK],
       };
 
       const processedQuery: ProcessedQuery = {
@@ -138,8 +144,13 @@ describe('AnswerGenerator', () => {
         new Document({
           pageContent: 'Cairo is a programming language for Starknet.',
           metadata: {
+            name: 'Cairo Programming',
             title: 'Cairo Programming',
+            chunkNumber: 1,
+            contentHash: '1234567890',
+            uniqueId: '1234567890',
             sourceLink: 'https://example.com/cairo',
+            source: DocumentSource.CAIRO_BOOK,
           },
         }),
       ];
@@ -179,7 +190,7 @@ describe('AnswerGenerator', () => {
       const input: RagInput = {
         query: 'How do I test a Cairo contract?',
         chatHistory: [],
-        sources: ['cairo_book'],
+        sources: [DocumentSource.CAIRO_BOOK],
       };
 
       const processedQuery: ProcessedQuery = {
@@ -193,8 +204,13 @@ describe('AnswerGenerator', () => {
         new Document({
           pageContent: 'Testing Cairo contracts is important.',
           metadata: {
+            name: 'Cairo Testing',
             title: 'Cairo Testing',
             sourceLink: 'https://example.com/cairo-testing',
+            chunkNumber: 1,
+            contentHash: '1234567890',
+            uniqueId: '1234567890',
+            source: DocumentSource.CAIRO_BOOK,
           },
         }),
       ];
@@ -234,7 +250,7 @@ describe('AnswerGenerator', () => {
       const input: RagInput = {
         query: 'How do I write a Cairo contract?',
         chatHistory: [],
-        sources: ['cairo_book'],
+        sources: [DocumentSource.CAIRO_BOOK],
       };
 
       const processedQuery: ProcessedQuery = {

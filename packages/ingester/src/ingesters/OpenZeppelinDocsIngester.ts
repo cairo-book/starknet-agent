@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 import * as path from 'path';
-import { VectorStore } from '@starknet-agent/agents/index';
+import { DocumentSource, VectorStore } from '@starknet-agent/agents/index';
 import { BaseIngester } from '../BaseIngester';
 import { BookConfig, BookPageDto } from '../utils/types';
 import logger from '@starknet-agent/agents/utils/logger';
@@ -47,7 +47,7 @@ export class OpenZeppelinDocsIngester extends AsciiDocIngester {
       playbookPath: path.join(packageRoot, 'asciidoc', 'oz-playbook.yml'),
       outputDir: path.join(packageRoot, 'antora-output'),
       restructuredDir: path.join(packageRoot, 'oz-docs-restructured'),
-      source: 'openzeppelin_docs',
+      source: DocumentSource.OPENZEPPELIN_DOCS,
     };
     super(asciiDocIngesterConfig);
   }
