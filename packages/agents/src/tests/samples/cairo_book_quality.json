@@ -549,14 +549,6 @@
       "type": "conceptual",
       "difficulty": "advanced",
       "tags": ["smart contracts", "execution"]
-    },
-    {
-      "query": "How is a Starknet contract’s class hash computed?",
-      "expectedTopics": ["class hash", "deployment", "upgrades"],
-      "expectedContent": "The class hash is a cryptographic hash of the contract’s compiled code and definitions, used for deployment and upgrades.",
-      "type": "factual",
-      "difficulty": "advanced",
-      "tags": ["smart contracts", "deployment"]
     }
   ]
 }
