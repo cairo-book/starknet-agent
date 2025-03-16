@@ -1,9 +1,10 @@
 import * as path from 'path';
+import { Document } from '@langchain/core/documents';
 import { BookConfig, BookPageDto, ParsedSection } from '../utils/types';
 import { AsciiDocIngester, AsciiDocIngesterConfig } from './AsciiDocIngester';
 import { processDocFiles } from '../utils/fileUtils';
 import * as fs from 'fs';
-import { DocumentSource } from '@starknet-agent/agents/index';
+import { BookChunk, DocumentSource } from '@starknet-agent/agents/index';
 
 /**
  * Ingester for the Starknet documentation
@@ -56,5 +57,18 @@ export class StarknetDocsIngester extends AsciiDocIngester {
     directory: string,
   ): Promise<BookPageDto[]> {
     return await processDocFiles(config, directory);
+  }
+
+  /**
+   * createChunks function for Starknet docs
+   * Pages are split into sections because for better results.
+   *
+   * @param pages - Array of book pages
+   * @returns Promise<Document<BookChunk>[]> - Array of document chunks
+   */
+  protected async createChunks(
+    pages: BookPageDto[],
+  ): Promise<Document<BookChunk>[]> {
+    return super.createChunks(pages, true);
   }
 }

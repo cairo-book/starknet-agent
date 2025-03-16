@@ -1,8 +1,12 @@
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 import * as path from 'path';
-import { DocumentSource, VectorStore } from '@starknet-agent/agents/index';
-import { BaseIngester } from '../BaseIngester';
+import { Document } from '@langchain/core/documents';
+import {
+  BookChunk,
+  DocumentSource,
+  VectorStore,
+} from '@starknet-agent/agents/index';
 import { BookConfig, BookPageDto } from '../utils/types';
 import logger from '@starknet-agent/agents/utils/logger';
 import { AsciiDocIngesterConfig } from './AsciiDocIngester';
@@ -85,13 +89,15 @@ export class OpenZeppelinDocsIngester extends AsciiDocIngester {
             // Process AsciiDoc files
             const content = await fsPromises.readFile(fullPath, 'utf8');
 
+            // Get the relative path of the file from the base directory - which reflects the online website directory structure
+            const relativePath = path.relative(directory, fullPath);
+
             // Inject cairo-contracts/1.0.0 in the fullPath to reflect online website directory structure
             // This is the special handling for OpenZeppelin docs
             const adaptedFullPageName = path.join(
-              dir,
               'contracts-cairo',
               '1.0.0',
-              entry.name,
+              relativePath,
             );
 
             pages.push({
@@ -110,5 +116,18 @@ export class OpenZeppelinDocsIngester extends AsciiDocIngester {
       console.error('Error processing directory:', (err as Error).message);
       throw new Error(`Failed to process directory: ${(err as Error).message}`);
     }
+  }
+
+  /**
+   * createChunks function for OpenZeppelin docs
+   * Pages are not split into sections because this gives bad results otherwise.
+   *
+   * @param pages - Array of book pages
+   * @returns Promise<Document<BookChunk>[]> - Array of document chunks
+   */
+  protected async createChunks(
+    pages: BookPageDto[],
+  ): Promise<Document<BookChunk>[]> {
+    return super.createChunks(pages, false);
   }
 }

@@ -66,8 +66,10 @@ Rationale: The question is related to concepts related to programming smart cont
 Query: "I want to make an ERC20 token with a mint function"
 Response:
 <search_terms>
-<term> Contract Functions</term>
+<term> Creating ERC20 tokens</term>
+<term> Using Openzeppelin Library</term>
 <term> Contract Storage</term>
+<term> Extending ERC20</term>
 <term> Mapping balances to addresses</term>
 <term> Emitting Events in Contracts</term>
 <term> Assertions on caller address</term>

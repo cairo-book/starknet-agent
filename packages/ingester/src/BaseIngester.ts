@@ -65,6 +65,7 @@ export abstract class BaseIngester {
    */
   protected abstract createChunks(
     pages: BookPageDto[],
+    splitSections?: boolean,
   ): Promise<Document<BookChunk>[]>;
 
   /**

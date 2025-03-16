@@ -228,10 +228,12 @@ export abstract class AsciiDocIngester extends BaseIngester {
    * Create chunks from book pages
    *
    * @param pages - Array of book pages
+   * @param splitSections - Whether to split the page into sections
    * @returns Promise<Document<BookChunk>[]> - Array of document chunks
    */
   protected async createChunks(
     pages: BookPageDto[],
+    splitSections: boolean = false,
   ): Promise<Document<BookChunk>[]> {
     logger.info(
       `Creating chunks from ${this.source} pages based on AsciiDoc sections`,
@@ -240,7 +242,7 @@ export abstract class AsciiDocIngester extends BaseIngester {
 
     for (const page of pages) {
       // Parse the page into sections
-      const sections = this.parsePage(page.content, true);
+      const sections = this.parsePage(page.content, splitSections);
 
       // Create a document for each section
       sections.forEach((section: ParsedSection, index: number) => {
