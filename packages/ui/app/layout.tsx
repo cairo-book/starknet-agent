@@ -6,6 +6,7 @@ import Sidebar from '@/components/Sidebar';
 import { Toaster } from 'sonner';
 import ThemeProvider from '@/components/theme/Provider';
 import PostHogProviderClient from '@/components/providers/PostHogProvider';
+import GoogleAnalytics from '@/components/providers/GoogleAnalytics';
 
 const ibmPlexSans = IBM_Plex_Sans({
   weight: ['300', '400', '500', '700'],
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html className="h-full" lang="en" suppressHydrationWarning>
       <body className={cn('h-full', ibmPlexSans.className)}>
+        <GoogleAnalytics />
         <PostHogProviderClient>
           <ThemeProvider>
             <Sidebar>{children}</Sidebar>
