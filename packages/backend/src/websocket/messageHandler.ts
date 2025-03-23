@@ -34,7 +34,8 @@ const searchDatabases: Record<string, () => VectorStoreConfig> = {
   cairoBookSearch: getVectorDbConfig,
   starknetDocsSearch: getVectorDbConfig,
   starknetEcosystemSearch: getVectorDbConfig,
-  succintCairoBookSearch: getVectorDbConfig,
+  docChatMode: getVectorDbConfig,
+  succintCairoBookSearch: getVectorDbConfig, // TODO: legacy, remove after migration
   starknetFoundrySearch: getVectorDbConfig,
   cairoByExampleSearch: getVectorDbConfig,
   openZeppelinDocsSearch: getVectorDbConfig,
@@ -91,7 +92,8 @@ const getSearchHandler = (focusMode: string): SearchHandler => {
   // Map focus modes to agent names
   const agentMapping: Record<string, AvailableAgents> = {
     cairoBookSearch: 'cairoBook',
-    succintCairoBookSearch: 'succintCairoBook',
+    docChatMode: 'docChatMode',
+    succintCairoBookSearch: 'docChatMode', // TODO: legacy, remove after migration
     starknetDocsSearch: 'starknetDocs',
     starknetEcosystemSearch: 'starknetEcosystem',
     starknetFoundrySearch: 'starknetFoundry',

@@ -5,7 +5,7 @@ import {
   starknetDocsPrompts,
   starknetEcosystemPrompts,
   starknetFoundryPrompts,
-  succintCairoBookPrompts,
+  docChatModePrompts,
   cairoByExamplePrompts,
 } from './prompts';
 import { basicTestTemplate } from './templates/testTemplate';
@@ -61,7 +61,7 @@ export type AvailableAgents =
   | 'starknetDocs'
   | 'starknetEcosystem'
   | 'starknetFoundry'
-  | 'succintCairoBook'
+  | 'docChatMode'
   | 'cairoCoder'
   | 'cairoByExample'
   | 'openZeppelinDocs';
@@ -124,9 +124,9 @@ export const createAgentConfigs = (
     sources: [DocumentSource.STARKNET_FOUNDRY],
   },
 
-  succintCairoBook: {
-    name: 'Succint Cairo Book',
-    prompts: succintCairoBookPrompts,
+  docChatMode: {
+    name: 'Doc Chat Mode',
+    prompts: docChatModePrompts,
     vectorStore,
     contractTemplate: basicContractTemplate,
     testTemplate: basicTestTemplate,

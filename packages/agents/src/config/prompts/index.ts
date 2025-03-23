@@ -24,10 +24,10 @@ import {
 } from './starknetFoundryPrompts';
 
 import {
-  SUCCINT_CAIRO_BOOK_RETRIEVER_PROMPT,
-  SUCCINT_CAIRO_BOOK_RESPONSE_PROMPT,
-  SUCCINT_CAIRO_BOOK_NO_SOURCE_PROMPT,
-} from './succintCairoBookPrompts';
+  DOC_CHAT_MODE_RETRIEVER_PROMPT,
+  DOC_CHAT_MODE_RESPONSE_PROMPT,
+  DOC_CHAT_MODE_NO_SOURCE_PROMPT,
+} from './docChatModePrompts';
 import {
   CAIROCODER_NO_SOURCE_PROMPT,
   CAIROCODER_RESPONSE_PROMPT,
@@ -66,10 +66,10 @@ export const starknetFoundryPrompts: AgentPrompts = {
   noSourceFoundPrompt: STARKNET_FOUNDRY_NO_SOURCE_PROMPT,
 };
 
-export const succintCairoBookPrompts: AgentPrompts = {
-  searchRetrieverPrompt: SUCCINT_CAIRO_BOOK_RETRIEVER_PROMPT,
-  searchResponsePrompt: SUCCINT_CAIRO_BOOK_RESPONSE_PROMPT,
-  noSourceFoundPrompt: SUCCINT_CAIRO_BOOK_NO_SOURCE_PROMPT,
+export const docChatModePrompts: AgentPrompts = {
+  searchRetrieverPrompt: DOC_CHAT_MODE_RETRIEVER_PROMPT,
+  searchResponsePrompt: DOC_CHAT_MODE_RESPONSE_PROMPT,
+  noSourceFoundPrompt: DOC_CHAT_MODE_NO_SOURCE_PROMPT,
 };
 
 export const cairoCoderPrompts: AgentPrompts = {
