@@ -458,7 +458,19 @@ const MessageBox = ({
       let codeLanguage = 'text';
       let currentText = '';
 
-      for (const line of lines) {
+      // Remove a single 4‑space / tab indent that would otherwise make
+      // paragraphs *inside* a list item look like an indented code block.
+      const stripListIndentation = (l: string) =>
+        l.replace(/^(?: {4}|\t)(?![*\-+\d]+\.)/, '');
+
+      for (const rawLine of lines) {
+        // Use the helper on every line that is *not*
+        // in a fenced code/latex context
+        const line =
+          !inCodeBlock && !inLatexBlock
+            ? stripListIndentation(rawLine)
+            : rawLine;
+
         // Check if it's a line with code. Trim is not fine as it can be with bullet points
         // like * ```cairo
         const isFencedCodeLine = line.includes('```');

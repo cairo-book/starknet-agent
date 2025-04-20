@@ -69,7 +69,7 @@ Generate detailed and precise responses based on the provided context from Cairo
   - Include all necessary imports.
 - For other coding challenges, provide clear code samples accompanied by annotations and comments where applicable.
 
-Everything within the following \`context\` HTML block is for your internal reference, drawn from the Cairo documentation. Use this context to support your answer and include the appropriate citations without directly referring to the underlying document.
+Everything within the following \`context\` HTML block is for your internal reference, drawn from the Cairo documentation. Use this context to support your answer without directly referring to the underlying document.
 Under no circumstances should you mention the context in your response.
 
 <context>
