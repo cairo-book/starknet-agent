@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
 import Error from 'next/error';
+import { MathJaxContext } from 'better-react-mathjax';
 import {
   trackConversationStart,
   trackUserMessage,
@@ -357,6 +358,22 @@ const loadMessagesFromLocalStorage = (
   return null;
 };
 
+// MathJax configuration
+const mathJaxConfig = {
+  loader: { load: ['[tex]/html'] },
+  tex: {
+    packages: { '[+]': ['html'] },
+    inlineMath: [
+      ['$', '$'],
+      ['\\(', '\\)'],
+    ],
+    displayMath: [
+      ['$$', '$$'],
+      ['\\[', '\\]'],
+    ],
+  },
+};
+
 const ChatWindow = ({ id }: { id?: string }) => {
   const searchParams = useSearchParams();
   const initialMessage = searchParams.get('q');
@@ -643,13 +660,15 @@ const ChatWindow = ({ id }: { id?: string }) => {
         {messages.length > 0 ? (
           <>
             <Navbar messages={messages} />
-            <Chat
-              loading={loading}
-              messages={messages}
-              sendMessage={sendMessage}
-              messageAppeared={messageAppeared}
-              rewrite={rewrite}
-            />
+            <MathJaxContext version={3} config={mathJaxConfig}>
+              <Chat
+                loading={loading}
+                messages={messages}
+                sendMessage={sendMessage}
+                messageAppeared={messageAppeared}
+                rewrite={rewrite}
+              />
+            </MathJaxContext>
           </>
         ) : (
           <EmptyChat

@@ -1,4 +1,5 @@
 import ChatWindow from '@/components/ChatWindow';
+import { MathJaxContext } from 'better-react-mathjax';
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 

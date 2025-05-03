@@ -23,7 +23,7 @@ import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
 import { trackFeedback } from '@/lib/posthog';
 import { Document } from '@langchain/core/documents';
-
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
 // Common styling patterns (unchanged)
 const styles = {
   messageBubble: {
@@ -118,80 +118,6 @@ const styles = {
   },
 } as const;
 
-// Custom component for rendering LaTeX formulas
-const LatexRenderer = ({
-  isBlock = false,
-  children,
-}: {
-  isBlock?: boolean;
-  children: React.ReactNode;
-}) => {
-  // Ensure children is a string, handling different React child types
-  const getFormulaText = (children: React.ReactNode): string => {
-    if (typeof children === 'string') {
-      return children.trim();
-    } else if (Array.isArray(children)) {
-      return children.map((child) => getFormulaText(child)).join('');
-    } else if (React.isValidElement(children)) {
-      return getFormulaText(children.props.children || '');
-    } else if (children === null || children === undefined) {
-      return '';
-    } else {
-      return String(children).trim();
-    }
-  };
-
-  const formula = getFormulaText(children);
-
-  const CopyButton = () => (
-    <button
-      onClick={() => navigator.clipboard.writeText(formula)}
-      className={cn(styles.copyButton.base)}
-      title="Copy formula"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-gray-300 hover:text-white"
-      >
-        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-      </svg>
-    </button>
-  );
-
-  try {
-    return isBlock ? (
-      <div
-        className={cn(
-          styles.codeBlock.base,
-          styles.codeBlock.border,
-          'relative group',
-        )}
-      >
-        <CopyButton />
-        <div className={cn(styles.latex.block, styles.latex.container)}>
-          <BlockMath math={formula} />
-        </div>
-      </div>
-    ) : (
-      <span className={styles.latex.inline}>
-        <InlineMath math={formula} />
-      </span>
-    );
-  } catch (error) {
-    console.error('LaTeX rendering error:', error);
-    return <code>{formula}</code>;
-  }
-};
-
 // Custom component for rendering code blocks
 const CodeBlock = ({
   language,
@@ -271,6 +197,88 @@ const CodeBlock = ({
       </div>
     </div>
   );
+};
+
+// Custom component for rendering LaTeX formulas with copy button
+const LatexRenderer = ({
+  isBlock = false,
+  children,
+}: {
+  isBlock?: boolean;
+  children: React.ReactNode;
+}) => {
+  // Ensure children is a string, handling different React child types
+  const getFormulaText = (children: React.ReactNode): string => {
+    if (typeof children === 'string') {
+      return children.trim();
+    } else if (Array.isArray(children)) {
+      return children.map((child) => getFormulaText(child)).join('');
+    } else if (React.isValidElement(children)) {
+      return getFormulaText(children.props.children || '');
+    } else if (children === null || children === undefined) {
+      return '';
+    } else {
+      return String(children).trim();
+    }
+  };
+
+  const formula = getFormulaText(children);
+
+  const CopyButton = () => (
+    <button
+      onClick={() => navigator.clipboard.writeText(formula)}
+      className={cn(styles.copyButton.base)}
+      title="Copy formula"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-gray-300 hover:text-white"
+      >
+        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+      </svg>
+    </button>
+  );
+
+  try {
+    return isBlock ? (
+      <div
+        className={cn(
+          styles.codeBlock.base,
+          styles.codeBlock.border,
+          'relative group',
+        )}
+      >
+        <CopyButton />
+        <div className={cn(styles.latex.block, styles.latex.container)}>
+          <MathJax>
+            {/* Use $$ for display math mode */}
+            {`$$${formula}$$`}
+          </MathJax>
+        </div>
+      </div>
+    ) : (
+      <span
+        onClick={() => navigator.clipboard.writeText(formula)}
+        className="cursor-pointer"
+        title="Click to copy formula"
+      >
+        {/* Use $ for inline math mode */}
+        <MathJax inline>{`$${formula}$`}</MathJax>
+      </span>
+    );
+  } catch (error) {
+    console.error('LaTeX rendering error:', error);
+    return <code>{formula}</code>;
+  }
 };
 
 // Update the MessageFeedback component to use our unified tracking function
@@ -442,14 +450,16 @@ const MessageBox = ({
   rewrite: (messageId: string) => void;
   sendMessage: (message: string) => void;
 }) => {
-  const [parsedContent, setParsedContent] = useState<React.ReactNode[]>([]);
+  const [parsedContent, setParsedContent] = useState<
+    (string | React.ReactElement)[]
+  >([]);
   const [showSources, setShowSources] = useState(isLast);
   const [showSuggestions, setShowSuggestions] = useState(isLast);
   const isUser = message.role === 'user';
 
   useEffect(() => {
     const parseContent = (content: string) => {
-      const parts: React.ReactNode[] = [];
+      const parts: (string | React.ReactElement)[] = [];
       const lines = content.split('\n');
       let inCodeBlock = false;
       let inLatexBlock = false;
@@ -464,30 +474,25 @@ const MessageBox = ({
         l.replace(/^(?: {4}|\t)(?![*\-+\d]+\.)/, '');
 
       for (const rawLine of lines) {
-        // Use the helper on every line that is *not*
-        // in a fenced code/latex context
+        // Use the helper on every line that is not in a fenced code/latex context
         const line =
           !inCodeBlock && !inLatexBlock
             ? stripListIndentation(rawLine)
             : rawLine;
 
-        // Check if it's a line with code. Trim is not fine as it can be with bullet points
-        // like * ```cairo
+        // Check if it's a line with code or LaTeX delimiters
         const isFencedCodeLine = line.includes('```');
         const languageMatch = line.match(/```(\w+)/);
         const language = languageMatch ? languageMatch[1] : '';
-        const lineWithoutCodeAndLanguage = line
-          .replace('```', '')
-          .replace(language, '')
-          .trim();
+
         if (isFencedCodeLine && !inCodeBlock && !inLatexBlock) {
           // Start of code block
           if (currentText) {
-            parts.push(<Markdown key={parts.length}>{currentText}</Markdown>);
-            currentText = lineWithoutCodeAndLanguage;
+            parts.push(currentText);
+            currentText = '';
           }
 
-          // Check if this is a math block
+          // Check if this is a math/latex block
           if (language === 'math' || language === 'latex') {
             inLatexBlock = true;
             latexContent = '';
@@ -524,17 +529,19 @@ const MessageBox = ({
           !inLatexBlock &&
           !inCodeBlock
         ) {
-          // Start of LaTeX block
+          // Start of LaTeX block with $$ delimiters
           if (currentText) {
-            parts.push(<Markdown key={parts.length}>{currentText}</Markdown>);
+            parts.push(currentText);
             currentText = '';
           }
           inLatexBlock = true;
+          // Store without the $$ delimiters as we'll add them back in the LatexRenderer
           latexContent = line.trim().substring(2).trim();
         } else if (line.trim().endsWith('$$') && inLatexBlock) {
-          // End of LaTeX block
+          // End of LaTeX block with $$ delimiters
           const endContent = line.trim();
           const endIndex = endContent.lastIndexOf('$$');
+          // Add content without the $$ delimiters
           latexContent += ' ' + endContent.substring(0, endIndex).trim();
           inLatexBlock = false;
           parts.push(
@@ -550,15 +557,14 @@ const MessageBox = ({
           // Inside LaTeX block
           latexContent += line + '\n';
         } else {
-          // Regular text with possible inline LaTeX
-          const processedLine = processInlineLatex(line);
-          currentText += processedLine + '\n';
+          // Regular text (including inline LaTeX) - MathJax will handle inline LaTeX
+          currentText += line + '\n';
         }
       }
 
       // Handle incomplete content
       if (currentText) {
-        parts.push(<Markdown key={parts.length}>{currentText}</Markdown>);
+        parts.push(currentText);
       }
       if (inCodeBlock && codeContent) {
         // Handle incomplete code block
@@ -573,7 +579,7 @@ const MessageBox = ({
         );
       }
       if (inLatexBlock && latexContent) {
-        // Handle incomplete LaTeX block (from either $$ or ```math)
+        // Handle incomplete LaTeX block
         parts.push(
           <LatexRenderer key={parts.length} isBlock={true}>
             {latexContent.trim()}
@@ -582,40 +588,6 @@ const MessageBox = ({
       }
 
       return parts;
-    };
-
-    // Process inline LaTeX expressions ($...$)
-    const processInlineLatex = (text: string) => {
-      // Replace inline LaTeX with placeholders to avoid conflicts with markdown
-      const latexPlaceholders: { placeholder: string; formula: string }[] = [];
-      let placeholderIndex = 0;
-
-      // Find all inline LaTeX expressions ($...$) that are not escaped
-      // This regex looks for $ that is not preceded by a backslash,
-      // then captures everything until the next unescaped $
-      const processedText = text.replace(
-        /(?<!\\\$)\$((?:[^\$\\]|\\[\s\S])+?)\$/g,
-        (match, formula) => {
-          const placeholder = `__LATEX_PLACEHOLDER_${placeholderIndex}__`;
-          latexPlaceholders.push({ placeholder, formula: formula.trim() });
-          placeholderIndex++;
-          return placeholder;
-        },
-      );
-
-      // If no LaTeX formulas found, return the original text
-      if (latexPlaceholders.length === 0) {
-        return text;
-      }
-
-      // Replace placeholders with actual LaTeX components in the rendered markdown
-      return processedText.replace(
-        /__LATEX_PLACEHOLDER_(\d+)__/g,
-        (match, index) => {
-          const { formula } = latexPlaceholders[parseInt(index, 10)];
-          return `<latex-inline>${formula}</latex-inline>`;
-        },
-      );
     };
 
     const contentWithSources =
@@ -638,17 +610,6 @@ const MessageBox = ({
       setShowSuggestions(true);
     }
   }, [isLast]);
-
-  // Custom overrides for markdown-to-jsx to handle LaTeX
-  const markdownOptions = {
-    overrides: {
-      'latex-inline': {
-        component: ({ children }: { children: string }) => (
-          <LatexRenderer>{children}</LatexRenderer>
-        ),
-      },
-    },
-  };
 
   return (
     <div
@@ -685,11 +646,11 @@ const MessageBox = ({
         >
           <div className={cn(styles.prose.base, isUser && styles.prose.user)}>
             {parsedContent.map((part, index) => {
-              if (React.isValidElement(part) && part.type === Markdown) {
+              if (typeof part === 'string') {
                 return (
-                  <Markdown key={index} options={markdownOptions}>
-                    {part.props.children}
-                  </Markdown>
+                  <MathJax key={index}>
+                    <Markdown key={index}>{part}</Markdown>
+                  </MathJax>
                 );
               }
               return React.cloneElement(part as React.ReactElement, {

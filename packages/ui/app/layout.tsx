@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import ThemeProvider from '@/components/theme/Provider';
 import PostHogProviderClient from '@/components/providers/PostHogProvider';
 import GoogleAnalytics from '@/components/providers/GoogleAnalytics';
+import { MathJaxContext } from 'better-react-mathjax';
 
 const ibmPlexSans = IBM_Plex_Sans({
   weight: ['300', '400', '500', '700'],
@@ -28,23 +29,40 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const config = {
+    loader: { load: ['input/asciimath'] },
+    asciimath: { displaystyle: false },
+    tex: {
+      packages: { '[+]': ['html'] },
+      inlineMath: [
+        ['$', '$'],
+        ['\\(', '\\)'],
+      ],
+      displayMath: [
+        ['$$', '$$'],
+        ['\\[', '\\]'],
+      ],
+    },
+  };
   return (
     <html className="h-full" lang="en" suppressHydrationWarning>
       <body className={cn('h-full', ibmPlexSans.className)}>
         <GoogleAnalytics />
         <PostHogProviderClient>
-          <ThemeProvider>
-            <Sidebar>{children}</Sidebar>
-            <Toaster
-              toastOptions={{
-                unstyled: true,
-                classNames: {
-                  toast:
-                    'bg-light-primary dark:bg-dark-secondary dark:text-white/70 text-black-70 rounded-lg p-4 flex flex-row items-center space-x-2',
-                },
-              }}
-            />
-          </ThemeProvider>
+          <MathJaxContext config={config}>
+            <ThemeProvider>
+              <Sidebar>{children}</Sidebar>
+              <Toaster
+                toastOptions={{
+                  unstyled: true,
+                  classNames: {
+                    toast:
+                      'bg-light-primary dark:bg-dark-secondary dark:text-white/70 text-black-70 rounded-lg p-4 flex flex-row items-center space-x-2',
+                  },
+                }}
+              />
+            </ThemeProvider>
+          </MathJaxContext>
         </PostHogProviderClient>
       </body>
     </html>
