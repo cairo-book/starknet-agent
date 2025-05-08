@@ -9,6 +9,11 @@ import { initializeHTTP } from './http';
 import { Container } from './types/context';
 import { validateConfig } from './config/server';
 
+// Load the langsmith environment variables
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 export async function createApplication() {
   try {
     // Initialize container

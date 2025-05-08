@@ -19,6 +19,7 @@
     "commander": "^11.1.0",
     "compute-cosine-similarity": "^1.1.0",
     "compute-dot": "^1.1.0",
+    "langsmith": "^0.3.25",
     "mongodb": "^6.13.1",
     "node-fetch": "^3.3.2",
     "winston": "^3.17.0"

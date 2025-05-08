@@ -125,6 +125,24 @@ There are mainly 2 ways of installing Starknet Agent - With Docker, Without Dock
 
 8. Wait a few minutes for the setup to complete. You can access Starknet Agent at http://localhost:3000 in your web browser.
 
+9. **Configure LangSmith (Optional)**
+
+   Starknet Agent can use LangSmith to record and monitor LLM calls. This step is optional but recommended for development and debugging.
+
+   - Create an account at [LangSmith](https://smith.langchain.com/)
+   - Create a new project in the LangSmith dashboard
+   - Retrieve your API credentials
+   - Create a `.env` file in the `packages/backend` directory with the following variables:
+
+   ```text
+   LANGSMITH_TRACING=true
+   LANGSMITH_ENDPOINT="https://api.smith.langchain.com"
+   LANGSMITH_API_KEY="<your-api-key>"
+   LANGCHAIN_PROJECT="<your-project-name>"
+   ```
+
+   With this configuration, all LLM calls and chain executions will be logged to your LangSmith project, allowing you to debug, analyze, and improve the system's performance.
+
 **Note**: After the containers are built, you can start Starknet Agent directly from Docker without having to open a terminal.
 
 ## Architecture
