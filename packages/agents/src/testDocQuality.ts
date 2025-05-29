@@ -92,9 +92,8 @@ program
       const dbConfig = getVectorDbConfig();
       const vectorStore = await VectorStore.getInstance(dbConfig, embeddings);
 
-      const source_to_agent_name: Record<
-        DocumentSource | 'starknet_ecosystem',
-        AvailableAgents
+      const source_to_agent_name: Partial<
+        Record<DocumentSource | 'starknet_ecosystem', AvailableAgents>
       > = {
         [DocumentSource.CAIRO_BOOK]: 'cairoBook',
         [DocumentSource.STARKNET_DOCS]: 'starknetDocs',
@@ -253,9 +252,8 @@ program
       const dbConfig = getVectorDbConfig();
       const vectorStore = await VectorStore.getInstance(dbConfig, embeddings);
 
-      const focus_to_agent_name: Record<
-        DocumentSource | 'starknet_ecosystem',
-        AvailableAgents
+      const focus_to_agent_name: Partial<
+        Record<DocumentSource | 'starknet_ecosystem', AvailableAgents>
       > = {
         [DocumentSource.CAIRO_BOOK]: 'cairoBook',
         [DocumentSource.STARKNET_DOCS]: 'starknetDocs',

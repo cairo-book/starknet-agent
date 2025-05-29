@@ -50,6 +50,7 @@ export interface RagSearchConfig extends AgentConfig {
 }
 
 export enum DocumentSource {
+  CORELIB_DOCS = 'corelib_docs',
   CAIRO_BOOK = 'cairo_book',
   STARKNET_DOCS = 'starknet_docs',
   STARKNET_FOUNDRY = 'starknet_foundry',

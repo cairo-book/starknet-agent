@@ -38,6 +38,7 @@ You will be given a conversation below and a follow up question. Your task is to
 *   **starknet_foundry:** The Starknet Foundry Documentation. For using the Foundry toolchain: writing, compiling, testing (unit tests, integration tests), and debugging Starknet contracts.
 *   **cairo_by_example:** Cairo by Example Documentation. Provides practical Cairo code snippets for specific language features or common patterns. Useful for "how-to" syntax questions.
 *   **openzeppelin_docs:** OpenZeppelin Cairo Contracts Documentation. For using the OZ library: standard implementations (ERC20, ERC721), access control, security patterns, contract upgradeability. Crucial for building standard-compliant contracts.
+*   **corelib_docs:** Cairo Core Library Documentation. For using the Cairo core library: basic types, stdlib functions, stdlib structs, macros, and other core concepts. Essential for Cairo programming questions.
 
 **Example Coding Queries:**
 

@@ -83,6 +83,7 @@ describe('IngesterFactory', () => {
         'starknet_foundry',
         'cairo_by_example',
         'openzeppelin_docs',
+        'corelib_docs',
       ]);
     });
   });
