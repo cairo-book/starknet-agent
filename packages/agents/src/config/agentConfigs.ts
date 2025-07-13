@@ -7,6 +7,7 @@ import {
   starknetFoundryPrompts,
   docChatModePrompts,
   cairoByExamplePrompts,
+  scarbDocsPrompts,
 } from './prompts';
 import { basicTestTemplate } from './templates/testTemplate';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
@@ -32,7 +33,8 @@ export type AvailableAgents =
   | 'docChatMode'
   | 'cairoCoder'
   | 'cairoByExample'
-  | 'openZeppelinDocs';
+  | 'openZeppelinDocs'
+  | 'scarbDocs';
 
 // We'll make this a factory function instead of a static object
 export const createAgentConfigs = (
@@ -68,13 +70,7 @@ export const createAgentConfigs = (
     testTemplate: basicTestTemplate,
     maxSourceCount: 15,
     similarityThreshold: 0.4,
-    sources: [
-      DocumentSource.CAIRO_BOOK,
-      DocumentSource.STARKNET_DOCS,
-      DocumentSource.CAIRO_BY_EXAMPLE,
-      DocumentSource.STARKNET_FOUNDRY,
-      DocumentSource.OPENZEPPELIN_DOCS,
-    ],
+    sources: Object.values(DocumentSource),
   },
 
   starknetFoundry: {
@@ -135,6 +131,16 @@ export const createAgentConfigs = (
     maxSourceCount: 10,
     similarityThreshold: 0.4,
     sources: [DocumentSource.OPENZEPPELIN_DOCS],
+  },
+  scarbDocs: {
+    name: 'Scarb Docs',
+    prompts: scarbDocsPrompts,
+    vectorStore,
+    contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
+    maxSourceCount: 10,
+    similarityThreshold: 0.4,
+    sources: [DocumentSource.SCARB_DOCS],
   },
 });
 

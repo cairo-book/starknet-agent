@@ -38,9 +38,20 @@ import {
   CAIRO_BY_EXAMPLE_RESPONSE_PROMPT,
   CAIRO_BY_EXAMPLE_NO_SOURCE_PROMPT,
 } from './cairoByExamplePrompts';
+import {
+  SCARB_DOCS_RETRIEVER_PROMPT,
+  SCARB_DOCS_RESPONSE_PROMPT,
+  SCARB_DOCS_NO_SOURCE_PROMPT,
+} from './scarbDocsPrompts';
 import { AgentPrompts } from '../../core/types';
 import { getScarbVersion } from '../../config';
 import { getStarknetFoundryVersion } from '../../config';
+
+export const scarbDocsPrompts: AgentPrompts = {
+  searchRetrieverPrompt: SCARB_DOCS_RETRIEVER_PROMPT,
+  searchResponsePrompt: SCARB_DOCS_RESPONSE_PROMPT,
+  noSourceFoundPrompt: SCARB_DOCS_NO_SOURCE_PROMPT,
+};
 
 export const cairoBookPrompts: AgentPrompts = {
   searchRetrieverPrompt: CAIRO_BOOK_RETRIEVER_PROMPT,

@@ -30,17 +30,6 @@ export type WSMessage = {
   history: Array<[string, string]>;
 };
 
-const searchDatabases: Record<string, () => VectorStoreConfig> = {
-  cairoBookSearch: getVectorDbConfig,
-  starknetDocsSearch: getVectorDbConfig,
-  starknetEcosystemSearch: getVectorDbConfig,
-  docChatMode: getVectorDbConfig,
-  succintCairoBookSearch: getVectorDbConfig, // TODO: legacy, remove after migration
-  starknetFoundrySearch: getVectorDbConfig,
-  cairoByExampleSearch: getVectorDbConfig,
-  openZeppelinDocsSearch: getVectorDbConfig,
-};
-
 const handleEmitterEvents = (
   emitter: EventEmitter,
   ws: WebSocket,
@@ -99,9 +88,11 @@ const getSearchHandler = (focusMode: string): SearchHandler => {
     starknetFoundrySearch: 'starknetFoundry',
     cairoByExampleSearch: 'cairoByExample',
     openZeppelinDocsSearch: 'openZeppelinDocs',
+    scarbDocsSearch: 'scarbDocs',
   };
 
   const agentName = agentMapping[focusMode];
+  console.log('agentName', agentName);
   if (!agentName) {
     throw new Error(`Invalid focus mode: ${focusMode}`);
   }
@@ -163,44 +154,32 @@ export const handleMessage = async (
     if (parsedWSMessage.type === 'message') {
       try {
         const handler = getSearchHandler(parsedWSMessage.focusMode);
-        const dbConfigGetter = searchDatabases[parsedWSMessage.focusMode];
+        const dbConfig = getVectorDbConfig();
+        try {
+          const vectorStore = await VectorStore.getInstance(
+            dbConfig,
+            embeddings,
+          );
+          logger.info('VectorStore initialized successfully');
+          const emitter = handler(
+            parsedMessage.content,
+            history,
+            llmConfig,
+            embeddings,
+            { vectorStore },
+          );
 
-        if (dbConfigGetter) {
-          const dbConfig = dbConfigGetter();
-          try {
-            const vectorStore = await VectorStore.getInstance(
-              dbConfig,
-              embeddings,
-            );
-            logger.info('VectorStore initialized successfully');
-            const emitter = handler(
-              parsedMessage.content,
-              history,
-              llmConfig,
-              embeddings,
-              { vectorStore },
-            );
-
-            handleEmitterEvents(emitter, ws, id, parsedMessage.chatId);
-          } catch (error) {
-            logger.error('Failed to initialize VectorStore:', error);
-            ws.send(
-              JSON.stringify({
-                type: 'error',
-                data: 'Failed to initialize VectorStore',
-                key: 'VECTOR_STORE_ERROR',
-              }),
-            );
-            return; // Stop execution if there's an error
-          }
-        } else {
+          handleEmitterEvents(emitter, ws, id, parsedMessage.chatId);
+        } catch (error) {
+          logger.error('Failed to initialize VectorStore:', error);
           ws.send(
             JSON.stringify({
               type: 'error',
-              data: 'Invalid focus mode',
-              key: 'INVALID_FOCUS_MODE',
+              data: 'Failed to initialize VectorStore',
+              key: 'VECTOR_STORE_ERROR',
             }),
           );
+          return; // Stop execution if there's an error
         }
       } catch (error) {
         ws.send(

@@ -49,6 +49,12 @@ const focusModes = [
     description: 'Search in OpenZeppelin Docs',
     icon: <Code size={20} />,
   },
+  {
+    key: 'scarbDocsSearch',
+    title: 'Scarb Docs',
+    description: 'Search in Scarb Docs',
+    icon: <Code size={20} />,
+  },
 ];
 
 const Focus = ({
