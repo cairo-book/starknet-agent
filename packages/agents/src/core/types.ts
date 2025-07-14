@@ -57,7 +57,7 @@ export enum DocumentSource {
   CAIRO_BY_EXAMPLE = 'cairo_by_example',
   OPENZEPPELIN_DOCS = 'openzeppelin_docs',
   SCARB_DOCS = 'scarb_docs',
-  STARKNET_JS_GUIDES = 'starknet_js_guides',
+  STARKNET_JS = 'starknet_js',
 }
 
 export type BookChunk = {

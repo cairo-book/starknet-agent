@@ -89,9 +89,9 @@ describe('IngesterFactory', () => {
       expect(ScarbDocsIngester).toHaveBeenCalledTimes(1);
     });
 
-    it('should create a StarknetJSGuidesIngester for starknet_js_guides source', () => {
+    it('should create a StarknetJSGuidesIngester for starknet_js source', () => {
       const ingester = IngesterFactory.createIngester(
-        DocumentSource.STARKNET_JS_GUIDES,
+        DocumentSource.STARKNET_JS,
       );
 
       expect(ingester).toBeInstanceOf(StarknetJSGuidesIngester);
@@ -118,7 +118,7 @@ describe('IngesterFactory', () => {
         'openzeppelin_docs',
         'corelib_docs',
         'scarb_docs',
-        'starknet_js_guides',
+        'starknet_js',
       ]);
     });
   });

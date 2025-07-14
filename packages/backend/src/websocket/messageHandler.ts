@@ -89,6 +89,7 @@ const getSearchHandler = (focusMode: string): SearchHandler => {
     cairoByExampleSearch: 'cairoByExample',
     openZeppelinDocsSearch: 'openZeppelinDocs',
     scarbDocsSearch: 'scarbDocs',
+    starknetJSSearch: 'starknetJS',
   };
 
   const agentName = agentMapping[focusMode];

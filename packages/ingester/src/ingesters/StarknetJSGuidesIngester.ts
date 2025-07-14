@@ -21,7 +21,7 @@ export class StarknetJSGuidesIngester extends MarkdownIngester {
       urlSuffix: '',
     };
 
-    super(config, DocumentSource.STARKNET_JS_GUIDES);
+    super(config, DocumentSource.STARKNET_JS);
   }
 
   protected getExtractDir(): string {

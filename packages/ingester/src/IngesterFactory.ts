@@ -58,7 +58,7 @@ export class IngesterFactory {
         const { ScarbDocsIngester } = require('./ingesters/ScarbDocsIngester');
         return new ScarbDocsIngester();
 
-      case 'starknet_js_guides':
+      case 'starknet_js':
         const {
           StarknetJSGuidesIngester,
         } = require('./ingesters/StarknetJSGuidesIngester');
@@ -83,7 +83,7 @@ export class IngesterFactory {
       DocumentSource.OPENZEPPELIN_DOCS,
       DocumentSource.CORELIB_DOCS,
       DocumentSource.SCARB_DOCS,
-      DocumentSource.STARKNET_JS_GUIDES,
+      DocumentSource.STARKNET_JS,
     ];
   }
 }

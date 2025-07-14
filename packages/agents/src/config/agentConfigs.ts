@@ -8,6 +8,7 @@ import {
   docChatModePrompts,
   cairoByExamplePrompts,
   scarbDocsPrompts,
+  starknetJSPrompts,
 } from './prompts';
 import { basicTestTemplate } from './templates/testTemplate';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
@@ -34,7 +35,8 @@ export type AvailableAgents =
   | 'cairoCoder'
   | 'cairoByExample'
   | 'openZeppelinDocs'
-  | 'scarbDocs';
+  | 'scarbDocs'
+  | 'starknetJS';
 
 // We'll make this a factory function instead of a static object
 export const createAgentConfigs = (
@@ -47,7 +49,7 @@ export const createAgentConfigs = (
     contractTemplate: basicContractTemplate,
     testTemplate: basicTestTemplate,
     maxSourceCount: 10,
-    similarityThreshold: 0.4,
+    similarityThreshold: 0.35,
     sources: [DocumentSource.CAIRO_BOOK],
   },
 
@@ -58,7 +60,7 @@ export const createAgentConfigs = (
     contractTemplate: basicContractTemplate,
     testTemplate: basicTestTemplate,
     maxSourceCount: 10,
-    similarityThreshold: 0.4,
+    similarityThreshold: 0.35,
     sources: [DocumentSource.STARKNET_DOCS],
   },
 
@@ -69,7 +71,7 @@ export const createAgentConfigs = (
     contractTemplate: basicContractTemplate,
     testTemplate: basicTestTemplate,
     maxSourceCount: 15,
-    similarityThreshold: 0.4,
+    similarityThreshold: 0.35,
     sources: Object.values(DocumentSource),
   },
 
@@ -80,7 +82,7 @@ export const createAgentConfigs = (
     contractTemplate: basicContractTemplate,
     testTemplate: basicTestTemplate,
     maxSourceCount: 10,
-    similarityThreshold: 0.4,
+    similarityThreshold: 0.35,
     sources: [DocumentSource.STARKNET_FOUNDRY],
   },
 
@@ -102,7 +104,7 @@ export const createAgentConfigs = (
     contractTemplate: basicContractTemplate,
     testTemplate: basicTestTemplate,
     maxSourceCount: 15,
-    similarityThreshold: 0.4,
+    similarityThreshold: 0.35,
     sources: [
       DocumentSource.CAIRO_BOOK,
       DocumentSource.CAIRO_BY_EXAMPLE,
@@ -117,7 +119,7 @@ export const createAgentConfigs = (
     contractTemplate: basicContractTemplate,
     testTemplate: basicTestTemplate,
     maxSourceCount: 10,
-    similarityThreshold: 0.4,
+    similarityThreshold: 0.35,
     sources: [DocumentSource.CAIRO_BY_EXAMPLE],
   },
 
@@ -129,7 +131,7 @@ export const createAgentConfigs = (
     contractTemplate: basicContractTemplate,
     testTemplate: basicTestTemplate,
     maxSourceCount: 10,
-    similarityThreshold: 0.4,
+    similarityThreshold: 0.35,
     sources: [DocumentSource.OPENZEPPELIN_DOCS],
   },
   scarbDocs: {
@@ -139,8 +141,18 @@ export const createAgentConfigs = (
     contractTemplate: basicContractTemplate,
     testTemplate: basicTestTemplate,
     maxSourceCount: 10,
-    similarityThreshold: 0.4,
+    similarityThreshold: 0.35,
     sources: [DocumentSource.SCARB_DOCS],
+  },
+  starknetJS: {
+    name: 'Starknet.js',
+    prompts: starknetJSPrompts,
+    vectorStore,
+    contractTemplate: basicContractTemplate,
+    testTemplate: basicTestTemplate,
+    maxSourceCount: 10,
+    similarityThreshold: 0.35,
+    sources: [DocumentSource.STARKNET_JS],
   },
 });
 

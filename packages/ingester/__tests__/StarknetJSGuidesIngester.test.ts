@@ -262,7 +262,7 @@ Content about L1-L2 communication.`);
         {
           pageContent: 'Test content',
           metadata: {
-            source: 'starknet_js_guides',
+            source: 'starknet_js',
             sourceLink: 'https://starknetjs.com/docs/guides/test-guide',
             hash: 'test-hash',
           },

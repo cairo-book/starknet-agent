@@ -40,6 +40,7 @@ You will be given a conversation below and a follow up question. Your task is to
 *   **openzeppelin_docs:** OpenZeppelin Cairo Contracts Documentation. For using the OZ library: standard implementations (ERC20, ERC721), access control, security patterns, contract upgradeability. Crucial for building standard-compliant contracts.
 *   **corelib_docs:** Cairo Core Library Documentation. For using the Cairo core library: basic types, stdlib functions, stdlib structs, macros, and other core concepts. Essential for Cairo programming questions.
 *   **scarb_docs:** Scarb Documentation. For using the Scarb package manager: building, compiling, generating compilation artifacts, managing dependencies, workspace configuration, profiles, scripts, Scarb.toml configuration.
+*   **starknet_js:** Starknet.js Documentation. For using the Starknet.js JavaScript/TypeScript library: connecting to networks, managing accounts, interacting with contracts, handling transactions, RPC calls, serialization, utilities.
 
 **Example Coding Queries:**
 

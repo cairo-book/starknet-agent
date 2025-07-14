@@ -55,6 +55,12 @@ const focusModes = [
     description: 'Search in Scarb Docs',
     icon: <Code size={20} />,
   },
+  {
+    key: 'starknetJSSearch',
+    title: 'Starknet.js',
+    description: 'Search in Starknet.js Docs',
+    icon: <Code size={20} />,
+  },
 ];
 
 const Focus = ({

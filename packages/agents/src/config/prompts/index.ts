@@ -43,6 +43,11 @@ import {
   SCARB_DOCS_RESPONSE_PROMPT,
   SCARB_DOCS_NO_SOURCE_PROMPT,
 } from './scarbDocsPrompts';
+import {
+  STARKNET_JS_RETRIEVER_PROMPT,
+  STARKNET_JS_RESPONSE_PROMPT,
+  STARKNET_JS_NO_SOURCE_PROMPT,
+} from './starknetJSPrompts';
 import { AgentPrompts } from '../../core/types';
 import { getScarbVersion } from '../../config';
 import { getStarknetFoundryVersion } from '../../config';
@@ -93,6 +98,12 @@ export const cairoByExamplePrompts: AgentPrompts = {
   searchRetrieverPrompt: CAIRO_BY_EXAMPLE_RETRIEVER_PROMPT,
   searchResponsePrompt: CAIRO_BY_EXAMPLE_RESPONSE_PROMPT,
   noSourceFoundPrompt: CAIRO_BY_EXAMPLE_NO_SOURCE_PROMPT,
+};
+
+export const starknetJSPrompts: AgentPrompts = {
+  searchRetrieverPrompt: STARKNET_JS_RETRIEVER_PROMPT,
+  searchResponsePrompt: STARKNET_JS_RESPONSE_PROMPT,
+  noSourceFoundPrompt: STARKNET_JS_NO_SOURCE_PROMPT,
 };
 
 // Helper function to inject dynamic values into prompts
