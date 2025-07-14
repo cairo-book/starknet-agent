@@ -4,6 +4,9 @@ import { StarknetDocsIngester } from '../src/ingesters/StarknetDocsIngester';
 import { StarknetFoundryIngester } from '../src/ingesters/StarknetFoundryIngester';
 import { CairoByExampleIngester } from '../src/ingesters/CairoByExampleIngester';
 import { OpenZeppelinDocsIngester } from '../src/ingesters/OpenZeppelinDocsIngester';
+import { CoreLibDocsIngester } from '../src/ingesters/CoreLibDocsIngester';
+import { ScarbDocsIngester } from '../src/ingesters/ScarbDocsIngester';
+import { StarknetJSGuidesIngester } from '../src/ingesters/StarknetJSGuidesIngester';
 import { BaseIngester } from '../src/BaseIngester';
 import { DocumentSource } from '@starknet-agent/agents/index';
 
@@ -13,6 +16,9 @@ jest.mock('../src/ingesters/StarknetDocsIngester');
 jest.mock('../src/ingesters/StarknetFoundryIngester');
 jest.mock('../src/ingesters/CairoByExampleIngester');
 jest.mock('../src/ingesters/OpenZeppelinDocsIngester');
+jest.mock('../src/ingesters/CoreLibDocsIngester');
+jest.mock('../src/ingesters/ScarbDocsIngester');
+jest.mock('../src/ingesters/StarknetJSGuidesIngester');
 
 describe('IngesterFactory', () => {
   beforeEach(() => {
@@ -65,6 +71,33 @@ describe('IngesterFactory', () => {
       expect(OpenZeppelinDocsIngester).toHaveBeenCalledTimes(1);
     });
 
+    it('should create a CoreLibDocsIngester for corelib_docs source', () => {
+      const ingester = IngesterFactory.createIngester(
+        DocumentSource.CORELIB_DOCS,
+      );
+
+      expect(ingester).toBeInstanceOf(CoreLibDocsIngester);
+      expect(CoreLibDocsIngester).toHaveBeenCalledTimes(1);
+    });
+
+    it('should create a ScarbDocsIngester for scarb_docs source', () => {
+      const ingester = IngesterFactory.createIngester(
+        DocumentSource.SCARB_DOCS,
+      );
+
+      expect(ingester).toBeInstanceOf(ScarbDocsIngester);
+      expect(ScarbDocsIngester).toHaveBeenCalledTimes(1);
+    });
+
+    it('should create a StarknetJSGuidesIngester for starknet_js_guides source', () => {
+      const ingester = IngesterFactory.createIngester(
+        DocumentSource.STARKNET_JS_GUIDES,
+      );
+
+      expect(ingester).toBeInstanceOf(StarknetJSGuidesIngester);
+      expect(StarknetJSGuidesIngester).toHaveBeenCalledTimes(1);
+    });
+
     it('should throw an error for an unknown source', () => {
       expect(() => {
         // @ts-ignore - Testing with invalid source
@@ -85,6 +118,7 @@ describe('IngesterFactory', () => {
         'openzeppelin_docs',
         'corelib_docs',
         'scarb_docs',
+        'starknet_js_guides',
       ]);
     });
   });
