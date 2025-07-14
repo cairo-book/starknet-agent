@@ -12,6 +12,8 @@ import logger from '@starknet-agent/agents/utils/logger';
 import { AsciiDocIngesterConfig } from './AsciiDocIngester';
 import { AsciiDocIngester } from './AsciiDocIngester';
 
+const OZ_DOCS_VERSION = '2.0.0';
+
 /**
  * Ingester for the OpenZeppelin documentation
  *
@@ -96,7 +98,7 @@ export class OpenZeppelinDocsIngester extends AsciiDocIngester {
             // This is the special handling for OpenZeppelin docs
             const adaptedFullPageName = path.join(
               'contracts-cairo',
-              '1.0.0',
+              OZ_DOCS_VERSION,
               relativePath,
             );
 

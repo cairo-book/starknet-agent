@@ -84,6 +84,7 @@ describe('IngesterFactory', () => {
         'cairo_by_example',
         'openzeppelin_docs',
         'corelib_docs',
+        'scarb_docs',
       ]);
     });
   });
