@@ -376,7 +376,8 @@ const mathJaxConfig = {
 
 const ChatWindow = ({ id }: { id?: string }) => {
   const searchParams = useSearchParams();
-  const initialMessage = searchParams.get('q');
+  const initialMessage = searchParams.get('prompt') || searchParams.get('q');
+  const hintsParam = searchParams.get('hints');
 
   const [chatId, setChatId] = useState<string | undefined>(id);
   const [newChatCreated, setNewChatCreated] = useState(false);
@@ -393,13 +394,31 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
   const DEFAULT_FOCUS_MODE = 'starknetEcosystemSearch';
 
+  // Map hints parameter to focusMode
+  const getFocusModeFromHints = (hints: string | null) => {
+    if (!hints) return DEFAULT_FOCUS_MODE;
+    
+    const hintsMap: Record<string, string> = {
+      'search': 'starknetEcosystemSearch',
+      'cairo-book': 'cairoBookSearch',
+      'starknet-docs': 'starknetDocsSearch',
+      'starknet-foundry': 'starknetFoundrySearch',
+      'cairo-by-example': 'cairoByExampleSearch',
+      'openzeppelin-docs': 'openZeppelinDocsSearch',
+      'scarb-docs': 'scarbDocsSearch',
+      'starknet-js': 'starknetJSSearch',
+    };
+    
+    return hintsMap[hints] || DEFAULT_FOCUS_MODE;
+  };
+
   const [loading, setLoading] = useState(false);
   const [messageAppeared, setMessageAppeared] = useState(false);
 
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const [focusMode, setFocusMode] = useState(DEFAULT_FOCUS_MODE);
+  const [focusMode, setFocusMode] = useState(getFocusModeFromHints(hintsParam));
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
@@ -417,7 +436,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
       if (isHostedMode) {
         const storedMessages = loadMessagesFromLocalStorage(chatId);
         setMessages(storedMessages?.messages || []);
-        setFocusMode(storedMessages?.focusMode || DEFAULT_FOCUS_MODE);
+        setFocusMode(storedMessages?.focusMode || getFocusModeFromHints(hintsParam));
         const history = storedMessages?.messages.map((msg) => {
           return [msg.role, msg.content];
         }) as [string, string][];
@@ -429,7 +448,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
           setMessages,
           setIsMessagesLoaded,
           setChatHistory,
-          setFocusMode,
+          (mode: string) => setFocusMode(mode || getFocusModeFromHints(hintsParam)),
           setNotFound,
         );
       }
