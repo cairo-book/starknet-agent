@@ -397,9 +397,9 @@ const ChatWindow = ({ id }: { id?: string }) => {
   // Map hints parameter to focusMode
   const getFocusModeFromHints = (hints: string | null) => {
     if (!hints) return DEFAULT_FOCUS_MODE;
-    
+
     const hintsMap: Record<string, string> = {
-      'search': 'starknetEcosystemSearch',
+      search: 'starknetEcosystemSearch',
       'cairo-book': 'cairoBookSearch',
       'starknet-docs': 'starknetDocsSearch',
       'starknet-foundry': 'starknetFoundrySearch',
@@ -408,7 +408,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
       'scarb-docs': 'scarbDocsSearch',
       'starknet-js': 'starknetJSSearch',
     };
-    
+
     return hintsMap[hints] || DEFAULT_FOCUS_MODE;
   };
 
@@ -436,7 +436,9 @@ const ChatWindow = ({ id }: { id?: string }) => {
       if (isHostedMode) {
         const storedMessages = loadMessagesFromLocalStorage(chatId);
         setMessages(storedMessages?.messages || []);
-        setFocusMode(storedMessages?.focusMode || getFocusModeFromHints(hintsParam));
+        setFocusMode(
+          storedMessages?.focusMode || getFocusModeFromHints(hintsParam),
+        );
         const history = storedMessages?.messages.map((msg) => {
           return [msg.role, msg.content];
         }) as [string, string][];
@@ -448,7 +450,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
           setMessages,
           setIsMessagesLoaded,
           setChatHistory,
-          (mode: string) => setFocusMode(mode || getFocusModeFromHints(hintsParam)),
+          (mode: string) =>
+            setFocusMode(mode || getFocusModeFromHints(hintsParam)),
           setNotFound,
         );
       }
