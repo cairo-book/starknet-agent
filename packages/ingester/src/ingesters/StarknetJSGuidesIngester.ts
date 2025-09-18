@@ -17,7 +17,7 @@ export class StarknetJSGuidesIngester extends MarkdownIngester {
       fileExtension: '.md',
       chunkSize: 4096,
       chunkOverlap: 512,
-      baseUrl: 'https://starknetjs.com/docs/guides',
+      baseUrl: 'https://starknetjs.com/docs/next/guides',
       urlSuffix: '',
     };
 
