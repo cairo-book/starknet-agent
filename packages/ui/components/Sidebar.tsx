@@ -20,8 +20,6 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
-
   const navLinks = [
     {
       icon: SquarePen,

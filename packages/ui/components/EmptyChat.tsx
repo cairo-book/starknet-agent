@@ -2,12 +2,8 @@ import EmptyChatMessageInput from './EmptyChatMessageInput';
 
 const EmptyChat = ({
   sendMessage,
-  focusMode,
-  setFocusMode,
 }: {
   sendMessage: (message: string) => void;
-  focusMode: string;
-  setFocusMode: (mode: string) => void;
 }) => {
   return (
     <div className="relative">
@@ -18,11 +14,7 @@ const EmptyChat = ({
             Unlock your Starknet expertise.
           </h2>
         </div>
-        <EmptyChatMessageInput
-          sendMessage={sendMessage}
-          focusMode={focusMode}
-          setFocusMode={setFocusMode}
-        />
+        <EmptyChatMessageInput sendMessage={sendMessage} />
       </div>
     </div>
   );
