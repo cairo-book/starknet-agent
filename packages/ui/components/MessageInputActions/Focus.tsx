@@ -71,10 +71,10 @@ const Focus = ({
   setFocusMode: (mode: string) => void;
 }) => {
   return (
-    <Popover className="fixed w-full max-w-[15rem] md:max-w-md lg:max-w-lg">
+    <Popover className="relative">
       <Popover.Button
         type="button"
-        className="p-2 text-black/50 dark:text-white/50 rounded-xl hover:bg-light-secondary dark:hover:bg-dark-secondary active:scale-95 transition duration-200 hover:text-black dark:hover:text-white"
+        className="p-2 text-black/50 dark:text-white/50 rounded-xl hover:bg-light-secondary dark:hover:bg-dark-secondary active:scale-95 transition duration-200 hover:text-black dark:hover:text-white focus:outline-none"
       >
         {focusMode !== 'webSearch' ? (
           <div className="flex flex-row items-center space-x-1">
@@ -97,8 +97,8 @@ const Focus = ({
         leaveFrom="opacity-100 translate-y-0"
         leaveTo="opacity-0 translate-y-1"
       >
-        <Popover.Panel className="absolute z-10 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 bg-light-primary dark:bg-dark-primary border rounded-lg border-light-200 dark:border-dark-200 w-full p-2 max-h-[200px] md:max-h-none overflow-y-auto">
+        <Popover.Panel className="absolute z-50 left-0 mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 bg-light-primary dark:bg-dark-primary border rounded-lg border-light-200 dark:border-dark-200 w-[90vw] md:w-[600px] lg:w-[800px] p-2 max-h-[200px] md:max-h-none overflow-y-auto">
             {focusModes.map((mode, i) => (
               <Popover.Button
                 onClick={() => setFocusMode(mode.key)}
@@ -114,7 +114,7 @@ const Focus = ({
                   className={cn(
                     'flex flex-row items-center space-x-1',
                     focusMode === mode.key
-                      ? 'text-[#24A0ED]'
+                      ? 'text-black/70 dark:text-white/70'
                       : 'text-black dark:text-white',
                   )}
                 >

@@ -51,7 +51,7 @@ export default function RootLayout({
         <PostHogProviderClient>
           <MathJaxContext config={config}>
             <ThemeProvider>
-              <Sidebar>{children}</Sidebar>
+              {children}
               <Toaster
                 toastOptions={{
                   unstyled: true,

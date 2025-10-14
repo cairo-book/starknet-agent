@@ -1,7 +1,5 @@
-import ChatWindow from '@/components/ChatWindow';
-import { MathJaxContext } from 'better-react-mathjax';
+import LandingPage from '@/components/LandingPage';
 import { Metadata } from 'next';
-import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'The Starknet Agent - Unlock your Starknet expertise',
@@ -12,15 +10,7 @@ export const metadata: Metadata = {
 };
 
 const Home = () => {
-  return (
-    <>
-      <div className="content-wrapper">
-        <Suspense>
-          <ChatWindow />
-        </Suspense>
-      </div>
-    </>
-  );
+  return <LandingPage />;
 };
 
 export default Home;
