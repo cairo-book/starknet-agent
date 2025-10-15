@@ -3,6 +3,7 @@
 import { useState, Fragment, useEffect } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import Focus from './MessageInputActions/Focus';
 import { ArrowRight, ChevronDown, Copy, Check } from 'lucide-react';
 import { Popover, Transition } from '@headlessui/react';
@@ -24,6 +25,7 @@ const FalconViewer = dynamic(() => import('./FalconViewer'), {
 type TabType = 'auto' | 'json';
 
 const LandingPage = () => {
+  const router = useRouter();
   const [prompt, setPrompt] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -62,9 +64,12 @@ const LandingPage = () => {
   };
 
   const handleChatClick = () => {
+    // Trigger fade out animation before navigation
     setIsTransitioning(true);
-    // Start sidebar transition immediately for seamless animation
-    setShowChat(true);
+    // Navigate to chat route after a short delay for smooth transition
+    setTimeout(() => {
+      router.push('/chat');
+    }, 400);
   };
 
   const handleBackToLanding = () => {
