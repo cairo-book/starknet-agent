@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
-import Sidebar from '@/components/Sidebar';
 import { Toaster } from 'sonner';
 import ThemeProvider from '@/components/theme/Provider';
 import PostHogProviderClient from '@/components/providers/PostHogProvider';
@@ -17,10 +16,10 @@ const ibmPlexSans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'The Starknet Agent - Unlock your Starknet expertise',
+  title: 'Ask Starknet - Unlock your Starknet expertise',
   description: 'AI-powered assistant for Starknet and Cairo.',
   icons: {
-    icon: '/starknet_logo.svg',
+    icon: '/favicon.ico',
   },
 };
 

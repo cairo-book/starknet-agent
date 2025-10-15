@@ -49,6 +49,7 @@ body {
 
 .animate-slideInLeft {
   animation: slideInLeft 0.6s ease-out;
+  animation-fill-mode: forwards;
 }
 
 @keyframes slideInBottom {

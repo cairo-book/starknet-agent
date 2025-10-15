@@ -2,12 +2,13 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { BookOpenText, SquarePen, Settings } from 'lucide-react';
+import { BookOpenText, SquarePen, Settings, Home, Sun, Moon, Monitor } from 'lucide-react';
 import Link from 'next/link';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, type ReactNode } from 'react';
 import Layout from './Layout';
-import SettingsDialog from './SettingsDialog';
+import Image from 'next/image';
+import { useTheme } from 'next-themes';
 
 const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   return (
@@ -15,10 +16,17 @@ const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const Sidebar = ({ children }: { children: React.ReactNode }) => {
+const Sidebar = ({ 
+  children, 
+  onLogoClick 
+}: { 
+  children: React.ReactNode;
+  onLogoClick?: () => void;
+}) => {
   const segments = useSelectedLayoutSegments();
+  const { theme, setTheme } = useTheme();
 
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isThemePickerOpen, setIsThemePickerOpen] = useState(false);
 
   const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
 
@@ -39,16 +47,32 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div>
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-20 lg:flex-col animate-slideInLeft">
-        <div className="flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto bg-light-secondary dark:bg-dark-secondary px-2 py-8">
-          <Link href="/">
-            <img
-              src="/starknet_logo_with_outline.svg"
-              alt="logo"
-              width={40}
-              height={40}
-            />
-          </Link>
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-[100] lg:flex lg:w-20 lg:flex-col animate-slideInLeft">
+        <div className="flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto bg-light-primary dark:bg-dark-primary px-2 py-8">
+          {onLogoClick ? (
+            <button 
+              onClick={onLogoClick}
+              className="transition-transform hover:scale-105 duration-200"
+            >
+              <Image
+                src="/ask_logo_white_alpha.png"
+                alt="Ask Logo"
+                width={35}
+                height={35}
+                className="object-contain"
+              />
+            </button>
+          ) : (
+            <Link href="/" className="transition-transform hover:scale-105 duration-200">
+              <Image
+                src="/ask_logo_white_alpha.png"
+                alt="Ask Logo"
+                width={35}
+                height={35}
+                className="object-contain"
+              />
+            </Link>
+          )}
           <div className="flex-1" />
           <VerticalIconContainer>
             {navLinks.map((link, i) => (
@@ -56,29 +80,89 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
                 key={i}
                 href={link.href}
                 className={cn(
-                  'relative flex flex-row items-center justify-center cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 duration-150 transition w-full py-2 rounded-lg',
+                  'relative flex flex-row items-center justify-center cursor-pointer hover:scale-110 duration-200 transition-transform w-full py-2 rounded-lg',
                   link.active
-                    ? 'text-black dark:text-white'
+                    ? 'text-white'
                     : 'text-black/70 dark:text-white/70',
                 )}
               >
                 <link.icon />
-                {link.active && (
-                  <div className="absolute right-0 -mr-2 h-full w-1 rounded-l-lg bg-black dark:bg-white" />
-                )}
               </Link>
             ))}
-            <div
-              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className="cursor-pointer relative flex flex-row items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 duration-150 transition w-full py-2 rounded-lg text-black/70 dark:text-white/70"
-            >
-              <Settings />
+            
+            {/* Theme Picker Section */}
+            <div className="relative w-full flex flex-row items-center justify-center">
+              <div
+                onClick={() => setIsThemePickerOpen(!isThemePickerOpen)}
+                className="cursor-pointer flex flex-row items-center justify-center hover:scale-110 duration-200 transition-transform w-full py-2 rounded-lg text-black/70 dark:text-white/70"
+              >
+                <Settings />
+              </div>
+              
+              {/* Theme Icons Slide-out */}
+              <div
+                className={cn(
+                  'fixed left-24 bottom-[88px] flex flex-row gap-2 transition-all duration-300 ease-out z-[200]',
+                  isThemePickerOpen
+                    ? 'opacity-100 translate-x-0'
+                    : 'opacity-0 -translate-x-4 pointer-events-none'
+                )}
+              >
+                <button
+                  onClick={() => {
+                    setTheme('light');
+                    setIsThemePickerOpen(false);
+                  }}
+                  className={cn(
+                    'p-2 rounded-lg transition-all duration-200',
+                    theme === 'light'
+                      ? 'text-white scale-110'
+                      : 'text-black/70 dark:text-white/70 hover:scale-110'
+                  )}
+                  title="Light mode"
+                >
+                  <Sun className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => {
+                    setTheme('dark');
+                    setIsThemePickerOpen(false);
+                  }}
+                  className={cn(
+                    'p-2 rounded-lg transition-all duration-200',
+                    theme === 'dark'
+                      ? 'text-white scale-110'
+                      : 'text-black/70 dark:text-white/70 hover:scale-110'
+                  )}
+                  title="Dark mode"
+                >
+                  <Moon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => {
+                    setTheme('system');
+                    setIsThemePickerOpen(false);
+                  }}
+                  className={cn(
+                    'p-2 rounded-lg transition-all duration-200',
+                    theme === 'system'
+                      ? 'text-white scale-110'
+                      : 'text-black/70 dark:text-white/70 hover:scale-110'
+                  )}
+                  title="System mode"
+                >
+                  <Monitor className="w-5 h-5" />
+                </button>
+              </div>
             </div>
+
+            <Link
+              href="/"
+              className="cursor-pointer relative flex flex-row items-center justify-center hover:scale-110 duration-200 transition-transform w-full py-2 rounded-lg text-black/70 dark:text-white/70"
+            >
+              <Home />
+            </Link>
           </VerticalIconContainer>
-          <SettingsDialog
-            isOpen={isSettingsOpen}
-            setIsOpen={setIsSettingsOpen}
-          />
         </div>
       </div>
 
@@ -90,13 +174,10 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
             className={cn(
               'relative flex flex-col items-center space-y-1 text-center w-full',
               link.active
-                ? 'text-black dark:text-white'
+                ? 'text-white'
                 : 'text-black dark:text-white/70',
             )}
           >
-            {link.active && (
-              <div className="absolute top-0 -mt-4 h-1 w-full rounded-b-lg bg-black dark:bg-white" />
-            )}
             <link.icon />
             <p className="text-xs">{link.label}</p>
           </Link>

@@ -1,153 +1,149 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Fragment, useEffect } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import Focus from './MessageInputActions/Focus';
+import { ArrowRight, ChevronDown, Copy, Check } from 'lucide-react';
+import { Popover, Transition } from '@headlessui/react';
+import {
+  MCP_CLIENTS,
+  generateMCPDeepLink,
+  copyToClipboard,
+  openDeepLink,
+  type MCPStdioConfig,
+} from '@/lib/mcpDeepLink';
+import ChatWindow from './ChatWindow';
+import Sidebar from './Sidebar';
+
+// Dynamically import the FalconViewer to avoid SSR issues with Three.js
+const FalconViewer = dynamic(() => import('./FalconViewer'), {
+  ssr: false,
+});
+
+type TabType = 'auto' | 'json';
 
 const LandingPage = () => {
   const [prompt, setPrompt] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [submittedPrompt, setSubmittedPrompt] = useState('');
+  const [showChat, setShowChat] = useState(false);
+  const [initialPrompt, setInitialPrompt] = useState<string>('');
   const [focusMode, setFocusMode] = useState('starknetEcosystemSearch');
   const [showMCPConfig, setShowMCPConfig] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const router = useRouter();
+  const [isCoderHovered, setIsCoderHovered] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('auto');
+  const [selectedClient, setSelectedClient] = useState<string>('cursor');
+  const [copied, setCopied] = useState<boolean>(false);
+
+  // MCP Configuration for Ask Starknet
+  const mcpConfig: MCPStdioConfig = {
+    type: 'stdio',
+    command: 'npx',
+    args: ['-y', '@kasarlabs/ask-starknet-mcp'],
+    env: {
+      STARKNET_PUBLIC_ADDRESS: 'your-public-address-here',
+      STARKNET_PRIVATE_KEY: 'your-private-key-here',
+      STARKNET_RPC_URL: 'your-rpc-url-here',
+      MODEL_API_KEY: 'your-model-api-key-here',
+    },
+  };
+
+  const displayName = 'Ask Starknet MCP';
+  const selectedClientInfo = MCP_CLIENTS.find((c) => c.id === selectedClient);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (prompt.trim()) {
-      setSubmittedPrompt(prompt);
       setIsTransitioning(true);
-      // Navigate after the visual transition completes
-      setTimeout(() => {
-        router.push(`/chat?prompt=${encodeURIComponent(prompt)}&focusMode=${focusMode}`);
-      }, 1200);
+      setInitialPrompt(prompt);
+      // Start sidebar transition immediately for seamless animation
+      setShowChat(true);
     }
   };
 
   const handleChatClick = () => {
     setIsTransitioning(true);
-    // Navigate after the visual transition completes
-    setTimeout(() => {
-      router.push('/chat');
-    }, 1200);
+    // Start sidebar transition immediately for seamless animation
+    setShowChat(true);
+  };
+
+  const handleBackToLanding = () => {
+    setShowChat(false);
+    setIsTransitioning(false);
+    setInitialPrompt('');
+    setPrompt('');
   };
 
   const handleMCPClick = () => {
     setShowMCPConfig(!showMCPConfig);
   };
 
-  const mcpConfig = {
-    mcpServers: {
-      'cairo-coder': {
-        command: 'npx',
-        args: ['-y', '@kasarlabs/cairo-coder-mcp'],
-        env: {
-          CAIRO_CODER_API_KEY: 'your-api-key-here',
-        },
-      },
-    },
-  };
-
   const handleCopyConfig = async () => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(mcpConfig, null, 2));
+    const configJson = JSON.stringify({ 'ask-starknet': mcpConfig }, null, 2);
+    const success = await copyToClipboard(configJson);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleOneClickSetup = () => {
+    try {
+      const deepLink = generateMCPDeepLink(selectedClient, displayName, mcpConfig, false);
+      openDeepLink(deepLink);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to open deep link:', err);
     }
   };
 
   return (
     <div className="fixed inset-0 bg-light-primary dark:bg-dark-primary overflow-hidden">
-      {/* Sidebar - slides in from left during transition */}
-      <div
-        className={`fixed lg:inset-y-0 lg:z-50 lg:w-20 transition-all duration-700 ease-out ${
-          isTransitioning
-            ? 'lg:translate-x-0 opacity-100'
-            : 'lg:-translate-x-full opacity-0 pointer-events-none'
-        }`}
-      >
-        <div className="flex h-full flex-col items-center justify-between gap-y-5 bg-light-secondary dark:bg-dark-secondary px-2 py-8">
-          <Image
-            src="/starknet_logo_grey.png"
-            alt="Starknet Logo"
-            width={40}
-            height={40}
+      {/* Chat View - Hidden until showChat is true */}
+      {showChat && (
+        <Sidebar onLogoClick={handleBackToLanding}>
+          <ChatWindow 
+            key={initialPrompt} 
+            initialMessage={initialPrompt}
+            focusMode={focusMode}
+            onBack={handleBackToLanding}
           />
-        </div>
-      </div>
+        </Sidebar>
+      )}
 
-      {/* Navbar - slides down from top during transition */}
-      <div
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-700 ease-out ${
-          isTransitioning
-            ? 'translate-y-0 opacity-100 lg:left-20'
-            : '-translate-y-full opacity-0 pointer-events-none'
-        }`}
-      >
-        <div className="bg-light-secondary dark:bg-dark-secondary border-b border-light-200 dark:border-dark-200 px-4 py-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="flex items-center space-x-2">
-              <h2 className="text-black dark:text-white text-lg font-medium">
-                Starknet Agent
-              </h2>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Input Bar - slides up from bottom during transition */}
-      <div
-        className={`fixed bottom-0 left-0 right-0 z-40 transition-all duration-700 ease-out ${
-          isTransitioning
-            ? 'translate-y-0 opacity-100 lg:left-20'
-            : 'translate-y-full opacity-0 pointer-events-none'
-        }`}
-      >
-        <div className="bg-light-primary dark:bg-dark-primary border-t border-light-200 dark:border-dark-200 px-4 py-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Ask a follow-up question..."
-                disabled
-                className="w-full px-6 py-4 text-base rounded-xl bg-white dark:bg-[#1a1a1a] text-black dark:text-white border-2 border-light-200 dark:border-dark-200 transition-all"
+      {/* Landing Page - Fades out when showChat is true */}
+      <div className={`h-full transition-opacity duration-600 ${showChat ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        {/* Header with Logo - special transition animation */}
+        <div 
+          className={`fixed transition-all duration-600 ease-out ${
+            showChat 
+              ? 'top-8 left-6 z-0 opacity-0' 
+              : isTransitioning 
+                ? 'top-8 left-6 z-50 opacity-100' 
+                : 'top-8 left-8 z-50 opacity-100'
+          }`}
+        >
+          <div className="relative flex items-center">
+            {/* Full logo */}
+            <div
+              className={`transition-all duration-300 ${
+                showChat || isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+              }`}
+            >
+              <Image
+                src="/ask_full_logo_white_alpha.png"
+                alt="Ask Starknet Logo"
+                width={120}
+                height={40}
+                className="object-contain"
               />
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content Area */}
-      <div
-        className={`h-full transition-all duration-700 ${
-          isTransitioning ? 'lg:pl-20' : 'lg:pl-0'
-        }`}
-      >
-        {/* Header with Logo - fades out during transition */}
-        <div
-          className={`absolute top-8 left-8 flex items-center space-x-3 z-10 transition-all duration-500 ${
-            isTransitioning ? 'opacity-0 pointer-events-none' : 'opacity-100'
-          }`}
-        >
-          <Image
-            src="/starknet_logo_grey.png"
-            alt="Starknet Logo"
-            width={50}
-            height={50}
-          />
-          <span className="text-3xl font-semibold" style={{ color: '#b1b1b1' }}>
-            Ask
-          </span>
-        </div>
-
-        {/* Action Buttons - top right */}
+        {/* Action Buttons - top right - fade out smoothly */}
         <div
           className={`absolute top-8 right-8 flex items-center space-x-8 z-10 transition-all duration-500 ${
-            isTransitioning ? 'opacity-0 pointer-events-none' : 'opacity-100'
+            isTransitioning || showChat ? 'opacity-0 pointer-events-none' : 'opacity-100'
           }`}
         >
           <button
@@ -164,27 +160,49 @@ const LandingPage = () => {
           </button>
           <button
             onClick={() => window.open('https://cairo-coder.com', '_blank')}
-            className="text-black dark:text-white font-medium text-2xl hover:scale-105 transition-transform duration-200"
+            onMouseEnter={() => setIsCoderHovered(true)}
+            onMouseLeave={() => setIsCoderHovered(false)}
+            className="relative text-black dark:text-white font-medium text-2xl hover:scale-105 transition-all duration-300"
           >
-            Coder
+            <span className={`transition-opacity duration-300 ${isCoderHovered ? 'opacity-0' : 'opacity-100'}`}>
+              Coder
+            </span>
+            {isCoderHovered && (
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] pointer-events-none border-2 border-red-500">
+                <FalconViewer
+                  modelPath="/models/Falcon.glb"
+                  width={200}
+                  height={200}
+                  autoRotate={true}
+                  enableControls={false}
+                />
+              </div>
+            )}
           </button>
         </div>
 
-        {/* Landing Content - scales down and fades during transition */}
+        {/* Landing Content - fades during transition */}
         <div
-          className={`flex flex-col items-center justify-center h-full px-4 sm:px-8 transition-all duration-700 ${
-            isTransitioning
-              ? 'opacity-0 scale-95 pointer-events-none'
-              : 'opacity-100 scale-100'
+          className={`flex flex-col items-center h-full px-4 sm:px-8 transition-all duration-500 ${
+            isTransitioning || showChat
+              ? 'opacity-0 pointer-events-none'
+              : 'opacity-100'
           }`}
         >
           {/* Floating Icons around the center */}
-          <FloatingIcons isAnimating={isTransitioning} />
+          <FloatingIcons isAnimating={isTransitioning || showChat} />
 
-          {/* Centered Title and Input - perfectly centered */}
-          <div className="flex flex-col items-center space-y-12 w-full max-w-3xl mx-auto z-10 relative">
+          {/* Centered Title and Input - title fixed, content grows below */}
+          <div 
+            className="flex flex-col items-center w-full max-w-3xl mx-auto z-10 relative transition-all duration-700" 
+            style={{ 
+              paddingTop: showMCPConfig 
+                ? (activeTab === 'json' ? 'calc(50vh - 280px)' : 'calc(50vh - 200px)') 
+                : 'calc(50vh - 100px)' 
+            }}
+          >
             {/* Title */}
-            <div className="flex flex-col items-center justify-center space-y-2">
+            <div className="flex flex-col items-center justify-center space-y-2 mb-12">
               <h1 className="text-black/70 dark:text-white/100 text-xl sm:text-2xl md:text-3xl font-medium text-center transition-all duration-500">
                 {showMCPConfig
                   ? 'Build your own Starknet Agents'
@@ -198,15 +216,15 @@ const LandingPage = () => {
             </div>
 
             {/* Search Input / MCP Config - with growing transition */}
-            <div className="w-full">
+            <div className="w-full overflow-visible">
               {/* Container that grows */}
               <div
-                className={`w-full transition-all duration-700 ease-in-out ${
-                  showMCPConfig 
-                    ? 'px-0 py-0 bg-transparent' 
+                className={`w-full transition-all duration-700 ease-in-out overflow-visible ${
+                  showMCPConfig
+                    ? 'px-0 py-0 bg-transparent'
                     : isTransitioning
-                    ? 'bg-transparent px-5 pt-5 pb-2 rounded-lg overflow-visible'
-                    : 'bg-light-secondary dark:bg-dark-secondary border border-light-200 dark:border-dark-200 px-5 pt-5 pb-2 rounded-lg overflow-visible'
+                    ? 'bg-transparent px-5 pt-5 pb-2 rounded-lg'
+                    : 'bg-light-secondary dark:bg-dark-secondary px-5 pt-5 pb-2 rounded-lg'
                 }`}
                 style={{
                   minHeight: showMCPConfig ? '400px' : 'auto',
@@ -257,7 +275,7 @@ const LandingPage = () => {
                   </form>
                 </div>
 
-                {/* MCP Config Content - appears while modal grows */}
+                {/* MCP Config Content - appears while container grows */}
                 <div
                   className={`transition-all duration-700 ease-in-out ${
                     showMCPConfig
@@ -265,107 +283,237 @@ const LandingPage = () => {
                       : 'opacity-0 translate-x-4 h-0 overflow-hidden pointer-events-none'
                   }`}
                 >
-                  <div className="relative">
-                    <button
-                      onClick={handleCopyConfig}
-                      className="absolute top-2 right-2 z-10 p-2 rounded-lg hover:opacity-70 transition-all duration-200"
-                      title={copied ? 'Copied!' : 'Copy to clipboard'}
+                  {showMCPConfig && (
+                    <div 
+                      className="bg-light-secondary dark:bg-dark-secondary rounded-2xl border border-light-200 dark:border-dark-200 transition-all duration-500 ease-in-out overflow-visible"
+                      style={{
+                        minHeight: activeTab === 'json' ? '600px' : '350px',
+                      }}
                     >
-                      {copied ? (
-                        <svg
-                          className="w-5 h-5 text-green-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      {/* Tabs */}
+                      <div className="px-8 pt-6 pb-6">
+                        <div className="flex gap-6 border-b border-light-200 dark:border-dark-200">
+                          <button
+                            onClick={() => setActiveTab('auto')}
+                            className={`pb-3 px-1 font-medium transition-all duration-300 relative ${
+                              activeTab === 'auto'
+                                ? 'text-white'
+                                : 'text-black/50 dark:text-white/50 hover:text-black/70 dark:hover:text-white/70'
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">Auto</span>
+                            {activeTab === 'auto' && (
+                              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white transition-all duration-300" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => setActiveTab('json')}
+                            className={`pb-3 px-1 font-medium transition-all duration-300 relative ${
+                              activeTab === 'json'
+                                ? 'text-white'
+                                : 'text-black/50 dark:text-white/50 hover:text-black/70 dark:hover:text-white/70'
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">JSON</span>
+                            {activeTab === 'json' && (
+                              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white transition-all duration-300" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Content Container with relative positioning for absolute content */}
+                      <div className="relative px-8 pb-8 overflow-visible">
+                        {/* JSON Tab Content */}
+                        <div
+                          className={`transition-all duration-500 ease-in-out ${
+                            activeTab === 'json'
+                              ? 'opacity-100 translate-x-0 relative'
+                              : 'opacity-0 -translate-x-4 absolute inset-0 pointer-events-none'
+                          }`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-5 h-5 text-black dark:text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                          <div className="space-y-6">
+                            <p className="text-sm text-black/60 dark:text-white/60">
+                              Add this configuration to any MCP client settings.
+                            </p>
+
+                            {/* JSON Config */}
+                            <div className="bg-[#1a1a1a] rounded-lg overflow-hidden relative">
+                              <button
+                                onClick={handleCopyConfig}
+                                className="absolute top-3 right-3 z-10 p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                              >
+                                {copied ? (
+                                  <Check className="w-4 h-4" />
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
+                              </button>
+                              <div className="px-4 py-4 overflow-x-auto pt-12">
+                                <pre className="text-sm font-mono leading-relaxed">
+                                  <code>
+                                    <span className="text-gray-400">{'{'}</span>
+                                    {'\n  '}
+                                    <span className="text-blue-400 font-semibold">
+                                      &quot;mcpServers&quot;
+                                    </span>
+                                    <span className="text-gray-400">: {'{'}</span>
+                                    {'\n    '}
+                                    <span className="text-blue-400 font-semibold">
+                                      &quot;ask-starknet&quot;
+                                    </span>
+                                    <span className="text-gray-400">: {'{'}</span>
+                                    {'\n      '}
+                                    <span className="text-purple-400">&quot;command&quot;</span>
+                                    <span className="text-gray-400">: </span>
+                                    <span className="text-green-400">
+                                      &quot;{mcpConfig.command}&quot;
+                                    </span>
+                                    <span className="text-gray-400">,</span>
+                                    {'\n      '}
+                                    <span className="text-purple-400">&quot;args&quot;</span>
+                                    <span className="text-gray-400">: [</span>
+                                    {mcpConfig.args.map((arg, i) => (
+                                      <span key={i}>
+                                        {'\n        '}
+                                        <span className="text-green-400">&quot;{arg}&quot;</span>
+                                        {i < mcpConfig.args.length - 1 && (
+                                          <span className="text-gray-400">,</span>
+                                        )}
+                                      </span>
+                                    ))}
+                                    {'\n      '}
+                                    <span className="text-gray-400">],</span>
+                                    {'\n      '}
+                                    <span className="text-purple-400">&quot;env&quot;</span>
+                                    <span className="text-gray-400">: {'{'}</span>
+                                    {mcpConfig.env &&
+                                      Object.entries(mcpConfig.env).map(([key, value], i, arr) => (
+                                        <span key={key}>
+                                          {'\n        '}
+                                          <span className="text-orange-400">
+                                            &quot;{key}&quot;
+                                          </span>
+                                          <span className="text-gray-400">: </span>
+                                          <span className="text-green-400">
+                                            &quot;{value}&quot;
+                                          </span>
+                                          {i < arr.length - 1 && (
+                                            <span className="text-gray-400">,</span>
+                                          )}
+                                        </span>
+                                      ))}
+                                    {'\n      '}
+                                    <span className="text-gray-400">{'}'}</span>
+                                    {'\n    '}
+                                    <span className="text-gray-400">{'}'}</span>
+                                    {'\n  '}
+                                    <span className="text-gray-400">{'}'}</span>
+                                    {'\n'}
+                                    <span className="text-gray-400">{'}'}</span>
+                                  </code>
+                                </pre>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Auto Tab Content */}
+                        <div
+                          className={`transition-all duration-500 ease-in-out ${
+                            activeTab === 'auto'
+                              ? 'opacity-100 translate-x-0 relative overflow-visible'
+                              : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'
+                          }`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                    <pre className="bg-white dark:bg-[#1a1a1a] text-black dark:text-white p-4 rounded-lg overflow-x-auto text-sm font-mono">
-                      {JSON.stringify(mcpConfig, null, 2)}
-                    </pre>
-                  </div>
+                          <div className="space-y-6 overflow-visible">
+                            {/* Client Dropdown and One-Click Install */}
+                            <div>
+                              <p className="text-sm text-black/60 dark:text-white/60 mb-4">
+                                Connect this server to {selectedClientInfo?.name} with one click.
+                              </p>
+                              <div className="flex items-center gap-3">
+                                <Popover className="relative flex-1">
+                                  <Popover.Button className="w-full flex items-center justify-between px-4 py-3 bg-light-primary dark:bg-dark-primary border border-light-200 dark:border-dark-200 rounded-lg hover:bg-light-200 dark:hover:bg-dark-200 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                      {selectedClientInfo?.icon && (
+                                        <div className="w-6 h-6 relative flex items-center justify-center">
+                                          <Image
+                                            src={selectedClientInfo.icon}
+                                            alt={selectedClientInfo.name}
+                                            width={24}
+                                            height={24}
+                                            className="object-contain"
+                                          />
+                                        </div>
+                                      )}
+                                      <span className="font-medium text-black dark:text-white">
+                                        {selectedClientInfo?.name}
+                                      </span>
+                                    </div>
+                                    <ChevronDown className="w-5 h-5 text-black/50 dark:text-white/50 transition-transform ui-open:rotate-180" />
+                                  </Popover.Button>
+
+                                  <Transition
+                                    as={Fragment}
+                                    enter="transition ease-out duration-150"
+                                    enterFrom="opacity-0 translate-y-1"
+                                    enterTo="opacity-100 translate-y-0"
+                                    leave="transition ease-in duration-150"
+                                    leaveFrom="opacity-100 translate-y-0"
+                                    leaveTo="opacity-0 translate-y-1"
+                                  >
+                                    <Popover.Panel className="absolute z-50 left-0 mt-2 w-full">
+                                      <div className="bg-light-secondary dark:bg-dark-secondary border border-light-200 dark:border-dark-200 rounded-lg shadow-xl overflow-hidden">
+                                        {MCP_CLIENTS.map((client) => (
+                                          <Popover.Button
+                                            key={client.id}
+                                            onClick={() => setSelectedClient(client.id)}
+                                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-light-200 dark:hover:bg-dark-200 transition-colors ${
+                                              selectedClient === client.id
+                                                ? 'bg-light-200 dark:bg-dark-200'
+                                                : ''
+                                            }`}
+                                          >
+                                            <div className="w-6 h-6 relative flex items-center justify-center">
+                                              <Image
+                                                src={client.icon}
+                                                alt={client.name}
+                                                width={24}
+                                                height={24}
+                                                className="object-contain"
+                                              />
+                                            </div>
+                                            <span className="font-medium text-black dark:text-white">
+                                              {client.name}
+                                            </span>
+                                          </Popover.Button>
+                                        ))}
+                                      </div>
+                                    </Popover.Panel>
+                                  </Transition>
+                                </Popover>
+
+                                {/* One-Click Install Icon */}
+                                <button
+                                  onClick={handleOneClickSetup}
+                                  className="p-4 text-white rounded-lg transition-transform hover:scale-110"
+                                  title="One-Click Install"
+                                >
+                                  <ArrowRight className="w-6 h-6" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Chat Message - morphs from the input during transition */}
-        {isTransitioning && submittedPrompt && (
-          <div className="absolute inset-0 flex flex-col pt-24 pb-24 overflow-y-auto">
-            <div className="max-w-4xl w-full mx-auto px-4 animate-morphToMessage">
-              <div className="bg-transparent rounded-xl p-4 mb-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#EC796B] to-[#D672EF] flex items-center justify-center flex-shrink-0">
-                    <svg
-                      className="w-5 h-5 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-black dark:text-white text-base">
-                      {submittedPrompt}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {/* Loading indicator */}
-              <div className="flex items-start space-x-3 animate-pulse">
-                <div className="w-8 h-8 rounded-full bg-light-secondary dark:bg-dark-secondary flex items-center justify-center flex-shrink-0">
-                  <Image
-                    src="/starknet_logo_grey.png"
-                    alt="AI"
-                    width={20}
-                    height={20}
-                  />
-                </div>
-                <div className="flex-1">
-                  <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-[#EC796B] rounded-full animate-bounce" />
-                    <div
-                      className="w-2 h-2 bg-[#D672EF] rounded-full animate-bounce"
-                      style={{ animationDelay: '0.1s' }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-[#EC796B] rounded-full animate-bounce"
-                      style={{ animationDelay: '0.2s' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
@@ -396,8 +544,8 @@ const FloatingIcons = ({ isAnimating }: { isAnimating: boolean }) => {
         return (
           <div
             key={icon.id}
-            className={`absolute transition-all duration-700 ${
-              isAnimating ? 'opacity-0 scale-50' : 'opacity-100 scale-100'
+            className={`absolute transition-all duration-500 ${
+              isAnimating ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
             }`}
             style={{
               left: icon.x,

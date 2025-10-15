@@ -374,9 +374,19 @@ const mathJaxConfig = {
   },
 };
 
-const ChatWindow = ({ id }: { id?: string }) => {
+const ChatWindow = ({ 
+  id, 
+  initialMessage: initialMessageProp,
+  focusMode: focusModeProp,
+  onBack,
+}: { 
+  id?: string; 
+  initialMessage?: string;
+  focusMode?: string;
+  onBack?: () => void;
+}) => {
   const searchParams = useSearchParams();
-  const initialMessage = searchParams.get('prompt') || searchParams.get('q');
+  const initialMessage = initialMessageProp || searchParams.get('prompt') || searchParams.get('q');
   const hintsParam = searchParams.get('hints');
 
   const [chatId, setChatId] = useState<string | undefined>(id);
@@ -418,7 +428,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const [focusMode, setFocusMode] = useState(getFocusModeFromHints(hintsParam));
+  const [focusMode, setFocusMode] = useState(focusModeProp || getFocusModeFromHints(hintsParam));
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
@@ -722,4 +732,11 @@ const ChatWindow = ({ id }: { id?: string }) => {
     </div>
   );
 };
+export type ChatWindowProps = {
+  id?: string;
+  initialMessage?: string;
+  focusMode?: string;
+  onBack?: () => void;
+};
+
 export default ChatWindow;
