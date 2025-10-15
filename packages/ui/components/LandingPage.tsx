@@ -69,7 +69,7 @@ const LandingPage = () => {
     // Navigate to chat route after a short delay for smooth transition
     setTimeout(() => {
       router.push('/chat');
-    }, 400);
+    }, 150);
   };
 
   const handleBackToLanding = () => {
@@ -116,10 +116,10 @@ const LandingPage = () => {
       )}
 
       {/* Landing Page - Fades out when showChat is true */}
-      <div className={`h-full transition-opacity duration-600 ${showChat ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`h-full transition-opacity duration-300 ${showChat ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Header with Logo - special transition animation */}
         <div 
-          className={`fixed transition-all duration-600 ease-out ${
+          className={`fixed transition-all duration-300 ease-out ${
             showChat 
               ? 'top-8 left-6 z-0 opacity-0' 
               : isTransitioning 
@@ -147,7 +147,7 @@ const LandingPage = () => {
 
         {/* Action Buttons - top right - fade out smoothly */}
         <div
-          className={`absolute top-8 right-8 flex items-center space-x-8 z-10 transition-all duration-500 ${
+          className={`absolute top-8 right-8 flex items-center space-x-8 z-10 transition-all duration-200 ${
             isTransitioning || showChat ? 'opacity-0 pointer-events-none' : 'opacity-100'
           }`}
         >
@@ -188,7 +188,7 @@ const LandingPage = () => {
 
         {/* Landing Content - fades during transition */}
         <div
-          className={`flex flex-col items-center h-full px-4 sm:px-8 transition-all duration-500 ${
+          className={`flex flex-col items-center h-full px-4 sm:px-8 transition-all duration-200 ${
             isTransitioning || showChat
               ? 'opacity-0 pointer-events-none'
               : 'opacity-100'
@@ -346,7 +346,7 @@ const LandingPage = () => {
                             <div className="bg-[#1a1a1a] rounded-lg overflow-hidden relative">
                               <button
                                 onClick={handleCopyConfig}
-                                className="absolute top-3 right-3 z-10 p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                                className="absolute top-3 right-3 z-10 p-2 text-gray-400 hover:text-white hover:scale-110 rounded-lg transition-all"
                               >
                                 {copied ? (
                                   <Check className="w-4 h-4" />
@@ -470,15 +470,11 @@ const LandingPage = () => {
                                   >
                                     <Popover.Panel className="absolute z-50 left-0 mt-2 w-full">
                                       <div className="bg-light-secondary dark:bg-dark-secondary border border-light-200 dark:border-dark-200 rounded-lg shadow-xl overflow-hidden">
-                                        {MCP_CLIENTS.map((client) => (
+                                        {MCP_CLIENTS.filter((client) => client.id !== selectedClient).map((client) => (
                                           <Popover.Button
                                             key={client.id}
                                             onClick={() => setSelectedClient(client.id)}
-                                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-light-200 dark:hover:bg-dark-200 transition-colors ${
-                                              selectedClient === client.id
-                                                ? 'bg-light-200 dark:bg-dark-200'
-                                                : ''
-                                            }`}
+                                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-light-200 dark:hover:bg-dark-200 transition-colors"
                                           >
                                             <div className="w-6 h-6 relative flex items-center justify-center">
                                               <Image
@@ -549,7 +545,7 @@ const FloatingIcons = ({ isAnimating }: { isAnimating: boolean }) => {
         return (
           <div
             key={icon.id}
-            className={`absolute transition-all duration-500 ${
+            className={`absolute transition-all duration-200 ${
               isAnimating ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
             }`}
             style={{

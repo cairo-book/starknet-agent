@@ -53,8 +53,8 @@ const styles = {
   copyButton: {
     base: cn(
       'absolute right-1 sm:right-2 top-1 sm:top-2 p-1 sm:p-1.5 rounded-md bg-gray-700/50 backdrop-blur-sm',
-      'opacity-0 group-hover:opacity-100 transition-opacity duration-150',
-      'hover:bg-gray-700/70',
+      'opacity-0 group-hover:opacity-100',
+      'hover:scale-110 transition-all duration-150',
     ),
   },
   avatar: {
