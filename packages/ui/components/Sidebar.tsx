@@ -28,8 +28,6 @@ const Sidebar = ({
 
   const [isThemePickerOpen, setIsThemePickerOpen] = useState(false);
 
-  const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
-
   const navLinks = [
     {
       icon: SquarePen,
