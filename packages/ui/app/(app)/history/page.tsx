@@ -119,7 +119,7 @@ const ChatHistory = () => {
           <ul className="space-y-4">
             {filteredChats.map((chat) => (
               <li
-                key={chat.title?.slice(0, 30) || chat.id}
+                key={chat.id}
                 className="flex items-center justify-between p-4 bg-light-secondary dark:bg-dark-secondary rounded-lg border border-light-200 dark:border-dark-200"
               >
                 <div>

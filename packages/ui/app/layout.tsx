@@ -29,10 +29,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const config = {
-    loader: { load: ['input/asciimath'] },
-    asciimath: { displaystyle: false },
+    loader: { load: ['[tex]/boldsymbol', '[tex]/ams', '[tex]/html'] },
     tex: {
-      packages: { '[+]': ['html'] },
+      packages: { '[+]': ['boldsymbol', 'ams', 'html'] },
       inlineMath: [
         ['$', '$'],
         ['\\(', '\\)'],
@@ -41,6 +40,15 @@ export default function RootLayout({
         ['$$', '$$'],
         ['\\[', '\\]'],
       ],
+    },
+    svg: { fontCache: 'global' },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+      ignoreHtmlClass: 'tex2jax_ignore',
+      processHtmlClass: 'tex2jax_process',
+    },
+    startup: {
+      typeset: false, // Don't typeset on startup, let components control it
     },
   };
   return (

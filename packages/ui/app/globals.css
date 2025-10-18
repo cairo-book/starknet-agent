@@ -15,7 +15,14 @@
 body {
   position: relative;
   min-height: 100vh;
-  background-color: #000; /* Set a dark background color */
+}
+
+body.dark {
+  background-color: #000;
+}
+
+body:not(.dark) {
+  background-color: #fcfcf9;
 }
 
 .content-wrapper {
@@ -208,3 +215,25 @@ body {
 .animate-float4 { animation: float4 8s ease-in-out infinite; }
 .animate-float5 { animation: float5 8s ease-in-out infinite; }
 .animate-float6 { animation: float6 8s ease-in-out infinite; }
+
+/* Mobile-specific responsive improvements */
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .content-wrapper {
+    padding-bottom: 60px; /* Space for bottom navigation */
+  }
+}
+
+/* Prevent horizontal scrolling on small screens */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+  
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

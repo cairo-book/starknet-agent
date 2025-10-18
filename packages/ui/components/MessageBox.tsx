@@ -20,22 +20,20 @@ import MessageSources from './MessageSources';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { trackFeedback } from '@/lib/posthog';
-import { Document } from '@langchain/core/documents';
+import type { Document } from '@langchain/core/documents';
 import {
   MathJax,
-  MathJaxContext,
-  MathJaxBaseContext,
 } from 'better-react-mathjax';
 
 // Common styling patterns (unchanged)
 const styles = {
   messageBubble: {
-    base: 'rounded-2xl px-3 sm:px-4 py-2',
-    user: 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white',
-    assistant: 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white',
+    base: 'rounded-2xl px-2 sm:px-3 md:px-4 py-2',
+    user: 'text-black dark:text-white',
+    assistant: 'text-black dark:text-white',
   },
   inlineCode: {
-    base: 'px-1 sm:px-1.5 py-0.5 rounded-md font-mono text-[0.85em] sm:text-[0.9em] break-words whitespace-normal',
+    base: 'px-1 sm:px-1.5 py-0.5 rounded-md font-mono text-[0.8em] sm:text-[0.85em] md:text-[0.9em] break-words whitespace-normal',
     user: 'bg-grey-100 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200',
     assistant:
       'bg-grey-100 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200',
@@ -43,72 +41,72 @@ const styles = {
   codeBlock: {
     base: 'relative group rounded-lg overflow-hidden',
     header:
-      'absolute top-0 left-0 right-0 h-7 sm:h-8 bg-gray-800/50 dark:bg-gray-800/30 backdrop-blur-sm border-b border-gray-700/20',
+      'absolute top-0 left-0 right-0 h-6 sm:h-7 md:h-8 bg-gray-800/50 dark:bg-gray-800/30 backdrop-blur-sm border-b border-gray-700/20',
     background: 'bg-[#1E1E1E]',
     border: 'border border-gray-800',
-    padding: 'px-3 sm:px-4 py-2 sm:py-3',
-    fontSize: 'text-[13px] sm:text-sm',
-    wrapper: 'overflow-x-auto whitespace-pre-wrap break-words mt-3 sm:mt-5',
+    padding: 'px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3',
+    fontSize: 'text-xs sm:text-[13px] md:text-sm',
+    wrapper: 'overflow-x-auto whitespace-pre-wrap break-words mt-2 sm:mt-3 md:mt-5',
   },
   copyButton: {
     base: cn(
-      'absolute right-1 sm:right-2 top-1 sm:top-2 p-1 sm:p-1.5 rounded-md bg-gray-700/50 backdrop-blur-sm',
+      'absolute right-1 sm:right-1.5 md:right-2 top-1 sm:top-1.5 md:top-2 p-1 sm:p-1.5 rounded-md bg-gray-700/50 backdrop-blur-sm',
       'opacity-0 group-hover:opacity-100',
       'hover:scale-110 transition-all duration-150',
     ),
   },
   avatar: {
-    base: 'flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center',
+    base: 'flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center',
     assistant: 'bg-blue-100 dark:bg-blue-900',
     assistantIcon: 'text-blue-600 dark:text-blue-300',
     user: 'bg-blue-600',
     userIcon: 'text-white',
   },
   messageContainer: {
-    base: 'flex flex-col space-y-1.5 sm:space-y-2',
-    maxWidth: 'max-w-[90%] sm:max-w-[85%] md:max-w-[80%]',
+    base: 'flex flex-col space-y-1 sm:space-y-1.5 md:space-y-2',
+    maxWidth: 'max-w-[92%] sm:max-w-[88%] md:max-w-[85%] lg:max-w-[80%]',
     user: 'items-end',
     assistant: 'items-start',
   },
   prose: {
     base: cn(
       'prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0',
-      'max-w-none break-words text-sm sm:text-base',
+      'max-w-none break-words text-xs sm:text-sm md:text-base',
       'prose-pre:overflow-x-auto prose-pre:scrollbar-thin prose-pre:scrollbar-thumb-gray-400 prose-pre:scrollbar-track-gray-200',
       'dark:prose-pre:scrollbar-thumb-gray-600 dark:prose-pre:scrollbar-track-gray-800',
     ),
-    user: 'prose-headings:text-white prose-p:text-grey dark:prose-headings:text-white dark:prose-p:text-white',
+    user: 'prose-headings:text-black dark:prose-headings:text-white prose-p:text-black dark:prose-p:text-white',
   },
   sources: {
     container: 'mt-2 transition-all',
     header: cn(
-      'flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400',
+      'flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400',
       'hover:text-gray-700 dark:hover:text-gray-200 transition-colors',
       'cursor-pointer select-none',
     ),
-    content: 'mt-2 pl-6 border-l-2 border-gray-200 dark:border-gray-700',
-    icon: 'w-4 h-4 rotate-180 transition-transform duration-200',
+    content: 'mt-2 pl-4 sm:pl-6 border-l-2 border-gray-200 dark:border-gray-700',
+    icon: 'w-3 h-3 sm:w-4 sm:h-4 rotate-180 transition-transform duration-200',
   },
   suggestions: {
-    container: 'mt-4 transition-all',
+    container: 'mt-3 sm:mt-4 transition-all',
     header: cn(
-      'flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400',
+      'flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400',
       'hover:text-gray-700 dark:hover:text-gray-200 transition-colors',
       'cursor-pointer select-none',
     ),
     content: 'mt-2 space-y-2',
     button: cn(
-      'w-full text-left px-3 py-2 rounded-lg',
+      'w-full text-left px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg',
       'bg-gray-100 dark:bg-gray-800/50',
       'hover:bg-gray-200 dark:hover:bg-gray-700/50',
       'focus:outline-none focus:ring-2 focus:ring-blue-500/50',
-      'transition-colors text-sm text-gray-700 dark:text-gray-300',
+      'transition-colors text-xs sm:text-sm text-gray-700 dark:text-gray-300',
     ),
   },
   actions: {
     container: 'flex items-center gap-1 mt-2',
     button: cn(
-      'p-1.5 rounded-lg text-gray-500 dark:text-gray-400',
+      'p-1 sm:p-1.5 rounded-lg text-gray-500 dark:text-gray-400',
       'hover:bg-gray-100 dark:hover:bg-gray-800',
       'focus:outline-none focus:ring-2 focus:ring-blue-500/50',
       'transition-colors',
@@ -160,8 +158,8 @@ const CodeBlock = ({
     <div className={codeBlockClass}>
       {language && language !== 'text' && (
         <div className={styles.codeBlock.header}>
-          <div className="flex items-center h-full px-2 sm:px-4">
-            <span className="text-xs text-gray-400">{language}</span>
+          <div className="flex items-center h-full px-2 sm:px-3 md:px-4">
+            <span className="text-[10px] sm:text-xs text-gray-400">{language}</span>
           </div>
         </div>
       )}
@@ -175,7 +173,7 @@ const CodeBlock = ({
       <div
         className={cn(
           styles.codeBlock.wrapper,
-          language !== 'text' ? 'pt-7 sm:pt-8' : '', // Adjust padding if header is present
+          language !== 'text' ? 'pt-6 sm:pt-7 md:pt-8' : '', // Adjust padding if header is present
           styles.codeBlock.padding,
         )}
       >
@@ -206,14 +204,35 @@ const CodeBlock = ({
 const LatexRenderer = ({
   isBlock = false,
   children,
+  isLoading = false,
 }: {
   isBlock?: boolean;
   children: string; // Expect a raw formula string
+  isLoading?: boolean;
 }) => {
   const formula = String(children || '').trim();
+  const [renderError, setRenderError] = React.useState(false);
 
   if (!formula) {
     return null;
+  }
+
+  // Don't render MathJax while content is still loading/streaming
+  if (isLoading) {
+    return (
+      <code className={cn(styles.inlineCode.base, styles.inlineCode.assistant, 'animate-pulse')}>
+        {isBlock ? `$$${formula}$$` : `$${formula}$`}
+      </code>
+    );
+  }
+
+  if (renderError) {
+    // Fallback: render the formula as inline code
+    return (
+      <code className={cn(styles.inlineCode.base, styles.inlineCode.assistant)}>
+        {isBlock ? `$$${formula}$$` : `$${formula}$`}
+      </code>
+    );
   }
 
   try {
@@ -235,7 +254,12 @@ const LatexRenderer = ({
             <CopyIcon />
           </button>
           <div className={cn(styles.latex.block)}>
-            <MathJax>{`$$${formula}$$`}</MathJax>
+            <MathJax 
+              onError={() => setRenderError(true)}
+              hideUntilTypeset="every"
+            >
+              {`$$${formula}$$`}
+            </MathJax>
           </div>
         </div>
       );
@@ -250,7 +274,13 @@ const LatexRenderer = ({
           className={cn(styles.latex.inline, 'cursor-pointer')}
           title="Click to copy formula"
         >
-          <MathJax inline>{`$${formula}$`}</MathJax>
+          <MathJax 
+            inline 
+            onError={() => setRenderError(true)}
+            hideUntilTypeset="every"
+          >
+            {`$${formula}$`}
+          </MathJax>
         </span>
       );
     }
@@ -266,7 +296,7 @@ const LatexRenderer = ({
 };
 
 // Component to render text potentially mixed with inline LaTeX
-const TextWithInlineMath = ({ text }: { text: string }) => {
+const TextWithInlineMath = ({ text, isLoading = false }: { text: string; isLoading?: boolean }) => {
   if (typeof text !== 'string') {
     // Should not happen if called correctly, but good to be safe
     return <>{text}</>;
@@ -284,7 +314,7 @@ const TextWithInlineMath = ({ text }: { text: string }) => {
         if (part.startsWith('$') && part.endsWith('$') && part.length > 2) {
           const formula = part.substring(1, part.length - 1);
           return (
-            <LatexRenderer key={index} isBlock={false}>
+            <LatexRenderer key={index} isBlock={false} isLoading={isLoading}>
               {formula}
             </LatexRenderer>
           );
@@ -299,10 +329,11 @@ const TextWithInlineMath = ({ text }: { text: string }) => {
 // Helper to recursively process children for inline math
 const renderChildrenWithInlineMath = (
   children: React.ReactNode,
+  isLoading = false,
 ): React.ReactNode => {
   return React.Children.map(children, (child) => {
     if (typeof child === 'string') {
-      return <TextWithInlineMath text={child} />;
+      return <TextWithInlineMath text={child} isLoading={isLoading} />;
     }
     if (React.isValidElement(child) && child.props.children) {
       // Check if the element type should have its children processed
@@ -316,7 +347,7 @@ const renderChildrenWithInlineMath = (
       ) {
         return React.cloneElement(child, {
           ...child.props,
-          children: renderChildrenWithInlineMath(child.props.children),
+          children: renderChildrenWithInlineMath(child.props.children, isLoading),
         });
       }
     }
@@ -405,36 +436,38 @@ const MessageFeedback = ({
 
   return (
     <div className="mt-2">
-      <div className="flex items-center gap-2">
-        <div className="text-xs text-gray-500 dark:text-gray-400 mr-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2">
+        <div className="text-xs text-gray-500 dark:text-gray-400 mr-0 sm:mr-1">
           Was this response helpful?
         </div>
-        <button
-          onClick={() => handleFeedback('positive')}
-          className={cn(
-            'p-1 rounded-md transition-colors',
-            feedback === 'positive'
-              ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-              : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300',
-          )}
-          aria-label="Thumbs up"
-        >
-          <ThumbsUp size={16} />
-        </button>
-        <button
-          onClick={() => handleFeedback('negative')}
-          className={cn(
-            'p-1 rounded-md transition-colors',
-            feedback === 'negative'
-              ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-              : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300',
-          )}
-          aria-label="Thumbs down"
-        >
-          <ThumbsDown size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleFeedback('positive')}
+            className={cn(
+              'p-1 rounded-md transition-colors',
+              feedback === 'positive'
+                ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300',
+            )}
+            aria-label="Thumbs up"
+          >
+            <ThumbsUp size={14} className="sm:w-4 sm:h-4" />
+          </button>
+          <button
+            onClick={() => handleFeedback('negative')}
+            className={cn(
+              'p-1 rounded-md transition-colors',
+              feedback === 'negative'
+                ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300',
+            )}
+            aria-label="Thumbs down"
+          >
+            <ThumbsDown size={14} className="sm:w-4 sm:h-4" />
+          </button>
+        </div>
         {feedback && (
-          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-0 sm:ml-1">
             {feedback === 'positive'
               ? 'Thanks for your feedback!'
               : 'Thanks for your feedback.'}
@@ -443,29 +476,29 @@ const MessageFeedback = ({
       </div>
 
       {showFeedbackModal && (
-        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <div className="mt-3 p-2 sm:p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
           <div className="flex justify-between items-center mb-2">
-            <h4 className="text-sm font-medium">
+            <h4 className="text-xs sm:text-sm font-medium">
               What was wrong with this response?
             </h4>
             <button
               onClick={handleCloseModal}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              <X size={16} />
+              <X size={14} className="sm:w-4 sm:h-4" />
             </button>
           </div>
           <textarea
             value={feedbackText}
             onChange={(e) => setFeedbackText(e.target.value)}
-            className="w-full p-2 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full p-2 text-xs sm:text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             placeholder="Please describe the issue (optional)"
             rows={3}
           />
           <div className="flex justify-end mt-2">
             <button
               onClick={submitFeedbackText}
-              className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+              className="px-2 sm:px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
             >
               Submit
             </button>
@@ -497,6 +530,7 @@ const MessageBox = ({
 }) => {
   const [showSources, setShowSources] = useState(isLast);
   const [showSuggestions, setShowSuggestions] = useState(isLast);
+  const [contentReady, setContentReady] = useState(false);
   const isUser = message.role === 'user';
 
   useEffect(() => {
@@ -505,6 +539,19 @@ const MessageBox = ({
       setShowSuggestions(true);
     }
   }, [isLast]);
+
+  // Mark content as ready for MathJax typesetting when loading is done
+  useEffect(() => {
+    if (!loading && message.content && message.role === 'assistant') {
+      // Add a small delay to ensure DOM is fully updated
+      const timer = setTimeout(() => {
+        setContentReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else if (message.role === 'user') {
+      setContentReady(true);
+    }
+  }, [loading, message.content, message.role]);
 
   // Pre-process content for source links and block LaTeX
   const processedContent = React.useMemo(() => {
@@ -569,7 +616,7 @@ const MessageBox = ({
               : 'text';
 
             if (language === 'math' || language === 'latex') {
-              return <LatexRenderer isBlock={true}>{codeString}</LatexRenderer>;
+              return <LatexRenderer isBlock={true} isLoading={!contentReady}>{codeString}</LatexRenderer>;
             }
             return (
               <CodeBlock language={language} isComplete={!loading}>
@@ -610,64 +657,53 @@ const MessageBox = ({
         },
         // Process text content in these elements for inline math ($...$)
         p: ({ children }) => (
-          <p className="mb-4 last:mb-0">
-            {renderChildrenWithInlineMath(children)}
+          <p className="mb-3 sm:mb-4 last:mb-0">
+            {renderChildrenWithInlineMath(children, !contentReady)}
           </p>
         ),
-        li: ({ children }) => <li>{renderChildrenWithInlineMath(children)}</li>,
+        li: ({ children }) => <li>{renderChildrenWithInlineMath(children, !contentReady)}</li>,
         span: ({ children }) => (
-          <span>{renderChildrenWithInlineMath(children)}</span>
+          <span>{renderChildrenWithInlineMath(children, !contentReady)}</span>
         ),
-        em: ({ children }) => <em>{renderChildrenWithInlineMath(children)}</em>,
+        em: ({ children }) => <em>{renderChildrenWithInlineMath(children, !contentReady)}</em>,
         strong: ({ children }) => (
-          <strong>{renderChildrenWithInlineMath(children)}</strong>
+          <strong>{renderChildrenWithInlineMath(children, !contentReady)}</strong>
         ),
         del: ({ children }) => (
-          <del>{renderChildrenWithInlineMath(children)}</del>
+          <del>{renderChildrenWithInlineMath(children, !contentReady)}</del>
         ),
         a: ({ children, ...props }) => (
-          <a {...props}>{renderChildrenWithInlineMath(children)}</a>
+          <a {...props}>{renderChildrenWithInlineMath(children, !contentReady)}</a>
         ),
         // Add other text-bearing elements as needed: blockquote, table cells (th, td), etc.
       },
     }),
-    [loading, isUser],
-  );
-
-  // MathJax configuration
-  const mathJaxConfig = React.useMemo(
-    () => ({
-      loader: { load: ['[tex]/boldsymbol', '[tex]/ams'] }, // Load common LaTeX packages
-      tex: {
-        packages: { '[+]': ['boldsymbol', 'ams'] }, // Enable those packages
-        inlineMath: [
-          ['$', '$'],
-          ['\\(', '\\)'],
-        ], // Standard inline math delimiters
-        displayMath: [
-          ['$$', '$$'],
-          ['\\[', '\\]'],
-        ], // Standard block math delimiters
-      },
-      svg: { fontCache: 'global' }, // Recommended for performance
-    }),
-    [],
+    [loading, isUser, contentReady],
   );
 
   return (
     <div
       className={cn(
-        'flex w-full items-start gap-2',
+        'flex w-full items-start gap-1.5 sm:gap-2',
         isUser ? 'justify-end' : 'justify-start',
       )}
     >
       {!isUser && (
         <div
-          className={cn(styles.avatar.base, styles.avatar.assistant)}
+          className={cn(styles.avatar.base, 'bg-transparent')}
           role="img"
           aria-label="Assistant"
         >
-          <Bot size={20} className={styles.avatar.assistantIcon} />
+          <img 
+            src="/ask_logo_black_alpha.png" 
+            alt="Assistant" 
+            className="w-full h-full object-contain dark:hidden"
+          />
+          <img 
+            src="/ask_logo_white_alpha.png" 
+            alt="Assistant" 
+            className="w-full h-full object-contain hidden dark:block"
+          />
         </div>
       )}
       <div
@@ -684,14 +720,19 @@ const MessageBox = ({
           className={cn(
             styles.messageBubble.base,
             isUser ? styles.messageBubble.user : styles.messageBubble.assistant,
+            isUser && 'bg-[#e5e5e5] dark:bg-[#323232]'
           )}
           role={isUser ? 'user message' : 'assistant message'}
         >
-          <MathJaxContext config={mathJaxConfig} hideUntilTypeset="first">
-            <div className={cn(styles.prose.base, isUser && styles.prose.user)}>
+          <div className={cn(styles.prose.base, isUser && styles.prose.user)}>
+            {contentReady ? (
               <Markdown options={markdownOptions}>{processedContent}</Markdown>
-            </div>
-          </MathJaxContext>
+            ) : (
+              <div className="animate-pulse">
+                <Markdown options={markdownOptions}>{processedContent}</Markdown>
+              </div>
+            )}
+          </div>
         </div>
 
         {message.sources && message.sources.length > 0 && (
@@ -704,7 +745,7 @@ const MessageBox = ({
               <BookCopy
                 className={cn(styles.sources.icon, !showSources && '!rotate-0')}
               />
-              <span>Sources ({message.sources.length})</span>
+              <span className="text-xs sm:text-sm">Sources ({message.sources.length})</span>
             </button>
             {showSources && (
               <div className={styles.sources.content}>
@@ -745,7 +786,7 @@ const MessageBox = ({
                     !showSuggestions && '!rotate-0',
                   )}
                 />
-                <span>Related questions ({message.suggestions.length})</span>
+                <span className="text-xs sm:text-sm">Related questions ({message.suggestions.length})</span>
               </button>
               {showSuggestions && (
                 <div className={styles.suggestions.content}>
@@ -775,11 +816,11 @@ const MessageBox = ({
       </div>
       {isUser && (
         <div
-          className={cn(styles.avatar.base, styles.avatar.user)}
+          className={cn(styles.avatar.base, 'bg-white dark:bg-white')}
           role="img"
           aria-label="User"
         >
-          <User size={20} className={styles.avatar.userIcon} />
+          <User size={16} className="sm:w-5 sm:h-5 md:w-5 md:h-5 text-gray-800" />
         </div>
       )}
     </div>

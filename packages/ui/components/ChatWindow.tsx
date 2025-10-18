@@ -1,20 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Document } from '@langchain/core/documents';
+import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import type { Document } from '@langchain/core/documents';
 import Navbar from './Navbar';
 import Chat from './Chat';
-import EmptyChat from './EmptyChat';
 import crypto from 'crypto';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
-import { MathJaxContext } from 'better-react-mathjax';
 import {
   trackConversationStart,
   trackUserMessage,
   initUserFeedbackStats,
 } from '@/lib/posthog';
+
+// Only lazy load EmptyChat as it doesn't use MathJax
+const EmptyChat = dynamic(() => import('./EmptyChat'), { ssr: false });
 
 export type Message = {
   messageId: string;
@@ -113,30 +115,30 @@ const loadMessagesFromLocalStorage = (
 const getFocusModeFromHints = (hints: string | null): string => {
   if (!hints) return 'starknetEcosystemSearch';
   
+  // If hints is already a valid focus mode, return it directly
+  const validFocusModes = [
+    'starknetEcosystemSearch',
+    'cairoBook',
+    'starknetDocumentation',
+    'starknetJS',
+    'webSearch',
+  ];
+  
+  if (validFocusModes.includes(hints)) {
+    return hints;
+  }
+  
   // Map hints to focus modes
   const hintsMap: Record<string, string> = {
     'cairo': 'cairoBook',
     'starknet': 'starknetEcosystemSearch',
     'ecosystem': 'starknetEcosystemSearch',
+    'docs': 'starknetDocumentation',
+    'js': 'starknetJS',
+    'search': 'webSearch',
   };
   
   return hintsMap[hints.toLowerCase()] || 'starknetEcosystemSearch';
-};
-
-// MathJax configuration
-const mathJaxConfig = {
-  loader: { load: ['[tex]/html'] },
-  tex: {
-    packages: { '[+]': ['html'] },
-    inlineMath: [
-      ['$', '$'],
-      ['\\(', '\\)'],
-    ],
-    displayMath: [
-      ['$$', '$$'],
-      ['\\[', '\\]'],
-    ],
-  },
 };
 
 const ChatWindow = ({ 
@@ -511,15 +513,13 @@ const ChatWindow = ({
       {messages.length > 0 ? (
         <>
           <Navbar messages={messages} />
-          <MathJaxContext version={3} config={mathJaxConfig}>
-            <Chat
-              loading={loading}
-              messages={messages}
-              sendMessage={sendMessage}
-              messageAppeared={messageAppeared}
-              rewrite={rewrite}
-            />
-          </MathJaxContext>
+          <Chat
+            loading={loading}
+            messages={messages}
+            sendMessage={sendMessage}
+            messageAppeared={messageAppeared}
+            rewrite={rewrite}
+          />
         </>
       ) : (
         <EmptyChat sendMessage={sendMessage} />

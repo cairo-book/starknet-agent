@@ -41,6 +41,12 @@ const Sidebar = ({
       active: segments.includes('history'),
       label: 'History',
     },
+    {
+      icon: Home,
+      href: '/',
+      active: segments.length === 0,
+      label: 'Home',
+    },
   ];
 
   return (
@@ -53,21 +59,35 @@ const Sidebar = ({
               className="transition-transform hover:scale-105 duration-200"
             >
               <Image
-                src="/ask_logo_white_alpha.png"
+                src="/ask_logo_black_alpha.png"
                 alt="Ask Logo"
                 width={35}
                 height={35}
-                className="object-contain"
+                className="object-contain opacity-90 hover:opacity-100 transition-opacity duration-200 dark:hidden"
               />
-            </button>
-          ) : (
-            <Link href="/" className="transition-transform hover:scale-105 duration-200">
               <Image
                 src="/ask_logo_white_alpha.png"
                 alt="Ask Logo"
                 width={35}
                 height={35}
-                className="object-contain"
+                className="object-contain opacity-90 hover:opacity-100 transition-opacity duration-200 hidden dark:block"
+              />
+            </button>
+          ) : (
+            <Link href="/" className="transition-transform hover:scale-105 duration-200">
+              <Image
+                src="/ask_logo_black_alpha.png"
+                alt="Ask Logo"
+                width={35}
+                height={35}
+                className="object-contain opacity-90 hover:opacity-100 transition-opacity duration-200 dark:hidden"
+              />
+              <Image
+                src="/ask_logo_white_alpha.png"
+                alt="Ask Logo"
+                width={35}
+                height={35}
+                className="object-contain opacity-90 hover:opacity-100 transition-opacity duration-200 hidden dark:block"
               />
             </Link>
           )}
@@ -80,7 +100,7 @@ const Sidebar = ({
                 className={cn(
                   'relative flex flex-row items-center justify-center cursor-pointer hover:scale-110 duration-200 transition-transform w-full py-2 rounded-lg',
                   link.active
-                    ? 'text-white'
+                    ? 'text-black dark:text-white'
                     : 'text-black/70 dark:text-white/70',
                 )}
               >
@@ -96,88 +116,78 @@ const Sidebar = ({
               >
                 <Settings />
               </div>
-              
-              {/* Theme Icons Slide-out */}
-              <div
-                className={cn(
-                  'fixed left-24 bottom-[88px] flex flex-row gap-2 transition-all duration-300 ease-out z-[200]',
-                  isThemePickerOpen
-                    ? 'opacity-100 translate-x-0'
-                    : 'opacity-0 -translate-x-4 pointer-events-none'
-                )}
-              >
-                <button
-                  onClick={() => {
-                    setTheme('light');
-                    setIsThemePickerOpen(false);
-                  }}
-                  className={cn(
-                    'p-2 rounded-lg transition-all duration-200',
-                    theme === 'light'
-                      ? 'text-white scale-110'
-                      : 'text-black/70 dark:text-white/70 hover:scale-110'
-                  )}
-                  title="Light mode"
-                >
-                  <Sun className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => {
-                    setTheme('dark');
-                    setIsThemePickerOpen(false);
-                  }}
-                  className={cn(
-                    'p-2 rounded-lg transition-all duration-200',
-                    theme === 'dark'
-                      ? 'text-white scale-110'
-                      : 'text-black/70 dark:text-white/70 hover:scale-110'
-                  )}
-                  title="Dark mode"
-                >
-                  <Moon className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => {
-                    setTheme('system');
-                    setIsThemePickerOpen(false);
-                  }}
-                  className={cn(
-                    'p-2 rounded-lg transition-all duration-200',
-                    theme === 'system'
-                      ? 'text-white scale-110'
-                      : 'text-black/70 dark:text-white/70 hover:scale-110'
-                  )}
-                  title="System mode"
-                >
-                  <Monitor className="w-5 h-5" />
-                </button>
-              </div>
             </div>
-
-            <Link
-              href="/"
-              className="cursor-pointer relative flex flex-row items-center justify-center hover:scale-110 duration-200 transition-transform w-full py-2 rounded-lg text-black/70 dark:text-white/70"
-            >
-              <Home />
-            </Link>
           </VerticalIconContainer>
+          
+          {/* Theme Icons Slide-out - positioned next to Settings icon */}
+          {isThemePickerOpen && (
+            <div
+              className="fixed left-[88px] bottom-8 flex flex-row gap-2 bg-light-secondary dark:bg-dark-secondary rounded-lg px-2 py-2 border border-light-200 dark:border-dark-200 shadow-lg animate-slideInLeft z-[150]"
+            >
+            <button
+              onClick={() => {
+                setTheme('light');
+                setIsThemePickerOpen(false);
+              }}
+              className={cn(
+                'p-2 rounded-lg transition-all duration-200',
+                theme === 'light'
+                  ? 'text-black dark:text-white scale-110'
+                  : 'text-black/70 dark:text-white/70 hover:scale-110'
+              )}
+              title="Light mode"
+            >
+              <Sun className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => {
+                setTheme('dark');
+                setIsThemePickerOpen(false);
+              }}
+              className={cn(
+                'p-2 rounded-lg transition-all duration-200',
+                theme === 'dark'
+                  ? 'text-black dark:text-white scale-110'
+                  : 'text-black/70 dark:text-white/70 hover:scale-110'
+              )}
+              title="Dark mode"
+            >
+              <Moon className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => {
+                setTheme('system');
+                setIsThemePickerOpen(false);
+              }}
+              className={cn(
+                'p-2 rounded-lg transition-all duration-200',
+                theme === 'system'
+                  ? 'text-black dark:text-white scale-110'
+                  : 'text-black/70 dark:text-white/70 hover:scale-110'
+              )}
+              title="System mode"
+            >
+              <Monitor className="w-5 h-5" />
+            </button>
+          </div>
+          )}
         </div>
       </div>
 
-      <div className="fixed bottom-0 w-full z-50 flex flex-row items-center gap-x-6 bg-light-primary dark:bg-dark-primary px-4 py-4 shadow-sm lg:hidden animate-slideInBottom">
+      <div className="fixed bottom-0 w-full z-50 flex flex-row items-center gap-x-4 sm:gap-x-6 bg-light-primary dark:bg-dark-primary px-3 sm:px-4 py-3 sm:py-4 shadow-sm lg:hidden animate-slideInBottom border-t border-light-100 dark:border-dark-200">
         {navLinks.map((link, i) => (
           <Link
             href={link.href}
             key={i}
             className={cn(
-              'relative flex flex-col items-center space-y-1 text-center w-full',
+              'relative flex flex-col items-center space-y-0.5 sm:space-y-1 text-center w-full',
               link.active
-                ? 'text-white'
-                : 'text-black dark:text-white/70',
+                ? 'text-black dark:text-white'
+                : 'text-black/70 dark:text-white/70',
             )}
           >
-            <link.icon />
-            <p className="text-xs">{link.label}</p>
+            <link.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+            <p className="text-[10px] sm:text-xs">{link.label}</p>
           </Link>
         ))}
       </div>
