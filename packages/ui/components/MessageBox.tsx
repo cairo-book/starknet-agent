@@ -12,6 +12,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   X,
+  ChevronDown,
 } from 'lucide-react';
 import Markdown, { MarkdownToJSX } from 'markdown-to-jsx';
 import Copy from './MessageActions/Copy';
@@ -87,6 +88,19 @@ const styles = {
       'mt-2 pl-4 sm:pl-6 border-l-2 border-gray-200 dark:border-gray-700',
     icon: 'w-3 h-3 sm:w-4 sm:h-4 rotate-180 transition-transform duration-200',
   },
+  thinking: {
+    container: 'mt-2 transition-all',
+    header: cn(
+      'flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400',
+      'hover:text-gray-700 dark:hover:text-gray-200 transition-colors',
+      'cursor-pointer select-none',
+    ),
+    content: cn(
+      'mt-2 pl-4 sm:pl-6 border-l-2 border-gray-200 dark:border-gray-700',
+      'text-gray-500 dark:text-gray-400 italic whitespace-pre-wrap break-words text-xs sm:text-sm md:text-base',
+    ),
+    icon: 'w-3 h-3 sm:w-4 sm:h-4 rotate-180 transition-transform duration-200',
+  },
   suggestions: {
     container: 'mt-3 sm:mt-4 transition-all',
     header: cn(
@@ -118,6 +132,24 @@ const styles = {
     container: 'bg-gray-50 dark:bg-gray-900 rounded-lg', // Container for block math
   },
 } as const;
+
+// Animated hourglass for processing indicator
+const AnimatedHourglass = ({ interval = 500 }: { interval?: number }) => {
+  const frames = ['⏳', '⌛'];
+  const [i, setI] = React.useState(0);
+  useEffect(() => {
+    const id = setInterval(
+      () => setI((c) => (c + 1) % frames.length),
+      interval,
+    );
+    return () => clearInterval(id);
+  }, [interval]);
+  return (
+    <span className="inline-block mr-1" aria-hidden>
+      {frames[i]}
+    </span>
+  );
+};
 
 const CopyIcon = () => (
   <svg
@@ -547,6 +579,13 @@ const MessageBox = ({
 }) => {
   const [showSources, setShowSources] = useState(isLast);
   const [showSuggestions, setShowSuggestions] = useState(isLast);
+  // Thinking panel open state: expanded while streaming, auto-collapses on first chunk
+  const [showThinking, setShowThinking] = useState(
+    message.thinking ? !(message.thinkingCollapsed ?? false) : false,
+  );
+  const prevThinkingCollapsed = React.useRef<boolean | undefined>(
+    message.thinkingCollapsed,
+  );
   const [contentReady, setContentReady] = useState(false);
   const isUser = message.role === 'user';
 
@@ -556,6 +595,14 @@ const MessageBox = ({
       setShowSuggestions(true);
     }
   }, [isLast]);
+
+  // Sync panel with collapse state controlled by stream events
+  useEffect(() => {
+    if (prevThinkingCollapsed.current !== message.thinkingCollapsed) {
+      setShowThinking(!(message.thinkingCollapsed ?? false));
+      prevThinkingCollapsed.current = message.thinkingCollapsed;
+    }
+  }, [message.thinkingCollapsed]);
 
   // Mark content as ready for MathJax typesetting when loading is done
   useEffect(() => {
@@ -745,6 +792,28 @@ const MessageBox = ({
             : styles.messageContainer.assistant,
         )}
       >
+        {/* Thinking (reasoning) collapsible panel – stays above response text */}
+        {!isUser && message.thinking && message.thinking.length > 0 && (
+          <div className={styles.thinking.container}>
+            <button
+              onClick={() => setShowThinking(!showThinking)}
+              className={styles.thinking.header}
+              aria-expanded={showThinking}
+            >
+              <ChevronDown
+                className={cn(
+                  styles.thinking.icon,
+                  !showThinking && '!rotate-0',
+                )}
+              />
+              <span className="text-xs sm:text-sm">Thinking</span>
+            </button>
+            {showThinking && (
+              <div className={styles.thinking.content}>{message.thinking}</div>
+            )}
+          </div>
+        )}
+
         <div
           className={cn(
             styles.messageBubble.base,
@@ -754,7 +823,16 @@ const MessageBox = ({
           role={isUser ? 'user message' : 'assistant message'}
         >
           <div className={cn(styles.prose.base, isUser && styles.prose.user)}>
-            {contentReady ? (
+            {!isUser &&
+            message.processing &&
+            (!message.content || message.content.length === 0) ? (
+              <p className="text-gray-500 dark:text-gray-400 italic flex items-center">
+                <AnimatedHourglass />
+                <span>
+                  {message.processingText || 'Generating response...'}
+                </span>
+              </p>
+            ) : contentReady ? (
               <Markdown options={markdownOptions}>{processedContent}</Markdown>
             ) : (
               <div className="animate-pulse">

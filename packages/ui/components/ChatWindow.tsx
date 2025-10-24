@@ -26,6 +26,13 @@ export type Message = {
   role: 'user' | 'assistant';
   suggestions?: string[];
   sources?: Document[];
+  // Streaming reasoning/thinking support
+  thinking?: string;
+  // Whether the thinking box should be collapsed by default
+  thinkingCollapsed?: boolean;
+  // Processing indicator while waiting for first tokens
+  processing?: boolean;
+  processingText?: string;
 };
 
 // Simple API ready check
@@ -239,6 +246,10 @@ const ChatWindow = ({
     let recievedMessage = '';
     let added = false;
     let assistantMessageId = '';
+    let thinking: string = '';
+    let thinkingCollapsed = false; // expand while streaming
+    let processing = false;
+    let processingText = '';
 
     const messageId = crypto.randomBytes(7).toString('hex');
 
@@ -322,8 +333,10 @@ const ChatWindow = ({
             if (parsed.type === 'sources') {
               sources = parsed.data;
               console.log('[DEBUG] sources', sources);
-              assistantMessageId =
-                parsed.messageId || crypto.randomBytes(7).toString('hex');
+              if (!assistantMessageId) {
+                assistantMessageId =
+                  parsed.messageId || crypto.randomBytes(7).toString('hex');
+              }
               if (!added) {
                 setMessages((prevMessages) => [
                   ...prevMessages,
@@ -333,10 +346,105 @@ const ChatWindow = ({
                     chatId: chatId!,
                     role: 'assistant',
                     sources: sources,
+                    thinking,
+                    thinkingCollapsed,
+                    processing,
+                    processingText,
                     createdAt: new Date(),
                   },
                 ]);
                 added = true;
+              }
+              // If assistant message already added, update sources
+              if (added) {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.messageId === assistantMessageId
+                      ? { ...msg, sources }
+                      : msg,
+                  ),
+                );
+              }
+              setMessageAppeared(true);
+            }
+
+            // Handle thinking event (custom type from Cairo Coder)
+            if (parsed.type === 'thinking') {
+              const chunk = String(parsed.data ?? '');
+              thinking = thinking
+                ? `${thinking}${thinking.endsWith('\n') ? '' : '\n'}${chunk}`
+                : chunk;
+
+              // Ensure an assistant message exists to display thinking
+              if (!added) {
+                if (!assistantMessageId) {
+                  assistantMessageId =
+                    parsed.messageId || crypto.randomBytes(7).toString('hex');
+                }
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  {
+                    content: '',
+                    messageId: assistantMessageId,
+                    chatId: chatId!,
+                    role: 'assistant',
+                    sources: sources,
+                    thinking,
+                    thinkingCollapsed, // expanded while streaming
+                    processing,
+                    processingText,
+                    createdAt: new Date(),
+                  },
+                ]);
+                added = true;
+              } else {
+                // Update existing assistant message with appended thinking
+                const t = thinking;
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.messageId === assistantMessageId
+                      ? { ...msg, thinking: t }
+                      : msg,
+                  ),
+                );
+              }
+              setMessageAppeared(true);
+            }
+
+            // Handle processing event (custom type from Cairo Coder)
+            if (parsed.type === 'processing') {
+              processing = true;
+              processingText = String(parsed.data ?? 'Generating response');
+              if (!added) {
+                if (!assistantMessageId) {
+                  assistantMessageId =
+                    parsed.messageId || crypto.randomBytes(7).toString('hex');
+                }
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  {
+                    content: '',
+                    messageId: assistantMessageId,
+                    chatId: chatId!,
+                    role: 'assistant',
+                    sources: sources,
+                    thinking,
+                    thinkingCollapsed,
+                    processing,
+                    processingText,
+                    createdAt: new Date(),
+                  },
+                ]);
+                added = true;
+              } else {
+                const pt = processingText;
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.messageId === assistantMessageId
+                      ? { ...msg, processing: true, processingText: pt }
+                      : msg,
+                  ),
+                );
               }
               setMessageAppeared(true);
             }
@@ -353,6 +461,11 @@ const ChatWindow = ({
                 const content = choice.delta.content;
 
                 if (!added) {
+                  if (!assistantMessageId && parsed.id) {
+                    assistantMessageId = parsed.id;
+                  } else if (!assistantMessageId) {
+                    assistantMessageId = crypto.randomBytes(7).toString('hex');
+                  }
                   setMessages((prevMessages) => [
                     ...prevMessages,
                     {
@@ -363,11 +476,38 @@ const ChatWindow = ({
                       chatId: chatId!,
                       role: 'assistant',
                       sources: sources,
+                      thinking,
+                      thinkingCollapsed: true, // collapse thinking on first chunk
+                      processing: false,
+                      processingText,
                       createdAt: new Date(),
                     },
                   ]);
                   added = true;
+                  thinkingCollapsed = true;
                 } else {
+                  // On first chunk, collapse the thinking panel
+                  if (!thinkingCollapsed) {
+                    thinkingCollapsed = true;
+                    setMessages((prev) =>
+                      prev.map((msg) =>
+                        msg.messageId === assistantMessageId
+                          ? { ...msg, thinkingCollapsed: true }
+                          : msg,
+                      ),
+                    );
+                  }
+                  // Stop processing indicator when first content arrives
+                  if (processing) {
+                    processing = false;
+                    setMessages((prev) =>
+                      prev.map((msg) =>
+                        msg.messageId === assistantMessageId
+                          ? { ...msg, processing: false }
+                          : msg,
+                      ),
+                    );
+                  }
                   setMessages((prev) =>
                     prev.map((msg) => {
                       if (msg.messageId === assistantMessageId) {
@@ -404,6 +544,10 @@ const ChatWindow = ({
                     chatId: chatId!,
                     role: 'assistant',
                     sources: sources,
+                    thinking,
+                    thinkingCollapsed: true, // collapse thinking at final response
+                    processing: false,
+                    processingText,
                     createdAt: new Date(),
                   },
                 ]);
@@ -413,7 +557,12 @@ const ChatWindow = ({
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.messageId === assistantMessageId
-                      ? { ...msg, content: finalText }
+                      ? {
+                          ...msg,
+                          content: finalText,
+                          thinkingCollapsed: true,
+                          processing: false,
+                        }
                       : msg,
                   ),
                 );
