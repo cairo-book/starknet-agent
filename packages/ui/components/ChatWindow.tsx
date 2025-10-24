@@ -1,20 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Document } from '@langchain/core/documents';
+import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import type { Document } from '@langchain/core/documents';
 import Navbar from './Navbar';
 import Chat from './Chat';
-import EmptyChat from './EmptyChat';
 import crypto from 'crypto';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
-import { MathJaxContext } from 'better-react-mathjax';
 import {
   trackConversationStart,
   trackUserMessage,
   initUserFeedbackStats,
 } from '@/lib/posthog';
+
+// Only lazy load EmptyChat as it doesn't use MathJax
+const EmptyChat = dynamic(() => import('./EmptyChat'), { ssr: false });
 
 export type Message = {
   messageId: string;
@@ -109,25 +111,50 @@ const loadMessagesFromLocalStorage = (
   return null;
 };
 
-// MathJax configuration
-const mathJaxConfig = {
-  loader: { load: ['[tex]/html'] },
-  tex: {
-    packages: { '[+]': ['html'] },
-    inlineMath: [
-      ['$', '$'],
-      ['\\(', '\\)'],
-    ],
-    displayMath: [
-      ['$$', '$$'],
-      ['\\[', '\\]'],
-    ],
-  },
+// Helper function to determine focus mode from hints parameter
+const getFocusModeFromHints = (hints: string | null): string => {
+  if (!hints) return 'starknetEcosystemSearch';
+  
+  // If hints is already a valid focus mode, return it directly
+  const validFocusModes = [
+    'starknetEcosystemSearch',
+    'cairoBook',
+    'starknetDocumentation',
+    'starknetJS',
+    'webSearch',
+  ];
+  
+  if (validFocusModes.includes(hints)) {
+    return hints;
+  }
+  
+  // Map hints to focus modes
+  const hintsMap: Record<string, string> = {
+    'cairo': 'cairoBook',
+    'starknet': 'starknetEcosystemSearch',
+    'ecosystem': 'starknetEcosystemSearch',
+    'docs': 'starknetDocumentation',
+    'js': 'starknetJS',
+    'search': 'webSearch',
+  };
+  
+  return hintsMap[hints.toLowerCase()] || 'starknetEcosystemSearch';
 };
 
-const ChatWindow = ({ id }: { id?: string }) => {
+const ChatWindow = ({ 
+  id, 
+  initialMessage: initialMessageProp,
+  focusMode: focusModeProp,
+  onBack,
+}: { 
+  id?: string; 
+  initialMessage?: string;
+  focusMode?: string;
+  onBack?: () => void;
+}) => {
   const searchParams = useSearchParams();
-  const initialMessage = searchParams.get('prompt') || searchParams.get('q');
+  const initialMessage = initialMessageProp || searchParams.get('prompt') || searchParams.get('q');
+  const hintsParam = searchParams.get('hints');
 
   const [chatId, setChatId] = useState<string | undefined>(id);
   const [newChatCreated, setNewChatCreated] = useState(false);
@@ -138,13 +165,13 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [isApiReady, setIsApiReady] = useState(false);
   useApiReady(setIsApiReady, setHasError);
 
-  const FOCUS_MODE = 'starknetEcosystemSearch';
-
   const [loading, setLoading] = useState(false);
   const [messageAppeared, setMessageAppeared] = useState(false);
 
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+
+  const [focusMode, setFocusMode] = useState(focusModeProp || getFocusModeFromHints(hintsParam));
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
@@ -156,11 +183,14 @@ const ChatWindow = ({ id }: { id?: string }) => {
       messages.length === 0
     ) {
       const storedMessages = loadMessagesFromLocalStorage(chatId);
-      setMessages(storedMessages?.messages || []);
-      const history = storedMessages?.messages.map((msg) => {
-        return [msg.role, msg.content];
-      }) as [string, string][];
-      setChatHistory(history);
+      if (storedMessages) {
+        setMessages(storedMessages.messages);
+        setFocusMode(storedMessages.focusMode);
+        const history = storedMessages.messages.map((msg) => {
+          return [msg.role, msg.content];
+        }) as [string, string][];
+        setChatHistory(history);
+      }
       setIsMessagesLoaded(true);
     } else if (!chatId) {
       setNewChatCreated(true);
@@ -179,11 +209,11 @@ const ChatWindow = ({ id }: { id?: string }) => {
     if (isMessagesLoaded && isApiReady && chatId) {
       // Track conversation start if this is a new chat
       if (newChatCreated) {
-        trackConversationStart(FOCUS_MODE, chatId);
+        trackConversationStart(focusMode, chatId);
       }
       setIsReady(true);
     }
-  }, [isMessagesLoaded, isApiReady, chatId, newChatCreated, FOCUS_MODE]);
+  }, [isMessagesLoaded, isApiReady, chatId, newChatCreated, focusMode]);
 
   const messagesRef = useRef<Message[]>([]);
 
@@ -422,7 +452,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
       saveMessagesToLocalStorage(
         chatId!,
         [...messages, humanMessage, assistantMessage],
-        FOCUS_MODE,
+        focusMode,
       );
 
       const lastMsg = messagesRef.current[messagesRef.current.length - 1];
@@ -483,15 +513,13 @@ const ChatWindow = ({ id }: { id?: string }) => {
       {messages.length > 0 ? (
         <>
           <Navbar messages={messages} />
-          <MathJaxContext version={3} config={mathJaxConfig}>
-            <Chat
-              loading={loading}
-              messages={messages}
-              sendMessage={sendMessage}
-              messageAppeared={messageAppeared}
-              rewrite={rewrite}
-            />
-          </MathJaxContext>
+          <Chat
+            loading={loading}
+            messages={messages}
+            sendMessage={sendMessage}
+            messageAppeared={messageAppeared}
+            rewrite={rewrite}
+          />
         </>
       ) : (
         <EmptyChat sendMessage={sendMessage} />
@@ -518,4 +546,11 @@ const ChatWindow = ({ id }: { id?: string }) => {
     </div>
   );
 };
+export type ChatWindowProps = {
+  id?: string;
+  initialMessage?: string;
+  focusMode?: string;
+  onBack?: () => void;
+};
+
 export default ChatWindow;
