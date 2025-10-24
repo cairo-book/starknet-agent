@@ -66,13 +66,13 @@ export const MCP_CLIENTS: MCPClient[] = [
 
 /**
  * Generates a deep link for installing an MCP server in a specific client
- * 
+ *
  * @param clientId - The ID of the client (cursor, vscode, etc.)
  * @param displayName - The display name for the MCP server
  * @param config - The MCP configuration (stdio or http)
  * @param includeEnv - Whether to include environment variables (default: false for security)
  * @returns The generated deep link URL
- * 
+ *
  * @example
  * ```typescript
  * const link = generateMCPDeepLink('cursor', 'My MCP Server', {
@@ -87,7 +87,7 @@ export function generateMCPDeepLink(
   clientId: string,
   displayName: string,
   config: MCPConfig,
-  includeEnv: boolean = false
+  includeEnv: boolean = false,
 ): string {
   const client = MCP_CLIENTS.find((c) => c.id === clientId);
   if (!client) {
@@ -116,10 +116,10 @@ export function generateMCPDeepLink(
 
 /**
  * Parses a deep link URL to extract the MCP configuration
- * 
+ *
  * @param url - The deep link URL to parse
  * @returns An object containing the display name and configuration
- * 
+ *
  * @example
  * ```typescript
  * const { displayName, config } = parseMCPDeepLink(deepLinkUrl);
@@ -145,13 +145,15 @@ export function parseMCPDeepLink(url: string): {
 
     return { displayName, config };
   } catch (error) {
-    throw new Error(`Invalid MCP deep link: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Invalid MCP deep link: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }
 
 /**
  * Validates an MCP configuration object
- * 
+ *
  * @param config - The configuration to validate
  * @returns True if valid, false otherwise
  */
@@ -191,7 +193,7 @@ function isValidUrl(urlString: string): boolean {
 
 /**
  * Opens a deep link in the user's system
- * 
+ *
  * @param url - The deep link URL to open
  * @returns True if the link was successfully opened, false otherwise
  */
@@ -207,7 +209,7 @@ export function openDeepLink(url: string): boolean {
 
 /**
  * Copies text to the clipboard
- * 
+ *
  * @param text - The text to copy
  * @returns A promise that resolves to true if successful, false otherwise
  */
@@ -220,4 +222,3 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     return false;
   }
 }
-

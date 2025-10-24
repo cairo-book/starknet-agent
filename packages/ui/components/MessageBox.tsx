@@ -21,9 +21,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { trackFeedback } from '@/lib/posthog';
 import type { Document } from '@langchain/core/documents';
-import {
-  MathJax,
-} from 'better-react-mathjax';
+import { MathJax } from 'better-react-mathjax';
 
 // Common styling patterns (unchanged)
 const styles = {
@@ -46,7 +44,8 @@ const styles = {
     border: 'border border-gray-800',
     padding: 'px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3',
     fontSize: 'text-xs sm:text-[13px] md:text-sm',
-    wrapper: 'overflow-x-auto whitespace-pre-wrap break-words mt-2 sm:mt-3 md:mt-5',
+    wrapper:
+      'overflow-x-auto whitespace-pre-wrap break-words mt-2 sm:mt-3 md:mt-5',
   },
   copyButton: {
     base: cn(
@@ -84,7 +83,8 @@ const styles = {
       'hover:text-gray-700 dark:hover:text-gray-200 transition-colors',
       'cursor-pointer select-none',
     ),
-    content: 'mt-2 pl-4 sm:pl-6 border-l-2 border-gray-200 dark:border-gray-700',
+    content:
+      'mt-2 pl-4 sm:pl-6 border-l-2 border-gray-200 dark:border-gray-700',
     icon: 'w-3 h-3 sm:w-4 sm:h-4 rotate-180 transition-transform duration-200',
   },
   suggestions: {
@@ -159,7 +159,9 @@ const CodeBlock = ({
       {language && language !== 'text' && (
         <div className={styles.codeBlock.header}>
           <div className="flex items-center h-full px-2 sm:px-3 md:px-4">
-            <span className="text-[10px] sm:text-xs text-gray-400">{language}</span>
+            <span className="text-[10px] sm:text-xs text-gray-400">
+              {language}
+            </span>
           </div>
         </div>
       )}
@@ -220,7 +222,13 @@ const LatexRenderer = ({
   // Don't render MathJax while content is still loading/streaming
   if (isLoading) {
     return (
-      <code className={cn(styles.inlineCode.base, styles.inlineCode.assistant, 'animate-pulse')}>
+      <code
+        className={cn(
+          styles.inlineCode.base,
+          styles.inlineCode.assistant,
+          'animate-pulse',
+        )}
+      >
         {isBlock ? `$$${formula}$$` : `$${formula}$`}
       </code>
     );
@@ -254,7 +262,7 @@ const LatexRenderer = ({
             <CopyIcon />
           </button>
           <div className={cn(styles.latex.block)}>
-            <MathJax 
+            <MathJax
               onError={() => setRenderError(true)}
               hideUntilTypeset="every"
             >
@@ -274,8 +282,8 @@ const LatexRenderer = ({
           className={cn(styles.latex.inline, 'cursor-pointer')}
           title="Click to copy formula"
         >
-          <MathJax 
-            inline 
+          <MathJax
+            inline
             onError={() => setRenderError(true)}
             hideUntilTypeset="every"
           >
@@ -296,7 +304,13 @@ const LatexRenderer = ({
 };
 
 // Component to render text potentially mixed with inline LaTeX
-const TextWithInlineMath = ({ text, isLoading = false }: { text: string; isLoading?: boolean }) => {
+const TextWithInlineMath = ({
+  text,
+  isLoading = false,
+}: {
+  text: string;
+  isLoading?: boolean;
+}) => {
   if (typeof text !== 'string') {
     // Should not happen if called correctly, but good to be safe
     return <>{text}</>;
@@ -347,7 +361,10 @@ const renderChildrenWithInlineMath = (
       ) {
         return React.cloneElement(child, {
           ...child.props,
-          children: renderChildrenWithInlineMath(child.props.children, isLoading),
+          children: renderChildrenWithInlineMath(
+            child.props.children,
+            isLoading,
+          ),
         });
       }
     }
@@ -616,7 +633,11 @@ const MessageBox = ({
               : 'text';
 
             if (language === 'math' || language === 'latex') {
-              return <LatexRenderer isBlock={true} isLoading={!contentReady}>{codeString}</LatexRenderer>;
+              return (
+                <LatexRenderer isBlock={true} isLoading={!contentReady}>
+                  {codeString}
+                </LatexRenderer>
+              );
             }
             return (
               <CodeBlock language={language} isComplete={!loading}>
@@ -661,19 +682,27 @@ const MessageBox = ({
             {renderChildrenWithInlineMath(children, !contentReady)}
           </p>
         ),
-        li: ({ children }) => <li>{renderChildrenWithInlineMath(children, !contentReady)}</li>,
+        li: ({ children }) => (
+          <li>{renderChildrenWithInlineMath(children, !contentReady)}</li>
+        ),
         span: ({ children }) => (
           <span>{renderChildrenWithInlineMath(children, !contentReady)}</span>
         ),
-        em: ({ children }) => <em>{renderChildrenWithInlineMath(children, !contentReady)}</em>,
+        em: ({ children }) => (
+          <em>{renderChildrenWithInlineMath(children, !contentReady)}</em>
+        ),
         strong: ({ children }) => (
-          <strong>{renderChildrenWithInlineMath(children, !contentReady)}</strong>
+          <strong>
+            {renderChildrenWithInlineMath(children, !contentReady)}
+          </strong>
         ),
         del: ({ children }) => (
           <del>{renderChildrenWithInlineMath(children, !contentReady)}</del>
         ),
         a: ({ children, ...props }) => (
-          <a {...props}>{renderChildrenWithInlineMath(children, !contentReady)}</a>
+          <a {...props}>
+            {renderChildrenWithInlineMath(children, !contentReady)}
+          </a>
         ),
         // Add other text-bearing elements as needed: blockquote, table cells (th, td), etc.
       },
@@ -694,14 +723,14 @@ const MessageBox = ({
           role="img"
           aria-label="Assistant"
         >
-          <img 
-            src="/ask_logo_black_alpha.png" 
-            alt="Assistant" 
+          <img
+            src="/ask_logo_black_alpha.png"
+            alt="Assistant"
             className="w-full h-full object-contain dark:hidden"
           />
-          <img 
-            src="/ask_logo_white_alpha.png" 
-            alt="Assistant" 
+          <img
+            src="/ask_logo_white_alpha.png"
+            alt="Assistant"
             className="w-full h-full object-contain hidden dark:block"
           />
         </div>
@@ -720,7 +749,7 @@ const MessageBox = ({
           className={cn(
             styles.messageBubble.base,
             isUser ? styles.messageBubble.user : styles.messageBubble.assistant,
-            isUser && 'bg-[#e5e5e5] dark:bg-[#323232]'
+            isUser && 'bg-[#e5e5e5] dark:bg-[#323232]',
           )}
           role={isUser ? 'user message' : 'assistant message'}
         >
@@ -729,7 +758,9 @@ const MessageBox = ({
               <Markdown options={markdownOptions}>{processedContent}</Markdown>
             ) : (
               <div className="animate-pulse">
-                <Markdown options={markdownOptions}>{processedContent}</Markdown>
+                <Markdown options={markdownOptions}>
+                  {processedContent}
+                </Markdown>
               </div>
             )}
           </div>
@@ -745,7 +776,9 @@ const MessageBox = ({
               <BookCopy
                 className={cn(styles.sources.icon, !showSources && '!rotate-0')}
               />
-              <span className="text-xs sm:text-sm">Sources ({message.sources.length})</span>
+              <span className="text-xs sm:text-sm">
+                Sources ({message.sources.length})
+              </span>
             </button>
             {showSources && (
               <div className={styles.sources.content}>
@@ -786,7 +819,9 @@ const MessageBox = ({
                     !showSuggestions && '!rotate-0',
                   )}
                 />
-                <span className="text-xs sm:text-sm">Related questions ({message.suggestions.length})</span>
+                <span className="text-xs sm:text-sm">
+                  Related questions ({message.suggestions.length})
+                </span>
               </button>
               {showSuggestions && (
                 <div className={styles.suggestions.content}>
@@ -820,7 +855,10 @@ const MessageBox = ({
           role="img"
           aria-label="User"
         >
-          <User size={16} className="sm:w-5 sm:h-5 md:w-5 md:h-5 text-gray-800" />
+          <User
+            size={16}
+            className="sm:w-5 sm:h-5 md:w-5 md:h-5 text-gray-800"
+          />
         </div>
       )}
     </div>

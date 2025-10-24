@@ -114,7 +114,7 @@ const loadMessagesFromLocalStorage = (
 // Helper function to determine focus mode from hints parameter
 const getFocusModeFromHints = (hints: string | null): string => {
   if (!hints) return 'starknetEcosystemSearch';
-  
+
   // If hints is already a valid focus mode, return it directly
   const validFocusModes = [
     'starknetEcosystemSearch',
@@ -123,37 +123,38 @@ const getFocusModeFromHints = (hints: string | null): string => {
     'starknetJS',
     'webSearch',
   ];
-  
+
   if (validFocusModes.includes(hints)) {
     return hints;
   }
-  
+
   // Map hints to focus modes
   const hintsMap: Record<string, string> = {
-    'cairo': 'cairoBook',
-    'starknet': 'starknetEcosystemSearch',
-    'ecosystem': 'starknetEcosystemSearch',
-    'docs': 'starknetDocumentation',
-    'js': 'starknetJS',
-    'search': 'webSearch',
+    cairo: 'cairoBook',
+    starknet: 'starknetEcosystemSearch',
+    ecosystem: 'starknetEcosystemSearch',
+    docs: 'starknetDocumentation',
+    js: 'starknetJS',
+    search: 'webSearch',
   };
-  
+
   return hintsMap[hints.toLowerCase()] || 'starknetEcosystemSearch';
 };
 
-const ChatWindow = ({ 
-  id, 
+const ChatWindow = ({
+  id,
   initialMessage: initialMessageProp,
   focusMode: focusModeProp,
   onBack,
-}: { 
-  id?: string; 
+}: {
+  id?: string;
   initialMessage?: string;
   focusMode?: string;
   onBack?: () => void;
 }) => {
   const searchParams = useSearchParams();
-  const initialMessage = initialMessageProp || searchParams.get('prompt') || searchParams.get('q');
+  const initialMessage =
+    initialMessageProp || searchParams.get('prompt') || searchParams.get('q');
   const hintsParam = searchParams.get('hints');
 
   const [chatId, setChatId] = useState<string | undefined>(id);
@@ -171,7 +172,9 @@ const ChatWindow = ({
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const [focusMode, setFocusMode] = useState(focusModeProp || getFocusModeFromHints(hintsParam));
+  const [focusMode, setFocusMode] = useState(
+    focusModeProp || getFocusModeFromHints(hintsParam),
+  );
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 

@@ -49,9 +49,11 @@ const ChatHistory = () => {
           <h1 className="text-2xl font-bold">Chat History</h1>
           <div className="flex gap-0 mt-2 md:mt-0 items-center -space-x-1">
             {/* Search icon that expands to input on hover */}
-            <div 
+            <div
               className={`relative flex items-center transition-transform duration-200 ${
-                isClearAllHovered && !isSearchExpanded && !searchTerm ? '-translate-x-16' : ''
+                isClearAllHovered && !isSearchExpanded && !searchTerm
+                  ? '-translate-x-16'
+                  : ''
               }`}
               onMouseEnter={() => setIsSearchExpanded(true)}
               onMouseLeave={() => {
@@ -61,8 +63,8 @@ const ChatHistory = () => {
               }}
             >
               {(isSearchExpanded || searchTerm) && (
-                <Search 
-                  className="absolute left-2 text-gray-500 dark:text-gray-400 z-10 pointer-events-none" 
+                <Search
+                  className="absolute left-2 text-gray-500 dark:text-gray-400 z-10 pointer-events-none"
                   size={20}
                 />
               )}
@@ -72,25 +74,29 @@ const ChatHistory = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`transition-all duration-300 ease-in-out pl-9 pr-3 py-1.5 rounded-md bg-light-secondary dark:bg-dark-secondary focus:outline-none focus:ring-0 border-0 ${
-                  isSearchExpanded || searchTerm 
-                    ? 'w-64 opacity-100' 
+                  isSearchExpanded || searchTerm
+                    ? 'w-64 opacity-100'
                     : 'w-8 opacity-0'
                 }`}
                 style={{
-                  background: isSearchExpanded || searchTerm ? '' : 'transparent',
+                  background:
+                    isSearchExpanded || searchTerm ? '' : 'transparent',
                 }}
               />
               {!isSearchExpanded && !searchTerm && (
                 <div className="absolute inset-0 flex items-center justify-center cursor-pointer">
                   <div className="w-8 h-8 flex items-center justify-center">
-                    <Search size={20} className="text-gray-600 dark:text-gray-400" />
+                    <Search
+                      size={20}
+                      className="text-gray-600 dark:text-gray-400"
+                    />
                   </div>
                 </div>
               )}
             </div>
 
             {/* Clear All button as red X icon with text on hover */}
-            <div 
+            <div
               className="relative group"
               onMouseEnter={() => setIsClearAllHovered(true)}
               onMouseLeave={() => setIsClearAllHovered(false)}
@@ -136,7 +142,11 @@ const ChatHistory = () => {
                     </p>
                   )}
                 </div>
-                <DeleteChat chatId={chat.id} chats={chats} setChats={setChats} />
+                <DeleteChat
+                  chatId={chat.id}
+                  chats={chats}
+                  setChats={setChats}
+                />
               </li>
             ))}
           </ul>

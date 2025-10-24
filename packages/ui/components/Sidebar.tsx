@@ -2,7 +2,15 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { BookOpenText, SquarePen, Settings, Home, Sun, Moon, Monitor } from 'lucide-react';
+import {
+  BookOpenText,
+  SquarePen,
+  Settings,
+  Home,
+  Sun,
+  Moon,
+  Monitor,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, type ReactNode } from 'react';
@@ -16,10 +24,10 @@ const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const Sidebar = ({ 
-  children, 
-  onLogoClick 
-}: { 
+const Sidebar = ({
+  children,
+  onLogoClick,
+}: {
   children: React.ReactNode;
   onLogoClick?: () => void;
 }) => {
@@ -54,7 +62,7 @@ const Sidebar = ({
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-[100] lg:flex lg:w-20 lg:flex-col animate-slideInLeft">
         <div className="flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto bg-light-primary dark:bg-dark-primary px-2 py-8">
           {onLogoClick ? (
-            <button 
+            <button
               onClick={onLogoClick}
               className="transition-transform hover:scale-105 duration-200"
             >
@@ -74,7 +82,10 @@ const Sidebar = ({
               />
             </button>
           ) : (
-            <Link href="/" className="transition-transform hover:scale-105 duration-200">
+            <Link
+              href="/"
+              className="transition-transform hover:scale-105 duration-200"
+            >
               <Image
                 src="/ask_logo_black_alpha.png"
                 alt="Ask Logo"
@@ -107,7 +118,7 @@ const Sidebar = ({
                 <link.icon />
               </Link>
             ))}
-            
+
             {/* Theme Picker Section */}
             <div className="relative w-full flex flex-row items-center justify-center">
               <div
@@ -118,58 +129,56 @@ const Sidebar = ({
               </div>
             </div>
           </VerticalIconContainer>
-          
+
           {/* Theme Icons Slide-out - positioned next to Settings icon */}
           {isThemePickerOpen && (
-            <div
-              className="fixed left-[88px] bottom-8 flex flex-row gap-2 bg-light-secondary dark:bg-dark-secondary rounded-lg px-2 py-2 border border-light-200 dark:border-dark-200 shadow-lg animate-slideInLeft z-[150]"
-            >
-            <button
-              onClick={() => {
-                setTheme('light');
-                setIsThemePickerOpen(false);
-              }}
-              className={cn(
-                'p-2 rounded-lg transition-all duration-200',
-                theme === 'light'
-                  ? 'text-black dark:text-white scale-110'
-                  : 'text-black/70 dark:text-white/70 hover:scale-110'
-              )}
-              title="Light mode"
-            >
-              <Sun className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => {
-                setTheme('dark');
-                setIsThemePickerOpen(false);
-              }}
-              className={cn(
-                'p-2 rounded-lg transition-all duration-200',
-                theme === 'dark'
-                  ? 'text-black dark:text-white scale-110'
-                  : 'text-black/70 dark:text-white/70 hover:scale-110'
-              )}
-              title="Dark mode"
-            >
-              <Moon className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => {
-                setTheme('system');
-                setIsThemePickerOpen(false);
-              }}
-              className={cn(
-                'p-2 rounded-lg transition-all duration-200',
-                theme === 'system'
-                  ? 'text-black dark:text-white scale-110'
-                  : 'text-black/70 dark:text-white/70 hover:scale-110'
-              )}
-              title="System mode"
-            >
-              <Monitor className="w-5 h-5" />
-            </button>
-          </div>
+            <div className="fixed left-[88px] bottom-8 flex flex-row gap-2 bg-light-secondary dark:bg-dark-secondary rounded-lg px-2 py-2 border border-light-200 dark:border-dark-200 shadow-lg animate-slideInLeft z-[150]">
+              <button
+                onClick={() => {
+                  setTheme('light');
+                  setIsThemePickerOpen(false);
+                }}
+                className={cn(
+                  'p-2 rounded-lg transition-all duration-200',
+                  theme === 'light'
+                    ? 'text-black dark:text-white scale-110'
+                    : 'text-black/70 dark:text-white/70 hover:scale-110',
+                )}
+                title="Light mode"
+              >
+                <Sun className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => {
+                  setTheme('dark');
+                  setIsThemePickerOpen(false);
+                }}
+                className={cn(
+                  'p-2 rounded-lg transition-all duration-200',
+                  theme === 'dark'
+                    ? 'text-black dark:text-white scale-110'
+                    : 'text-black/70 dark:text-white/70 hover:scale-110',
+                )}
+                title="Dark mode"
+              >
+                <Moon className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => {
+                  setTheme('system');
+                  setIsThemePickerOpen(false);
+                }}
+                className={cn(
+                  'p-2 rounded-lg transition-all duration-200',
+                  theme === 'system'
+                    ? 'text-black dark:text-white scale-110'
+                    : 'text-black/70 dark:text-white/70 hover:scale-110',
+                )}
+                title="System mode"
+              >
+                <Monitor className="w-5 h-5" />
+              </button>
+            </div>
           )}
         </div>
       </div>

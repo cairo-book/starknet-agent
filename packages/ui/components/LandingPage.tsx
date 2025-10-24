@@ -34,7 +34,7 @@ const LandingPage = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -43,9 +43,7 @@ const LandingPage = () => {
   // Calculate padding top based on screen size and config state
   const getPaddingTop = () => {
     if (showMCPConfig) {
-      return activeTab === 'json' 
-        ? 'max(20vh, 100px)' 
-        : 'max(25vh, 120px)';
+      return activeTab === 'json' ? 'max(20vh, 100px)' : 'max(25vh, 120px)';
     }
     return isMobile ? 'max(25vh, 120px)' : 'calc(50vh - 100px)';
   };
@@ -101,7 +99,12 @@ const LandingPage = () => {
 
   const handleOneClickSetup = () => {
     try {
-      const deepLink = generateMCPDeepLink(selectedClient, displayName, mcpConfig, false);
+      const deepLink = generateMCPDeepLink(
+        selectedClient,
+        displayName,
+        mcpConfig,
+        false,
+      );
       openDeepLink(deepLink);
     } catch (err) {
       console.error('Failed to open deep link:', err);
@@ -113,10 +116,10 @@ const LandingPage = () => {
     setShowMCPConfig(false);
     setPrompt('');
     setActiveTab('auto');
-    
+
     // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     // Navigate to home if not already there
     if (window.location.pathname !== '/') {
       router.push('/');
@@ -126,12 +129,14 @@ const LandingPage = () => {
   return (
     <div className="fixed inset-0 bg-light-primary dark:bg-dark-primary overflow-hidden">
       {/* Landing Page */}
-      <div className={`h-full transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+      <div
+        className={`h-full transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
+      >
         {/* Header with Logo */}
-        <div 
+        <div
           className={`fixed transition-all duration-300 ease-out ${
-            isTransitioning 
-              ? 'top-4 left-4 sm:top-8 sm:left-6 z-50 opacity-0' 
+            isTransitioning
+              ? 'top-4 left-4 sm:top-8 sm:left-6 z-50 opacity-0'
               : 'top-4 left-4 sm:top-8 sm:left-8 z-50 opacity-100'
           }`}
         >
@@ -192,9 +197,7 @@ const LandingPage = () => {
         {/* Landing Content - fades during transition */}
         <div
           className={`flex flex-col items-center h-full px-4 sm:px-6 md:px-8 transition-all duration-200 ${
-            isTransitioning
-              ? 'opacity-0 pointer-events-none'
-              : 'opacity-100'
+            isTransitioning ? 'opacity-0 pointer-events-none' : 'opacity-100'
           }`}
         >
           {/* Floating Icons around the center - hidden on mobile */}
@@ -203,10 +206,10 @@ const LandingPage = () => {
           </div>
 
           {/* Centered Title and Input - title fixed, content grows below */}
-          <div 
-            className="flex flex-col items-center w-full max-w-3xl mx-auto z-10 relative transition-all duration-700 mt-16 sm:mt-0" 
-            style={{ 
-              paddingTop: getPaddingTop()
+          <div
+            className="flex flex-col items-center w-full max-w-3xl mx-auto z-10 relative transition-all duration-700 mt-16 sm:mt-0"
+            style={{
+              paddingTop: getPaddingTop(),
             }}
           >
             {/* Title */}
@@ -218,7 +221,9 @@ const LandingPage = () => {
               </h1>
               {showMCPConfig && (
                 <p className="text-black/60 dark:text-white/70 text-xs sm:text-sm md:text-base text-center max-w-2xl px-4">
-                  Ask Starknet is available as a sophisticated MCP server. Access hundreds of Starknet tools and agents via a single ask_starknet method.
+                  Ask Starknet is available as a sophisticated MCP server.
+                  Access hundreds of Starknet tools and agents via a single
+                  ask_starknet method.
                 </p>
               )}
             </div>
@@ -231,11 +236,15 @@ const LandingPage = () => {
                   showMCPConfig
                     ? 'px-0 py-0 bg-transparent'
                     : isTransitioning
-                    ? 'bg-transparent px-3 sm:px-5 pt-3 sm:pt-5 pb-2 rounded-lg'
-                    : 'bg-light-secondary dark:bg-dark-secondary px-3 sm:px-5 pt-3 sm:pt-5 pb-2 rounded-lg'
+                      ? 'bg-transparent px-3 sm:px-5 pt-3 sm:pt-5 pb-2 rounded-lg'
+                      : 'bg-light-secondary dark:bg-dark-secondary px-3 sm:px-5 pt-3 sm:pt-5 pb-2 rounded-lg'
                 }`}
                 style={{
-                  minHeight: showMCPConfig ? (activeTab === 'json' ? '500px' : '250px') : 'auto',
+                  minHeight: showMCPConfig
+                    ? activeTab === 'json'
+                      ? '500px'
+                      : '250px'
+                    : 'auto',
                 }}
               >
                 {/* Search Input Content - slides left */}
@@ -258,7 +267,10 @@ const LandingPage = () => {
                     />
                     <div className="flex flex-row items-center justify-between mt-3 sm:mt-4 relative z-50">
                       <div className="flex flex-row items-center space-x-1 -mx-2">
-                        <Focus focusMode={focusMode} setFocusMode={setFocusMode} />
+                        <Focus
+                          focusMode={focusMode}
+                          setFocusMode={setFocusMode}
+                        />
                       </div>
                       <button
                         type="submit"
@@ -292,7 +304,7 @@ const LandingPage = () => {
                   }`}
                 >
                   {showMCPConfig && (
-                    <div 
+                    <div
                       className="bg-light-secondary dark:bg-dark-secondary rounded-2xl border border-light-200 dark:border-dark-200 transition-all duration-500 ease-in-out overflow-visible"
                       style={{
                         minHeight: activeTab === 'json' ? '500px' : '200px',
@@ -309,7 +321,9 @@ const LandingPage = () => {
                                 : 'text-black/50 dark:text-white/50 hover:text-black/70 dark:hover:text-white/70'
                             }`}
                           >
-                            <span className="flex items-center gap-2">Auto</span>
+                            <span className="flex items-center gap-2">
+                              Auto
+                            </span>
                             {activeTab === 'auto' && (
                               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black dark:bg-white transition-all duration-300" />
                             )}
@@ -322,7 +336,9 @@ const LandingPage = () => {
                                 : 'text-black/50 dark:text-white/50 hover:text-black/70 dark:hover:text-white/70'
                             }`}
                           >
-                            <span className="flex items-center gap-2">JSON</span>
+                            <span className="flex items-center gap-2">
+                              JSON
+                            </span>
                             {activeTab === 'json' && (
                               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black dark:bg-white transition-all duration-300" />
                             )}
@@ -363,47 +379,67 @@ const LandingPage = () => {
                                     <span className="text-blue-400 font-semibold">
                                       &quot;ask-starknet&quot;
                                     </span>
-                                    <span className="text-gray-400">: {'{'}</span>
+                                    <span className="text-gray-400">
+                                      : {'{'}
+                                    </span>
                                     {'\n  '}
-                                    <span className="text-purple-400">&quot;command&quot;</span>
+                                    <span className="text-purple-400">
+                                      &quot;command&quot;
+                                    </span>
                                     <span className="text-gray-400">: </span>
                                     <span className="text-green-400">
                                       &quot;{mcpConfig.command}&quot;
                                     </span>
                                     <span className="text-gray-400">,</span>
                                     {'\n  '}
-                                    <span className="text-purple-400">&quot;args&quot;</span>
+                                    <span className="text-purple-400">
+                                      &quot;args&quot;
+                                    </span>
                                     <span className="text-gray-400">: [</span>
                                     {mcpConfig.args.map((arg, i) => (
                                       <span key={i}>
                                         {'\n    '}
-                                        <span className="text-green-400">&quot;{arg}&quot;</span>
+                                        <span className="text-green-400">
+                                          &quot;{arg}&quot;
+                                        </span>
                                         {i < mcpConfig.args.length - 1 && (
-                                          <span className="text-gray-400">,</span>
+                                          <span className="text-gray-400">
+                                            ,
+                                          </span>
                                         )}
                                       </span>
                                     ))}
                                     {'\n  '}
                                     <span className="text-gray-400">],</span>
                                     {'\n  '}
-                                    <span className="text-purple-400">&quot;env&quot;</span>
-                                    <span className="text-gray-400">: {'{'}</span>
+                                    <span className="text-purple-400">
+                                      &quot;env&quot;
+                                    </span>
+                                    <span className="text-gray-400">
+                                      : {'{'}
+                                    </span>
                                     {mcpConfig.env &&
-                                      Object.entries(mcpConfig.env).map(([key, value], i, arr) => (
-                                        <span key={key}>
-                                          {'\n    '}
-                                          <span className="text-orange-400">
-                                            &quot;{key}&quot;
+                                      Object.entries(mcpConfig.env).map(
+                                        ([key, value], i, arr) => (
+                                          <span key={key}>
+                                            {'\n    '}
+                                            <span className="text-orange-400">
+                                              &quot;{key}&quot;
+                                            </span>
+                                            <span className="text-gray-400">
+                                              :{' '}
+                                            </span>
+                                            <span className="text-green-400">
+                                              &quot;{value}&quot;
+                                            </span>
+                                            {i < arr.length - 1 && (
+                                              <span className="text-gray-400">
+                                                ,
+                                              </span>
+                                            )}
                                           </span>
-                                          <span className="text-gray-400">: </span>
-                                          <span className="text-green-400">
-                                            &quot;{value}&quot;
-                                          </span>
-                                          {i < arr.length - 1 && (
-                                            <span className="text-gray-400">,</span>
-                                          )}
-                                        </span>
-                                      ))}
+                                        ),
+                                      )}
                                     {'\n  '}
                                     <span className="text-gray-400">{'}'}</span>
                                     {'\n'}
@@ -427,7 +463,8 @@ const LandingPage = () => {
                             {/* Client Dropdown and One-Click Install */}
                             <div>
                               <p className="text-xs sm:text-sm text-black/60 dark:text-white/60 mb-3 sm:mb-4">
-                                Connect this server to {selectedClientInfo?.name} with one click.
+                                Connect this server to{' '}
+                                {selectedClientInfo?.name} with one click.
                               </p>
                               <div className="flex items-center gap-2 sm:gap-3 relative z-[100]">
                                 <Popover className="relative flex-1">
@@ -450,7 +487,9 @@ const LandingPage = () => {
                                             {selectedClientInfo?.name}
                                           </span>
                                         </div>
-                                        <ChevronDown className={`w-4 h-4 sm:w-5 sm:h-5 text-black/50 dark:text-white/50 transition-transform ${open ? 'rotate-180' : ''}`} />
+                                        <ChevronDown
+                                          className={`w-4 h-4 sm:w-5 sm:h-5 text-black/50 dark:text-white/50 transition-transform ${open ? 'rotate-180' : ''}`}
+                                        />
                                       </Popover.Button>
 
                                       <Transition
@@ -464,10 +503,15 @@ const LandingPage = () => {
                                       >
                                         <Popover.Panel className="absolute z-[200] left-0 mt-2 w-full">
                                           <div className="bg-light-secondary dark:bg-dark-secondary border border-light-200 dark:border-dark-200 rounded-lg shadow-xl overflow-hidden">
-                                            {MCP_CLIENTS.filter((client) => client.id !== selectedClient).map((client) => (
+                                            {MCP_CLIENTS.filter(
+                                              (client) =>
+                                                client.id !== selectedClient,
+                                            ).map((client) => (
                                               <Popover.Button
                                                 key={client.id}
-                                                onClick={() => setSelectedClient(client.id)}
+                                                onClick={() =>
+                                                  setSelectedClient(client.id)
+                                                }
                                                 className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-light-200 dark:hover:bg-dark-200 transition-colors"
                                               >
                                                 <div className="w-5 h-5 sm:w-6 sm:h-6 relative flex items-center justify-center">
@@ -511,7 +555,6 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -519,20 +562,188 @@ const LandingPage = () => {
 
 const FloatingIcons = ({ isAnimating }: { isAnimating?: boolean }) => {
   const icons = [
-    { id: 1, image: 'https://pbs.twimg.com/profile_images/1876581196173320192/pF4KQQCb_400x400.jpg', twitter: 'extendedapp', x: '15%', y: '20%', blur: 6, size: 82, mobileSize: 60, delay: 0, floatAnim: 'animate-float1' },
-    { id: 2, image: 'https://pbs.twimg.com/profile_images/1024585501901303808/m92jEcPI_400x400.jpg', twitter: 'ready_co', x: '75%', y: '15%', blur: 7, size: 95, mobileSize: 70, delay: 0.2, floatAnim: 'animate-float2' },
-    { id: 3, image: 'https://pbs.twimg.com/profile_images/1736767433635975168/G1H8l7Ci_400x400.jpg', twitter: 'avnu_fi', x: '85%', y: '45%', blur: 8, size: 78, mobileSize: 56, delay: 0.4, floatAnim: 'animate-float3' },
-    { id: 4, image: 'https://pbs.twimg.com/profile_images/1846554119777013760/FydsgAUR_400x400.jpg', twitter: 'myBraavos', x: '20%', y: '70%', blur: 6, size: 100, mobileSize: 72, delay: 0.1, floatAnim: 'animate-float4' },
-    { id: 5, image: 'https://pbs.twimg.com/profile_images/1872475547059834880/TGT0jlCk_400x400.jpg', twitter: 'XverseApp', x: '80%', y: '75%', blur: 9, size: 75, mobileSize: 54, delay: 0.3, floatAnim: 'animate-float5' },
-    { id: 6, image: 'https://pbs.twimg.com/profile_images/1899459698551562240/_WK4Lfeb_400x400.jpg', twitter: 'vesuxyz', x: '10%', y: '45%', blur: 7, size: 88, mobileSize: 64, delay: 0.5, floatAnim: 'animate-float6' },
-    { id: 7, image: 'https://pbs.twimg.com/profile_images/1676963409303322624/NuCcNNxa_400x400.png', twitter: 'EkuboProtocol', x: '65%', y: '85%', blur: 8, size: 92, mobileSize: 66, delay: 0.2, floatAnim: 'animate-float1' },
-    { id: 8, image: 'https://pbs.twimg.com/profile_images/1782677936585256960/JAwtVCsD_400x400.png', twitter: 'cairolang', x: '30%', y: '12%', blur: 6, size: 80, mobileSize: 58, delay: 0.4, floatAnim: 'animate-float2' },
-    { id: 9, image: 'https://pbs.twimg.com/profile_images/1845153042762436629/LZs7_I2b_400x400.jpg', twitter: 'cartridge_gg', x: '92%', y: '60%', blur: 7, size: 98, mobileSize: 70, delay: 0.1, floatAnim: 'animate-float3' },
-    { id: 10, image: 'https://pbs.twimg.com/profile_images/1845152900256829447/H6PRbeYs_400x400.jpg', twitter: 'ohayo_dojo', x: '5%', y: '85%', blur: 9, size: 76, mobileSize: 55, delay: 0.3, floatAnim: 'animate-float4' },
-    { id: 11, image: 'https://pbs.twimg.com/profile_images/1854492998954012672/wcFszeR-_400x400.jpg', twitter: 'endurfi', x: '50%', y: '30%', blur: 6, size: 85, mobileSize: 62, delay: 0.15, floatAnim: 'animate-float5' },
-    { id: 12, image: 'https://pbs.twimg.com/profile_images/1635993072327639041/G_YIQ-G1_400x400.jpg', twitter: 'layerswap', x: '60%', y: '25%', blur: 7, size: 90, mobileSize: 65, delay: 0.35, floatAnim: 'animate-float6' },
-    { id: 13, image: 'https://pbs.twimg.com/profile_images/1940437227642798080/EnotVJl3_400x400.jpg', twitter: 'tradeparadex', x: '25%', y: '40%', blur: 8, size: 83, mobileSize: 60, delay: 0.45, floatAnim: 'animate-float1' },
-    { id: 14, image: 'https://pbs.twimg.com/profile_images/1686699616853454848/GMEuUL8M_400x400.jpg', twitter: 'FocusTree_', x: '40%', y: '55%', blur: 10, size: 78, mobileSize: 56, delay: 0.25, floatAnim: 'animate-float2' },
+    {
+      id: 1,
+      image:
+        'https://pbs.twimg.com/profile_images/1876581196173320192/pF4KQQCb_400x400.jpg',
+      twitter: 'extendedapp',
+      x: '15%',
+      y: '20%',
+      blur: 6,
+      size: 82,
+      mobileSize: 60,
+      delay: 0,
+      floatAnim: 'animate-float1',
+    },
+    {
+      id: 2,
+      image:
+        'https://pbs.twimg.com/profile_images/1024585501901303808/m92jEcPI_400x400.jpg',
+      twitter: 'ready_co',
+      x: '75%',
+      y: '15%',
+      blur: 7,
+      size: 95,
+      mobileSize: 70,
+      delay: 0.2,
+      floatAnim: 'animate-float2',
+    },
+    {
+      id: 3,
+      image:
+        'https://pbs.twimg.com/profile_images/1736767433635975168/G1H8l7Ci_400x400.jpg',
+      twitter: 'avnu_fi',
+      x: '85%',
+      y: '45%',
+      blur: 8,
+      size: 78,
+      mobileSize: 56,
+      delay: 0.4,
+      floatAnim: 'animate-float3',
+    },
+    {
+      id: 4,
+      image:
+        'https://pbs.twimg.com/profile_images/1846554119777013760/FydsgAUR_400x400.jpg',
+      twitter: 'myBraavos',
+      x: '20%',
+      y: '70%',
+      blur: 6,
+      size: 100,
+      mobileSize: 72,
+      delay: 0.1,
+      floatAnim: 'animate-float4',
+    },
+    {
+      id: 5,
+      image:
+        'https://pbs.twimg.com/profile_images/1872475547059834880/TGT0jlCk_400x400.jpg',
+      twitter: 'XverseApp',
+      x: '80%',
+      y: '75%',
+      blur: 9,
+      size: 75,
+      mobileSize: 54,
+      delay: 0.3,
+      floatAnim: 'animate-float5',
+    },
+    {
+      id: 6,
+      image:
+        'https://pbs.twimg.com/profile_images/1899459698551562240/_WK4Lfeb_400x400.jpg',
+      twitter: 'vesuxyz',
+      x: '10%',
+      y: '45%',
+      blur: 7,
+      size: 88,
+      mobileSize: 64,
+      delay: 0.5,
+      floatAnim: 'animate-float6',
+    },
+    {
+      id: 7,
+      image:
+        'https://pbs.twimg.com/profile_images/1676963409303322624/NuCcNNxa_400x400.png',
+      twitter: 'EkuboProtocol',
+      x: '65%',
+      y: '85%',
+      blur: 8,
+      size: 92,
+      mobileSize: 66,
+      delay: 0.2,
+      floatAnim: 'animate-float1',
+    },
+    {
+      id: 8,
+      image:
+        'https://pbs.twimg.com/profile_images/1782677936585256960/JAwtVCsD_400x400.png',
+      twitter: 'cairolang',
+      x: '30%',
+      y: '12%',
+      blur: 6,
+      size: 80,
+      mobileSize: 58,
+      delay: 0.4,
+      floatAnim: 'animate-float2',
+    },
+    {
+      id: 9,
+      image:
+        'https://pbs.twimg.com/profile_images/1845153042762436629/LZs7_I2b_400x400.jpg',
+      twitter: 'cartridge_gg',
+      x: '92%',
+      y: '60%',
+      blur: 7,
+      size: 98,
+      mobileSize: 70,
+      delay: 0.1,
+      floatAnim: 'animate-float3',
+    },
+    {
+      id: 10,
+      image:
+        'https://pbs.twimg.com/profile_images/1845152900256829447/H6PRbeYs_400x400.jpg',
+      twitter: 'ohayo_dojo',
+      x: '5%',
+      y: '85%',
+      blur: 9,
+      size: 76,
+      mobileSize: 55,
+      delay: 0.3,
+      floatAnim: 'animate-float4',
+    },
+    {
+      id: 11,
+      image:
+        'https://pbs.twimg.com/profile_images/1854492998954012672/wcFszeR-_400x400.jpg',
+      twitter: 'endurfi',
+      x: '50%',
+      y: '30%',
+      blur: 6,
+      size: 85,
+      mobileSize: 62,
+      delay: 0.15,
+      floatAnim: 'animate-float5',
+    },
+    {
+      id: 12,
+      image:
+        'https://pbs.twimg.com/profile_images/1635993072327639041/G_YIQ-G1_400x400.jpg',
+      twitter: 'layerswap',
+      x: '60%',
+      y: '25%',
+      blur: 7,
+      size: 90,
+      mobileSize: 65,
+      delay: 0.35,
+      floatAnim: 'animate-float6',
+    },
+    {
+      id: 13,
+      image:
+        'https://pbs.twimg.com/profile_images/1940437227642798080/EnotVJl3_400x400.jpg',
+      twitter: 'tradeparadex',
+      x: '25%',
+      y: '40%',
+      blur: 8,
+      size: 83,
+      mobileSize: 60,
+      delay: 0.45,
+      floatAnim: 'animate-float1',
+    },
+    {
+      id: 14,
+      image:
+        'https://pbs.twimg.com/profile_images/1686699616853454848/GMEuUL8M_400x400.jpg',
+      twitter: 'FocusTree_',
+      x: '40%',
+      y: '55%',
+      blur: 10,
+      size: 78,
+      mobileSize: 56,
+      delay: 0.25,
+      floatAnim: 'animate-float2',
+    },
   ];
 
   return (
@@ -584,4 +795,3 @@ const FloatingIcons = ({ isAnimating }: { isAnimating?: boolean }) => {
 };
 
 export default LandingPage;
-

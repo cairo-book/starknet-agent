@@ -2,14 +2,14 @@ const MessageBoxLoading = () => {
   return (
     <div className="flex w-full justify-start items-start gap-1.5 sm:gap-2">
       <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-full bg-transparent flex items-center justify-center">
-        <img 
-          src="/ask_logo_black_alpha.png" 
-          alt="Assistant" 
+        <img
+          src="/ask_logo_black_alpha.png"
+          alt="Assistant"
           className="w-full h-full object-contain dark:hidden"
         />
-        <img 
-          src="/ask_logo_white_alpha.png" 
-          alt="Assistant" 
+        <img
+          src="/ask_logo_white_alpha.png"
+          alt="Assistant"
           className="w-full h-full object-contain hidden dark:block"
         />
       </div>

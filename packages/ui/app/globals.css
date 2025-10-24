@@ -168,60 +168,126 @@ body:not(.dark) {
 }
 
 @keyframes float1 {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  25% { transform: translateY(-15px) translateX(8px); }
-  50% { transform: translateY(-8px) translateX(-6px); }
-  75% { transform: translateY(-12px) translateX(4px); }
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-15px) translateX(8px);
+  }
+  50% {
+    transform: translateY(-8px) translateX(-6px);
+  }
+  75% {
+    transform: translateY(-12px) translateX(4px);
+  }
 }
 
 @keyframes float2 {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  25% { transform: translateY(-8px) translateX(-10px); }
-  50% { transform: translateY(-18px) translateX(5px); }
-  75% { transform: translateY(-5px) translateX(-8px); }
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-8px) translateX(-10px);
+  }
+  50% {
+    transform: translateY(-18px) translateX(5px);
+  }
+  75% {
+    transform: translateY(-5px) translateX(-8px);
+  }
 }
 
 @keyframes float3 {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  25% { transform: translateY(-12px) translateX(-5px); }
-  50% { transform: translateY(-6px) translateX(8px); }
-  75% { transform: translateY(-16px) translateX(-3px); }
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-12px) translateX(-5px);
+  }
+  50% {
+    transform: translateY(-6px) translateX(8px);
+  }
+  75% {
+    transform: translateY(-16px) translateX(-3px);
+  }
 }
 
 @keyframes float4 {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  25% { transform: translateY(-10px) translateX(10px); }
-  50% { transform: translateY(-14px) translateX(-4px); }
-  75% { transform: translateY(-7px) translateX(6px); }
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-10px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-14px) translateX(-4px);
+  }
+  75% {
+    transform: translateY(-7px) translateX(6px);
+  }
 }
 
 @keyframes float5 {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  25% { transform: translateY(-9px) translateX(-7px); }
-  50% { transform: translateY(-15px) translateX(9px); }
-  75% { transform: translateY(-11px) translateX(-5px); }
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-9px) translateX(-7px);
+  }
+  50% {
+    transform: translateY(-15px) translateX(9px);
+  }
+  75% {
+    transform: translateY(-11px) translateX(-5px);
+  }
 }
 
 @keyframes float6 {
-  0%, 100% { transform: translateY(0px) translateX(0px); }
-  25% { transform: translateY(-13px) translateX(6px); }
-  50% { transform: translateY(-7px) translateX(-9px); }
-  75% { transform: translateY(-17px) translateX(2px); }
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-13px) translateX(6px);
+  }
+  50% {
+    transform: translateY(-7px) translateX(-9px);
+  }
+  75% {
+    transform: translateY(-17px) translateX(2px);
+  }
 }
 
-.animate-float1 { animation: float1 8s ease-in-out infinite; }
-.animate-float2 { animation: float2 8s ease-in-out infinite; }
-.animate-float3 { animation: float3 8s ease-in-out infinite; }
-.animate-float4 { animation: float4 8s ease-in-out infinite; }
-.animate-float5 { animation: float5 8s ease-in-out infinite; }
-.animate-float6 { animation: float6 8s ease-in-out infinite; }
+.animate-float1 {
+  animation: float1 8s ease-in-out infinite;
+}
+.animate-float2 {
+  animation: float2 8s ease-in-out infinite;
+}
+.animate-float3 {
+  animation: float3 8s ease-in-out infinite;
+}
+.animate-float4 {
+  animation: float4 8s ease-in-out infinite;
+}
+.animate-float5 {
+  animation: float5 8s ease-in-out infinite;
+}
+.animate-float6 {
+  animation: float6 8s ease-in-out infinite;
+}
 
 /* Mobile-specific responsive improvements */
 @media (max-width: 640px) {
   body {
     font-size: 14px;
   }
-  
+
   .content-wrapper {
     padding-bottom: 60px; /* Space for bottom navigation */
   }
@@ -232,7 +298,7 @@ body:not(.dark) {
   body {
     overflow-x: hidden;
   }
-  
+
   * {
     -webkit-tap-highlight-color: transparent;
   }
