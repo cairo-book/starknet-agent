@@ -6,10 +6,7 @@ export const runtime = 'nodejs';
 // Environment variables (server-only)
 const API_BASE = process.env.CAIRO_CODER_API_BASE_URL;
 const API_KEY = process.env.CAIRO_CODER_API_KEY;
-// Optional customization for auth header behavior
-const API_KEY_HEADER =
-  process.env.CAIRO_CODER_API_AUTH_HEADER || 'Authorization';
-const API_KEY_PREFIX = process.env.CAIRO_CODER_API_AUTH_PREFIX ?? 'Bearer ';
+const API_KEY_HEADER = 'x-api-key';
 
 function buildTargetUrl(pathSegments: string[]): string {
   if (!API_BASE) {
@@ -39,17 +36,7 @@ function buildUpstreamHeaders(req: NextRequest): HeadersInit {
   if (!API_KEY) {
     throw new Error('CAIRO_CODER_API_KEY is not set');
   }
-
-  // Inject API key without exposing it to the client
-  if (
-    API_KEY_HEADER.toLowerCase() === 'authorization' &&
-    API_KEY_PREFIX !== null
-  ) {
-    headers.set('authorization', `${API_KEY_PREFIX}${API_KEY}`);
-  } else {
-    headers.set(API_KEY_HEADER, API_KEY);
-  }
-
+  headers.set(API_KEY_HEADER, API_KEY);
   return headers;
 }
 
@@ -75,6 +62,9 @@ async function proxy(
       body = await req.text();
     }
 
+    console.log(
+      `Fetching URL: ${url} with method: ${method} and headers: ${headers} and body: ${body}`,
+    );
     const upstream = await fetch(url, {
       method,
       headers,
