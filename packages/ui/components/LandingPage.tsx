@@ -3,7 +3,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import Focus from './MessageInputActions/Focus';
 import { ArrowRight, ChevronDown, Copy, Check } from 'lucide-react';
 import { Popover, Transition } from '@headlessui/react';
 import { useTheme } from 'next-themes';
@@ -22,7 +21,6 @@ const LandingPage = () => {
   const { theme } = useTheme();
   const [prompt, setPrompt] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [focusMode, setFocusMode] = useState('starknetEcosystemSearch');
   const [showMCPConfig, setShowMCPConfig] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('auto');
   const [selectedClient, setSelectedClient] = useState<string>('cursor');
@@ -70,7 +68,7 @@ const LandingPage = () => {
       setIsTransitioning(true);
       // Navigate to chat route with prompt as query parameter
       setTimeout(() => {
-        router.push(`/chat?q=${encodeURIComponent(prompt)}&hints=${focusMode}`);
+        router.push(`/chat?q=${encodeURIComponent(prompt)}`);
       }, 150);
     }
   };
@@ -265,13 +263,7 @@ const LandingPage = () => {
                       autoFocus={!showMCPConfig}
                       disabled={isTransitioning}
                     />
-                    <div className="flex flex-row items-center justify-between mt-3 sm:mt-4 relative z-50">
-                      <div className="flex flex-row items-center space-x-1 -mx-2">
-                        <Focus
-                          focusMode={focusMode}
-                          setFocusMode={setFocusMode}
-                        />
-                      </div>
+                    <div className="flex flex-row items-center justify-end mt-3 sm:mt-4 relative z-50">
                       <button
                         type="submit"
                         disabled={!prompt.trim() || isTransitioning}

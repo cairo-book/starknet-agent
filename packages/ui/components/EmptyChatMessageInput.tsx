@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import TextareaAutosize from 'react-textarea-autosize';
-import Focus from './MessageInputActions/Focus';
 
 const EmptyChatMessageInput = ({
   sendMessage,
@@ -8,7 +6,6 @@ const EmptyChatMessageInput = ({
   sendMessage: (message: string) => void;
 }) => {
   const [message, setMessage] = useState('');
-  const [focusMode, setFocusMode] = useState('starknetEcosystemSearch');
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -52,10 +49,7 @@ const EmptyChatMessageInput = ({
           placeholder="Ask anything..."
           className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-base sm:text-lg text-black dark:text-white resize-none focus:outline-none w-full py-2 sm:py-3"
         />
-        <div className="flex flex-row items-center justify-between mt-3 sm:mt-4">
-          <div className="flex flex-row items-center space-x-1 -mx-1 sm:-mx-2">
-            <Focus focusMode={focusMode} setFocusMode={setFocusMode} />
-          </div>
+        <div className="flex flex-row items-center justify-end mt-3 sm:mt-4">
           <button
             type="submit"
             disabled={!message.trim()}

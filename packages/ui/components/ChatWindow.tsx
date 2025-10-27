@@ -69,16 +69,11 @@ export type StoredChat = {
   id: string;
   title: string;
   messages: Message[];
-  focusMode: string;
   createdAt: Date;
   updatedAt: Date;
 };
 
-const saveMessagesToLocalStorage = (
-  chatId: string,
-  messages: Message[],
-  focusMode: string,
-) => {
+const saveMessagesToLocalStorage = (chatId: string, messages: Message[]) => {
   const existingChats = JSON.parse(
     localStorage.getItem('chats') || '[]',
   ) as StoredChat[];
@@ -88,7 +83,6 @@ const saveMessagesToLocalStorage = (
     id: chatId,
     title: messages[0].content,
     messages,
-    focusMode,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -103,66 +97,31 @@ const saveMessagesToLocalStorage = (
   localStorage.setItem('chats', JSON.stringify(existingChats));
 };
 
-const loadMessagesFromLocalStorage = (
-  chatId: string,
-): { messages: Message[]; focusMode: string } | null => {
+const loadMessagesFromLocalStorage = (chatId: string): Message[] | null => {
   const existingChats = JSON.parse(
     localStorage.getItem('chats') || '[]',
   ) as StoredChat[];
   const chat = existingChats.find((chat) => chat.id === chatId);
 
   if (chat) {
-    return { messages: chat.messages, focusMode: chat.focusMode };
+    return chat.messages;
   }
 
   return null;
 };
 
-// Helper function to determine focus mode from hints parameter
-const getFocusModeFromHints = (hints: string | null): string => {
-  if (!hints) return 'starknetEcosystemSearch';
-
-  // If hints is already a valid focus mode, return it directly
-  const validFocusModes = [
-    'starknetEcosystemSearch',
-    'cairoBook',
-    'starknetDocumentation',
-    'starknetJS',
-    'webSearch',
-  ];
-
-  if (validFocusModes.includes(hints)) {
-    return hints;
-  }
-
-  // Map hints to focus modes
-  const hintsMap: Record<string, string> = {
-    cairo: 'cairoBook',
-    starknet: 'starknetEcosystemSearch',
-    ecosystem: 'starknetEcosystemSearch',
-    docs: 'starknetDocumentation',
-    js: 'starknetJS',
-    search: 'webSearch',
-  };
-
-  return hintsMap[hints.toLowerCase()] || 'starknetEcosystemSearch';
-};
-
 const ChatWindow = ({
   id,
   initialMessage: initialMessageProp,
-  focusMode: focusModeProp,
   onBack,
 }: {
   id?: string;
   initialMessage?: string;
-  focusMode?: string;
   onBack?: () => void;
 }) => {
   const searchParams = useSearchParams();
   const initialMessage =
     initialMessageProp || searchParams.get('prompt') || searchParams.get('q');
-  const hintsParam = searchParams.get('hints');
 
   const [chatId, setChatId] = useState<string | undefined>(id);
   const [newChatCreated, setNewChatCreated] = useState(false);
@@ -179,10 +138,6 @@ const ChatWindow = ({
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const [focusMode, setFocusMode] = useState(
-    focusModeProp || getFocusModeFromHints(hintsParam),
-  );
-
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
   useEffect(() => {
@@ -194,9 +149,8 @@ const ChatWindow = ({
     ) {
       const storedMessages = loadMessagesFromLocalStorage(chatId);
       if (storedMessages) {
-        setMessages(storedMessages.messages);
-        setFocusMode(storedMessages.focusMode);
-        const history = storedMessages.messages.map((msg) => {
+        setMessages(storedMessages);
+        const history = storedMessages.map((msg) => {
           return [msg.role, msg.content];
         }) as [string, string][];
         setChatHistory(history);
@@ -219,11 +173,11 @@ const ChatWindow = ({
     if (isMessagesLoaded && isApiReady && chatId) {
       // Track conversation start if this is a new chat
       if (newChatCreated) {
-        trackConversationStart(focusMode, chatId);
+        trackConversationStart(chatId);
       }
       setIsReady(true);
     }
-  }, [isMessagesLoaded, isApiReady, chatId, newChatCreated, focusMode]);
+  }, [isMessagesLoaded, isApiReady, chatId, newChatCreated]);
 
   const messagesRef = useRef<Message[]>([]);
 
@@ -601,11 +555,11 @@ const ChatWindow = ({
         role: 'assistant',
         createdAt: new Date(),
       };
-      saveMessagesToLocalStorage(
-        chatId!,
-        [...messages, humanMessage, assistantMessage],
-        focusMode,
-      );
+      saveMessagesToLocalStorage(chatId!, [
+        ...messages,
+        humanMessage,
+        assistantMessage,
+      ]);
 
       const lastMsg = messagesRef.current[messagesRef.current.length - 1];
 
@@ -701,7 +655,6 @@ const ChatWindow = ({
 export type ChatWindowProps = {
   id?: string;
   initialMessage?: string;
-  focusMode?: string;
   onBack?: () => void;
 };
 
