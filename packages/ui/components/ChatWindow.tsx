@@ -43,8 +43,7 @@ const useApiReady = (
   useEffect(() => {
     const checkApi = async () => {
       try {
-        // TODO: REPLACE THIS WITH /api/cairo-coder/v1/agents
-        const response = await fetch(`/api/cairo-coder/api/metrics`, {
+        const response = await fetch(`/api/cairo-coder/v1/agents`, {
           method: 'GET',
         });
         if (response.ok) {
@@ -278,16 +277,19 @@ const ChatWindow = ({
         { role: 'user', content: message },
       ];
 
-      const response = await fetch(`/api/cairo-coder/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `/api/cairo-coder/v1/agents/starknet-agent/chat/completions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages: messagesPayload,
+            stream: true,
+          }),
         },
-        body: JSON.stringify({
-          messages: messagesPayload,
-          stream: true,
-        }),
-      });
+      );
 
       if (!response.ok) {
         // @ts-ignore

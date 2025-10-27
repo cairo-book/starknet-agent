@@ -1,9 +1,6 @@
 import { Message } from '@/components/ChatWindow';
 
 export const getSuggestions = async (chatHisory: Message[]) => {
-  const chatModel = localStorage.getItem('chatModel');
-  const chatModelProvider = localStorage.getItem('chatModelProvider');
-
   const res = await fetch(`/api/cairo-coder/v1/suggestions`, {
     method: 'POST',
     headers: {
@@ -11,8 +8,6 @@ export const getSuggestions = async (chatHisory: Message[]) => {
     },
     body: JSON.stringify({
       chat_history: chatHisory,
-      chat_model: chatModel,
-      chat_model_provider: chatModelProvider,
     }),
   });
 

@@ -4,7 +4,10 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 // Environment variables (server-only)
-const API_BASE = process.env.CAIRO_CODER_API_BASE_URL;
+const API_BASE =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:3001'
+    : process.env.CAIRO_CODER_API_BASE_URL;
 const API_KEY = process.env.CAIRO_CODER_API_KEY;
 const API_KEY_HEADER = 'x-api-key';
 
