@@ -1,21 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Document } from '@langchain/core/documents';
+import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import type { Document } from '@langchain/core/documents';
 import Navbar from './Navbar';
 import Chat from './Chat';
-import EmptyChat from './EmptyChat';
 import crypto from 'crypto';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
-import Error from 'next/error';
-import { MathJaxContext } from 'better-react-mathjax';
 import {
   trackConversationStart,
   trackUserMessage,
   initUserFeedbackStats,
 } from '@/lib/posthog';
+
+// Only lazy load EmptyChat as it doesn't use MathJax
+const EmptyChat = dynamic(() => import('./EmptyChat'), { ssr: false });
 
 export type Message = {
   messageId: string;
@@ -25,300 +26,54 @@ export type Message = {
   role: 'user' | 'assistant';
   suggestions?: string[];
   sources?: Document[];
+  // Streaming reasoning/thinking support
+  thinking?: string;
+  // Whether the thinking box should be collapsed by default
+  thinkingCollapsed?: boolean;
+  // Processing indicator while waiting for first tokens
+  processing?: boolean;
+  processingText?: string;
 };
 
-const useSocket = (
-  url: string,
-  setIsWSReady: (ready: boolean) => void,
+// Simple API ready check
+const useApiReady = (
+  setIsApiReady: (ready: boolean) => void,
   setError: (error: boolean) => void,
 ) => {
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  const [reconnectStatus, setReconnectStatus] = useState<{
-    attempts: number;
-    isReconnecting: boolean;
-    maxAttempts: number;
-  }>({
-    attempts: 0,
-    isReconnecting: false,
-    maxAttempts: 5,
-  });
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
-
-  const connectWebSocket = useCallback(async () => {
-    let chatModel = localStorage.getItem('chatModel');
-    let chatModelProvider = localStorage.getItem('chatModelProvider');
-    let embeddingModel = localStorage.getItem('embeddingModel');
-    let embeddingModelProvider = localStorage.getItem('embeddingModelProvider');
-
-    const wsURL = new URL(url);
-    const searchParams = new URLSearchParams({});
-
-    if (!isHostedMode) {
-      const providers = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/models`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      ).then(async (res) => await res.json());
-
-      if (
-        !chatModel ||
-        !chatModelProvider ||
-        !embeddingModel ||
-        !embeddingModelProvider
-      ) {
-        if (!chatModel || !chatModelProvider) {
-          const chatModelProviders = providers.chatModelProviders;
-
-          chatModelProvider = Object.keys(chatModelProviders)[0];
-
-          if (chatModelProvider === 'custom_openai') {
-            toast.error(
-              'Seems like you are using the custom OpenAI provider, please open the settings and configure the API key and base URL',
-            );
-            setError(true);
-            return;
-          } else {
-            chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-            if (
-              !chatModelProviders ||
-              Object.keys(chatModelProviders).length === 0
-            )
-              return toast.error('No chat models available');
-          }
-        }
-
-        if (!embeddingModel || !embeddingModelProvider) {
-          const embeddingModelProviders = providers.embeddingModelProviders;
-
-          if (
-            !embeddingModelProviders ||
-            Object.keys(embeddingModelProviders).length === 0
-          )
-            return toast.error('No embedding models available');
-
-          embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
-          embeddingModel = Object.keys(
-            embeddingModelProviders[embeddingModelProvider],
-          )[0];
-        }
-
-        localStorage.setItem('chatModel', chatModel!);
-        localStorage.setItem('chatModelProvider', chatModelProvider);
-        localStorage.setItem('embeddingModel', embeddingModel!);
-        localStorage.setItem('embeddingModelProvider', embeddingModelProvider);
-      } else {
-        const chatModelProviders = providers.chatModelProviders;
-        const embeddingModelProviders = providers.embeddingModelProviders;
-
-        if (
-          Object.keys(chatModelProviders).length > 0 &&
-          !chatModelProviders[chatModelProvider]
-        ) {
-          chatModelProvider = Object.keys(chatModelProviders)[0];
-          localStorage.setItem('chatModelProvider', chatModelProvider);
-        }
-
-        if (
-          chatModelProvider &&
-          chatModelProvider != 'custom_openai' &&
-          !chatModelProviders[chatModelProvider][chatModel]
-        ) {
-          chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-          localStorage.setItem('chatModel', chatModel);
-        }
-
-        if (
-          Object.keys(embeddingModelProviders).length > 0 &&
-          !embeddingModelProviders[embeddingModelProvider]
-        ) {
-          embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
-          localStorage.setItem(
-            'embeddingModelProvider',
-            embeddingModelProvider,
-          );
-        }
-
-        if (
-          embeddingModelProvider &&
-          !embeddingModelProviders[embeddingModelProvider][embeddingModel]
-        ) {
-          embeddingModel = Object.keys(
-            embeddingModelProviders[embeddingModelProvider],
-          )[0];
-          localStorage.setItem('embeddingModel', embeddingModel);
-        }
-      }
-      searchParams.append('chatModel', chatModel!);
-      searchParams.append('chatModelProvider', chatModelProvider);
-
-      if (chatModelProvider === 'custom_openai') {
-        searchParams.append(
-          'openAIApiKey',
-          localStorage.getItem('openAIApiKey')!,
-        );
-        searchParams.append(
-          'openAIBaseURL',
-          localStorage.getItem('openAIBaseURL')!,
-        );
-      }
-
-      searchParams.append('embeddingModel', embeddingModel!);
-      searchParams.append('embeddingModelProvider', embeddingModelProvider);
-    }
-
-    wsURL.search = searchParams.toString();
-
-    const newWs = new WebSocket(wsURL.toString());
-
-    const timeoutId = setTimeout(() => {
-      if (newWs.readyState !== 1) {
-        toast.error('Failed to connect to the server. Please try again later.');
-      }
-    }, 10000);
-
-    newWs.onopen = () => {
-      console.log('[DEBUG] open');
-      clearTimeout(timeoutId);
-      setIsWSReady(true);
-      setError(false);
-      setReconnectStatus((prev) => ({
-        ...prev,
-        attempts: 0,
-        isReconnecting: false,
-      }));
-    };
-
-    newWs.onerror = () => {
-      clearTimeout(timeoutId);
-      setError(true);
-      toast.error('WebSocket connection error.');
-    };
-
-    newWs.onclose = () => {
-      clearTimeout(timeoutId);
-      console.log('[DEBUG] closed');
-      setIsWSReady(false);
-
-      setReconnectStatus((prev) => {
-        const newAttempts = prev.attempts + 1;
-        if (newAttempts <= prev.maxAttempts) {
-          setError(true);
-          console.log(`[DEBUG] reconnect attempt ${newAttempts}`);
-
-          const delay = Math.min(1000 * 2 ** newAttempts, 30000);
-
-          reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('[DEBUG] attempting to reconnect');
-            connectWebSocket();
-          }, delay);
-
-          return { ...prev, attempts: newAttempts, isReconnecting: true };
+  useEffect(() => {
+    const checkApi = async () => {
+      try {
+        const response = await fetch(`/api/cairo-coder/v1/agents`, {
+          method: 'GET',
+        });
+        if (response.ok) {
+          setIsApiReady(true);
+          setError(false);
         } else {
           setError(true);
           toast.error(
-            'Failed to connect after multiple attempts. Please try again later.',
+            'Failed to connect to the server. Please try again later.',
           );
-          return { ...prev, attempts: newAttempts, isReconnecting: false };
         }
-      });
-    };
-
-    newWs.addEventListener('message', (e) => {
-      const data = JSON.parse(e.data);
-      if (data.type === 'error') {
-        toast.error(data.data);
-      }
-    });
-
-    setWs(newWs);
-  }, [url, isHostedMode, setError, setIsWSReady]);
-
-  useEffect(() => {
-    if (!ws) {
-      connectWebSocket();
-    }
-
-    return () => {
-      if (ws?.readyState === 1) {
-        ws?.close();
-        console.log('[DEBUG] closed');
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
+      } catch (err) {
+        setError(true);
+        toast.error('Failed to connect to the server. Please try again later.');
       }
     };
-  }, [ws, connectWebSocket]);
 
-  return { ws, reconnectStatus };
-};
-
-const loadMessages = async (
-  chatId: string,
-  setMessages: (messages: Message[]) => void,
-  setIsMessagesLoaded: (loaded: boolean) => void,
-  setChatHistory: (history: [string, string][]) => void,
-  setFocusMode: (mode: string) => void,
-  setNotFound: (notFound: boolean) => void,
-) => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  if (res.status === 404) {
-    setNotFound(true);
-    setIsMessagesLoaded(true);
-    return;
-  }
-
-  const data = await res.json();
-
-  const messages = data.messages.map((msg: any) => {
-    return {
-      ...msg,
-      ...JSON.parse(msg.metadata),
-    };
-  }) as Message[];
-
-  setMessages(messages);
-
-  const history = messages.map((msg) => {
-    return [msg.role, msg.content];
-  }) as [string, string][];
-
-  console.log('[DEBUG] messages loaded');
-
-  document.title = messages[0].content;
-
-  setChatHistory(history);
-  setFocusMode(data.chat.focusMode);
-  setIsMessagesLoaded(true);
+    checkApi();
+  }, [setIsApiReady, setError]);
 };
 
 export type StoredChat = {
   id: string;
   title: string;
   messages: Message[];
-  focusMode: string;
   createdAt: Date;
   updatedAt: Date;
 };
 
-const saveMessagesToLocalStorage = (
-  chatId: string,
-  messages: Message[],
-  focusMode: string,
-) => {
+const saveMessagesToLocalStorage = (chatId: string, messages: Message[]) => {
   const existingChats = JSON.parse(
     localStorage.getItem('chats') || '[]',
   ) as StoredChat[];
@@ -328,7 +83,6 @@ const saveMessagesToLocalStorage = (
     id: chatId,
     title: messages[0].content,
     messages,
-    focusMode,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -343,41 +97,31 @@ const saveMessagesToLocalStorage = (
   localStorage.setItem('chats', JSON.stringify(existingChats));
 };
 
-const loadMessagesFromLocalStorage = (
-  chatId: string,
-): { messages: Message[]; focusMode: string } | null => {
+const loadMessagesFromLocalStorage = (chatId: string): Message[] | null => {
   const existingChats = JSON.parse(
     localStorage.getItem('chats') || '[]',
   ) as StoredChat[];
   const chat = existingChats.find((chat) => chat.id === chatId);
 
   if (chat) {
-    return { messages: chat.messages, focusMode: chat.focusMode };
+    return chat.messages;
   }
 
   return null;
 };
 
-// MathJax configuration
-const mathJaxConfig = {
-  loader: { load: ['[tex]/html'] },
-  tex: {
-    packages: { '[+]': ['html'] },
-    inlineMath: [
-      ['$', '$'],
-      ['\\(', '\\)'],
-    ],
-    displayMath: [
-      ['$$', '$$'],
-      ['\\[', '\\]'],
-    ],
-  },
-};
-
-const ChatWindow = ({ id }: { id?: string }) => {
+const ChatWindow = ({
+  id,
+  initialMessage: initialMessageProp,
+  onBack,
+}: {
+  id?: string;
+  initialMessage?: string;
+  onBack?: () => void;
+}) => {
   const searchParams = useSearchParams();
-  const initialMessage = searchParams.get('prompt') || searchParams.get('q');
-  const hintsParam = searchParams.get('hints');
+  const initialMessage =
+    initialMessageProp || searchParams.get('prompt') || searchParams.get('q');
 
   const [chatId, setChatId] = useState<string | undefined>(id);
   const [newChatCreated, setNewChatCreated] = useState(false);
@@ -385,32 +129,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [hasError, setHasError] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
-  const [isWSReady, setIsWSReady] = useState(false);
-  const { ws, reconnectStatus } = useSocket(
-    process.env.NEXT_PUBLIC_WS_URL!,
-    setIsWSReady,
-    setHasError,
-  );
-
-  const DEFAULT_FOCUS_MODE = 'starknetEcosystemSearch';
-
-  // Map hints parameter to focusMode
-  const getFocusModeFromHints = (hints: string | null) => {
-    if (!hints) return DEFAULT_FOCUS_MODE;
-
-    const hintsMap: Record<string, string> = {
-      search: 'starknetEcosystemSearch',
-      'cairo-book': 'cairoBookSearch',
-      'starknet-docs': 'starknetDocsSearch',
-      'starknet-foundry': 'starknetFoundrySearch',
-      'cairo-by-example': 'cairoByExampleSearch',
-      'openzeppelin-docs': 'openZeppelinDocsSearch',
-      'scarb-docs': 'scarbDocsSearch',
-      'starknet-js': 'starknetJSSearch',
-    };
-
-    return hintsMap[hints] || DEFAULT_FOCUS_MODE;
-  };
+  const [isApiReady, setIsApiReady] = useState(false);
+  useApiReady(setIsApiReady, setHasError);
 
   const [loading, setLoading] = useState(false);
   const [messageAppeared, setMessageAppeared] = useState(false);
@@ -418,13 +138,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const [focusMode, setFocusMode] = useState(getFocusModeFromHints(hintsParam));
-
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
-
-  const [notFound, setNotFound] = useState(false);
-
-  const isHostedMode = process.env.NEXT_PUBLIC_HOSTED_MODE === 'true';
 
   useEffect(() => {
     if (
@@ -433,28 +147,15 @@ const ChatWindow = ({ id }: { id?: string }) => {
       !isMessagesLoaded &&
       messages.length === 0
     ) {
-      if (isHostedMode) {
-        const storedMessages = loadMessagesFromLocalStorage(chatId);
-        setMessages(storedMessages?.messages || []);
-        setFocusMode(
-          storedMessages?.focusMode || getFocusModeFromHints(hintsParam),
-        );
-        const history = storedMessages?.messages.map((msg) => {
+      const storedMessages = loadMessagesFromLocalStorage(chatId);
+      if (storedMessages) {
+        setMessages(storedMessages);
+        const history = storedMessages.map((msg) => {
           return [msg.role, msg.content];
         }) as [string, string][];
         setChatHistory(history);
-        setIsMessagesLoaded(true);
-      } else {
-        loadMessages(
-          chatId,
-          setMessages,
-          setIsMessagesLoaded,
-          setChatHistory,
-          (mode: string) =>
-            setFocusMode(mode || getFocusModeFromHints(hintsParam)),
-          setNotFound,
-        );
       }
+      setIsMessagesLoaded(true);
     } else if (!chatId) {
       setNewChatCreated(true);
       setIsMessagesLoaded(true);
@@ -469,14 +170,14 @@ const ChatWindow = ({ id }: { id?: string }) => {
   }, []);
 
   useEffect(() => {
-    if (isMessagesLoaded && isWSReady && chatId) {
+    if (isMessagesLoaded && isApiReady && chatId) {
       // Track conversation start if this is a new chat
       if (newChatCreated) {
-        trackConversationStart(focusMode, chatId);
+        trackConversationStart(chatId);
       }
       setIsReady(true);
     }
-  }, [isMessagesLoaded, isWSReady, chatId, newChatCreated, focusMode]);
+  }, [isMessagesLoaded, isApiReady, chatId, newChatCreated]);
 
   const messagesRef = useRef<Message[]>([]);
 
@@ -485,10 +186,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
   }, [messages]);
 
   useEffect(() => {
-    if (isMessagesLoaded && isWSReady) {
+    if (isMessagesLoaded && isApiReady) {
       setIsReady(true);
     }
-  }, [isMessagesLoaded, isWSReady]);
+  }, [isMessagesLoaded, isApiReady]);
 
   const sendMessage = async (message: string) => {
     if (loading) return;
@@ -498,20 +199,13 @@ const ChatWindow = ({ id }: { id?: string }) => {
     let sources: Document[] | undefined = undefined;
     let recievedMessage = '';
     let added = false;
+    let assistantMessageId = '';
+    let thinking: string = '';
+    let thinkingCollapsed = false; // expand while streaming
+    let processing = false;
+    let processingText = '';
 
     const messageId = crypto.randomBytes(7).toString('hex');
-
-    ws?.send(
-      JSON.stringify({
-        type: 'message',
-        message: {
-          chatId: chatId!,
-          content: message,
-        },
-        focusMode: focusMode,
-        history: [...chatHistory, ['human', message]],
-      }),
-    );
 
     // Emit event when a user message is sent.
     trackUserMessage(message.length);
@@ -527,117 +221,369 @@ const ChatWindow = ({ id }: { id?: string }) => {
       },
     ]);
 
-    const messageHandler = async (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
+    try {
+      // Build messages array in OpenAI format
+      const messagesPayload = [
+        ...chatHistory.map(([role, content]) => ({
+          role: role === 'human' ? 'user' : 'assistant',
+          content,
+        })),
+        { role: 'user', content: message },
+      ];
 
-      if (data.type === 'error') {
-        toast.error(data.data);
-        setLoading(false);
-        return;
+      const response = await fetch(
+        `/api/cairo-coder/v1/agents/starknet-agent/chat/completions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages: messagesPayload,
+            stream: true,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        // @ts-ignore
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      if (data.type === 'sources') {
-        sources = data.data;
-        if (!added) {
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              content: '',
-              messageId: data.messageId,
-              chatId: chatId!,
-              role: 'assistant',
-              sources: sources,
-              createdAt: new Date(),
-            },
-          ]);
-          added = true;
-        }
-        setMessageAppeared(true);
-      }
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      if (data.type === 'message') {
-        if (!added) {
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              content: data.data,
-              messageId: data.messageId,
-              chatId: chatId!,
-              role: 'assistant',
-              sources: sources,
-              createdAt: new Date(),
-            },
-          ]);
-          added = true;
-        }
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-        setMessages((prev) =>
-          prev.map((message) => {
-            if (message.messageId === data.messageId) {
-              return { ...message, content: message.content + data.data };
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+
+        // Keep the last incomplete line in the buffer
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim() || !line.startsWith('data: ')) continue;
+
+          const data = line.slice(6); // Remove 'data: ' prefix
+
+          if (data === '[DONE]') {
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(data);
+
+            // Handle error events
+            if (parsed.type === 'error') {
+              toast.error(parsed.data || 'An error occurred');
+              setLoading(false);
+              return;
             }
 
-            return message;
+            // Handle sources event (custom type from Cairo Coder)
+            if (parsed.type === 'sources') {
+              sources = parsed.data;
+              console.log('[DEBUG] sources', sources);
+              if (!assistantMessageId) {
+                assistantMessageId =
+                  parsed.messageId || crypto.randomBytes(7).toString('hex');
+              }
+              if (!added) {
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  {
+                    content: '',
+                    messageId: assistantMessageId,
+                    chatId: chatId!,
+                    role: 'assistant',
+                    sources: sources,
+                    thinking,
+                    thinkingCollapsed,
+                    processing,
+                    processingText,
+                    createdAt: new Date(),
+                  },
+                ]);
+                added = true;
+              }
+              // If assistant message already added, update sources
+              if (added) {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.messageId === assistantMessageId
+                      ? { ...msg, sources }
+                      : msg,
+                  ),
+                );
+              }
+              setMessageAppeared(true);
+            }
+
+            // Handle thinking event (custom type from Cairo Coder)
+            if (parsed.type === 'thinking') {
+              const chunk = String(parsed.data ?? '');
+              thinking = thinking
+                ? `${thinking}${thinking.endsWith('\n') ? '' : '\n'}${chunk}`
+                : chunk;
+
+              // Ensure an assistant message exists to display thinking
+              if (!added) {
+                if (!assistantMessageId) {
+                  assistantMessageId =
+                    parsed.messageId || crypto.randomBytes(7).toString('hex');
+                }
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  {
+                    content: '',
+                    messageId: assistantMessageId,
+                    chatId: chatId!,
+                    role: 'assistant',
+                    sources: sources,
+                    thinking,
+                    thinkingCollapsed, // expanded while streaming
+                    processing,
+                    processingText,
+                    createdAt: new Date(),
+                  },
+                ]);
+                added = true;
+              } else {
+                // Update existing assistant message with appended thinking
+                const t = thinking;
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.messageId === assistantMessageId
+                      ? { ...msg, thinking: t }
+                      : msg,
+                  ),
+                );
+              }
+              setMessageAppeared(true);
+            }
+
+            // Handle processing event (custom type from Cairo Coder)
+            if (parsed.type === 'processing') {
+              processing = true;
+              processingText = String(parsed.data ?? 'Generating response');
+              if (!added) {
+                if (!assistantMessageId) {
+                  assistantMessageId =
+                    parsed.messageId || crypto.randomBytes(7).toString('hex');
+                }
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  {
+                    content: '',
+                    messageId: assistantMessageId,
+                    chatId: chatId!,
+                    role: 'assistant',
+                    sources: sources,
+                    thinking,
+                    thinkingCollapsed,
+                    processing,
+                    processingText,
+                    createdAt: new Date(),
+                  },
+                ]);
+                added = true;
+              } else {
+                const pt = processingText;
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.messageId === assistantMessageId
+                      ? { ...msg, processing: true, processingText: pt }
+                      : msg,
+                  ),
+                );
+              }
+              setMessageAppeared(true);
+            }
+
+            // Handle OpenAI-format response chunks
+            if (parsed.choices && parsed.choices[0]) {
+              const choice = parsed.choices[0];
+
+              if (!assistantMessageId && parsed.id) {
+                assistantMessageId = parsed.id;
+              }
+
+              if (choice.delta && choice.delta.content) {
+                const content = choice.delta.content;
+
+                if (!added) {
+                  if (!assistantMessageId && parsed.id) {
+                    assistantMessageId = parsed.id;
+                  } else if (!assistantMessageId) {
+                    assistantMessageId = crypto.randomBytes(7).toString('hex');
+                  }
+                  setMessages((prevMessages) => [
+                    ...prevMessages,
+                    {
+                      content: content,
+                      messageId:
+                        assistantMessageId ||
+                        crypto.randomBytes(7).toString('hex'),
+                      chatId: chatId!,
+                      role: 'assistant',
+                      sources: sources,
+                      thinking,
+                      thinkingCollapsed: true, // collapse thinking on first chunk
+                      processing: false,
+                      processingText,
+                      createdAt: new Date(),
+                    },
+                  ]);
+                  added = true;
+                  thinkingCollapsed = true;
+                } else {
+                  // On first chunk, collapse the thinking panel
+                  if (!thinkingCollapsed) {
+                    thinkingCollapsed = true;
+                    setMessages((prev) =>
+                      prev.map((msg) =>
+                        msg.messageId === assistantMessageId
+                          ? { ...msg, thinkingCollapsed: true }
+                          : msg,
+                      ),
+                    );
+                  }
+                  // Stop processing indicator when first content arrives
+                  if (processing) {
+                    processing = false;
+                    setMessages((prev) =>
+                      prev.map((msg) =>
+                        msg.messageId === assistantMessageId
+                          ? { ...msg, processing: false }
+                          : msg,
+                      ),
+                    );
+                  }
+                  setMessages((prev) =>
+                    prev.map((msg) => {
+                      if (msg.messageId === assistantMessageId) {
+                        return { ...msg, content: msg.content + content };
+                      }
+                      return msg;
+                    }),
+                  );
+                }
+
+                recievedMessage += content;
+                setMessageAppeared(true);
+              }
+
+              // Handle end of stream
+              if (choice.finish_reason === 'stop') {
+                break;
+              }
+            }
+
+            // Handle final_response event: replace streamed text with final text
+            if (parsed.type === 'final_response') {
+              const finalText = parsed.data as string;
+
+              // Ensure an assistant message exists
+              if (!added) {
+                assistantMessageId =
+                  assistantMessageId || crypto.randomBytes(7).toString('hex');
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  {
+                    content: finalText,
+                    messageId: assistantMessageId,
+                    chatId: chatId!,
+                    role: 'assistant',
+                    sources: sources,
+                    thinking,
+                    thinkingCollapsed: true, // collapse thinking at final response
+                    processing: false,
+                    processingText,
+                    createdAt: new Date(),
+                  },
+                ]);
+                added = true;
+              } else {
+                // Replace existing streamed content with the final content
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.messageId === assistantMessageId
+                      ? {
+                          ...msg,
+                          content: finalText,
+                          thinkingCollapsed: true,
+                          processing: false,
+                        }
+                      : msg,
+                  ),
+                );
+              }
+
+              // Keep local accumulator in sync with final content
+              recievedMessage = finalText;
+              setMessageAppeared(true);
+            }
+          } catch (e) {
+            console.error('Error parsing SSE data:', e);
+          }
+        }
+      }
+
+      // Message complete
+      setChatHistory((prevHistory) => [
+        ...prevHistory,
+        ['human', message],
+        ['assistant', recievedMessage],
+      ]);
+
+      setLoading(false);
+
+      const humanMessage: Message = {
+        content: message,
+        messageId: messageId,
+        chatId: chatId!,
+        role: 'user',
+        createdAt: new Date(),
+      };
+      const assistantMessage: Message = {
+        content: recievedMessage,
+        messageId: assistantMessageId,
+        chatId: chatId!,
+        role: 'assistant',
+        createdAt: new Date(),
+      };
+      saveMessagesToLocalStorage(chatId!, [
+        ...messages,
+        humanMessage,
+        assistantMessage,
+      ]);
+
+      const lastMsg = messagesRef.current[messagesRef.current.length - 1];
+
+      if (
+        lastMsg.role === 'assistant' &&
+        lastMsg.sources &&
+        lastMsg.sources.length > 0 &&
+        !lastMsg.suggestions
+      ) {
+        const suggestions = await getSuggestions(messagesRef.current);
+        setMessages((prev) =>
+          prev.map((msg) => {
+            if (msg.messageId === lastMsg.messageId) {
+              return { ...msg, suggestions: suggestions };
+            }
+            return msg;
           }),
         );
-
-        recievedMessage += data.data;
-        setMessageAppeared(true);
       }
-
-      if (data.type === 'messageEnd') {
-        setChatHistory((prevHistory) => [
-          ...prevHistory,
-          ['human', message],
-          ['assistant', recievedMessage],
-        ]);
-
-        ws?.removeEventListener('message', messageHandler);
-        setLoading(false);
-        if (isHostedMode) {
-          const humanMessage: Message = {
-            content: message,
-            messageId: messageId,
-            chatId: chatId!,
-            role: 'user',
-            createdAt: new Date(),
-          };
-          const assistantMessage: Message = {
-            content: recievedMessage,
-            messageId: data.messageId,
-            chatId: chatId!,
-            role: 'assistant',
-            createdAt: new Date(),
-          };
-          saveMessagesToLocalStorage(
-            chatId!,
-            [...messages, humanMessage, assistantMessage],
-            focusMode,
-          );
-        }
-
-        const lastMsg = messagesRef.current[messagesRef.current.length - 1];
-
-        if (
-          lastMsg.role === 'assistant' &&
-          lastMsg.sources &&
-          lastMsg.sources.length > 0 &&
-          !lastMsg.suggestions
-        ) {
-          const suggestions = await getSuggestions(messagesRef.current);
-          setMessages((prev) =>
-            prev.map((msg) => {
-              if (msg.messageId === lastMsg.messageId) {
-                return { ...msg, suggestions: suggestions };
-              }
-              return msg;
-            }),
-          );
-        }
-      }
-    };
-
-    ws?.addEventListener('message', messageHandler);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message. Please try again.');
+      setLoading(false);
+    }
   };
 
   const rewrite = (messageId: string) => {
@@ -665,42 +611,26 @@ const ChatWindow = ({ id }: { id?: string }) => {
   }, [isReady, initialMessage]);
 
   if (hasError) {
-    toast.error(
-      reconnectStatus.isReconnecting
-        ? `Attempting to reconnect... (Attempt ${reconnectStatus.attempts}/${reconnectStatus.maxAttempts})`
-        : reconnectStatus.attempts >= reconnectStatus.maxAttempts
-          ? 'Failed to connect after multiple attempts. Please try again later.'
-          : 'Failed to connect to the server. Please try again later.',
-    );
+    toast.error('Failed to connect to the server. Please try again later.');
   }
 
   return isReady || messages.length > 0 ? (
-    notFound ? (
-      <Error statusCode={404} />
-    ) : (
-      <div>
-        {messages.length > 0 ? (
-          <>
-            <Navbar messages={messages} />
-            <MathJaxContext version={3} config={mathJaxConfig}>
-              <Chat
-                loading={loading}
-                messages={messages}
-                sendMessage={sendMessage}
-                messageAppeared={messageAppeared}
-                rewrite={rewrite}
-              />
-            </MathJaxContext>
-          </>
-        ) : (
-          <EmptyChat
+    <div>
+      {messages.length > 0 ? (
+        <>
+          <Navbar messages={messages} />
+          <Chat
+            loading={loading}
+            messages={messages}
             sendMessage={sendMessage}
-            focusMode={focusMode}
-            setFocusMode={setFocusMode}
+            messageAppeared={messageAppeared}
+            rewrite={rewrite}
           />
-        )}
-      </div>
-    )
+        </>
+      ) : (
+        <EmptyChat sendMessage={sendMessage} />
+      )}
+    </div>
   ) : (
     <div className="flex flex-row items-center justify-center min-h-screen">
       <svg
@@ -722,4 +652,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
     </div>
   );
 };
+export type ChatWindowProps = {
+  id?: string;
+  initialMessage?: string;
+  onBack?: () => void;
+};
+
 export default ChatWindow;

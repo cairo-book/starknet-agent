@@ -1,18 +1,13 @@
 import { Message } from '@/components/ChatWindow';
 
 export const getSuggestions = async (chatHisory: Message[]) => {
-  const chatModel = localStorage.getItem('chatModel');
-  const chatModelProvider = localStorage.getItem('chatModelProvider');
-
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/suggestions`, {
+  const res = await fetch(`/api/cairo-coder/v1/suggestions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       chat_history: chatHisory,
-      chat_model: chatModel,
-      chat_model_provider: chatModelProvider,
     }),
   });
 

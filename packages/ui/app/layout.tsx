@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
-import Sidebar from '@/components/Sidebar';
 import { Toaster } from 'sonner';
 import ThemeProvider from '@/components/theme/Provider';
 import PostHogProviderClient from '@/components/providers/PostHogProvider';
@@ -17,10 +16,10 @@ const ibmPlexSans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'The Starknet Agent - Unlock your Starknet expertise',
+  title: 'Ask Starknet - Unlock your Starknet expertise',
   description: 'AI-powered assistant for Starknet and Cairo.',
   icons: {
-    icon: '/starknet_logo.svg',
+    icon: '/favicon.ico',
   },
 };
 
@@ -30,10 +29,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const config = {
-    loader: { load: ['input/asciimath'] },
-    asciimath: { displaystyle: false },
+    loader: { load: ['[tex]/boldsymbol', '[tex]/ams', '[tex]/html'] },
     tex: {
-      packages: { '[+]': ['html'] },
+      packages: { '[+]': ['boldsymbol', 'ams', 'html'] },
       inlineMath: [
         ['$', '$'],
         ['\\(', '\\)'],
@@ -43,6 +41,15 @@ export default function RootLayout({
         ['\\[', '\\]'],
       ],
     },
+    svg: { fontCache: 'global' },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+      ignoreHtmlClass: 'tex2jax_ignore',
+      processHtmlClass: 'tex2jax_process',
+    },
+    startup: {
+      typeset: false, // Don't typeset on startup, let components control it
+    },
   };
   return (
     <html className="h-full" lang="en" suppressHydrationWarning>
@@ -51,7 +58,7 @@ export default function RootLayout({
         <PostHogProviderClient>
           <MathJaxContext config={config}>
             <ThemeProvider>
-              <Sidebar>{children}</Sidebar>
+              {children}
               <Toaster
                 toastOptions={{
                   unstyled: true,

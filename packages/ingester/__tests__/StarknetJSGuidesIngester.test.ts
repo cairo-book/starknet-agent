@@ -241,7 +241,7 @@ Content about L1-L2 communication.`);
   describe('URL generation', () => {
     it('should generate correct URLs for documentation pages', () => {
       const config = (ingester as any).config;
-      expect(config.baseUrl).toBe('https://starknetjs.com/docs/guides');
+      expect(config.baseUrl).toBe('https://starknetjs.com/docs/next/guides');
       expect(config.urlSuffix).toBe('');
     });
   });

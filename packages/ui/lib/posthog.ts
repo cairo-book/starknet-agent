@@ -3,23 +3,17 @@ import { posthog } from 'posthog-js';
 /**
  * Types for PostHog events
  */
-type FocusModeContext = 'new_conversation' | 'mid_conversation';
 type FeedbackRating = 'positive' | 'negative';
 
 /**
  * Track when a conversation starts
- * @param focusMode - The focus mode being used
  * @param conversationId - The ID of the conversation
  */
-export const trackConversationStart = (
-  focusMode: string,
-  conversationId: string,
-) => {
+export const trackConversationStart = (conversationId: string) => {
   if (typeof window === 'undefined') return;
 
   try {
     posthog.capture('conversation_started', {
-      focus_mode: focusMode,
       conversation_id: conversationId,
       timestamp: new Date().toISOString(),
     });
