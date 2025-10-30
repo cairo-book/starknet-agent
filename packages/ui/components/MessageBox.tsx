@@ -335,6 +335,63 @@ const LatexRenderer = ({
   }
 };
 
+// Helper function to determine if a string inside $...$ is likely LaTeX or a ticker symbol
+const isLikelyLatex = (content: string): boolean => {
+  const trimmed = content.trim();
+
+  // Currency amounts: $738M, $16.5B, $1.2K, $0.83, $100, etc.
+  // Pattern: optional decimal number followed by optional M/B/K/T suffix
+  if (/^[\d,]+\.?\d*[MBKT]?$/i.test(trimmed)) {
+    return false;
+  }
+
+  // If it's all uppercase letters (with optional numbers), it's likely a ticker like $LORDS, $AAPL
+  if (/^[A-Z][A-Z0-9]*$/.test(trimmed)) {
+    return false;
+  }
+
+  // If it contains LaTeX-specific characters or commands, it's definitely LaTeX
+  const latexIndicators = [
+    '\\', // LaTeX commands start with backslash
+    '^', // Superscript
+    '_', // Subscript
+    '{',
+    '}', // LaTeX grouping
+    'frac',
+    'sum',
+    'int',
+    'sqrt',
+    'times',
+    'cdot', // Common LaTeX commands
+    '\\text',
+    '\\mathbb',
+    '\\mathrm', // Common LaTeX text commands
+  ];
+
+  if (latexIndicators.some((indicator) => content.includes(indicator))) {
+    return true;
+  }
+
+  // If it contains mathematical operators, likely LaTeX math
+  // e.g., "x + y", "a = b", "(x - 1)"
+  if (/[\+\-\*\/\=\(\)\[\]]/.test(content)) {
+    return true;
+  }
+
+  // If it's a single lowercase letter or Greek letter name, likely a variable (LaTeX)
+  if (
+    /^[a-z]$/.test(trimmed) ||
+    /^(alpha|beta|gamma|delta|epsilon|theta|lambda|mu|pi|sigma|omega)$/.test(
+      trimmed,
+    )
+  ) {
+    return true;
+  }
+
+  // Default to false (treat as ticker/regular text) to be conservative
+  return false;
+};
+
 // Component to render text potentially mixed with inline LaTeX
 const TextWithInlineMath = ({
   text,
@@ -359,11 +416,17 @@ const TextWithInlineMath = ({
       {parts.map((part, index) => {
         if (part.startsWith('$') && part.endsWith('$') && part.length > 2) {
           const formula = part.substring(1, part.length - 1);
-          return (
-            <LatexRenderer key={index} isBlock={false} isLoading={isLoading}>
-              {formula}
-            </LatexRenderer>
-          );
+
+          // Only render as LaTeX if it looks like a mathematical formula
+          if (isLikelyLatex(formula)) {
+            return (
+              <LatexRenderer key={index} isBlock={false} isLoading={isLoading}>
+                {formula}
+              </LatexRenderer>
+            );
+          }
+          // Otherwise, render the dollar sign and content as-is (ticker symbol, etc.)
+          return <React.Fragment key={index}>{part}</React.Fragment>;
         }
         // Return text parts as React Fragments to avoid unnecessary spans
         return <React.Fragment key={index}>{part}</React.Fragment>;
