@@ -42,13 +42,21 @@ const MessageInput = ({
   return (
     <form
       onSubmit={(e) => {
-        if (loading) return;
+        // Always prevent default form submission/navigation
         e.preventDefault();
+        if (loading) return;
         sendMessage(message);
         setMessage('');
       }}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' && !e.shiftKey && !loading) {
+        if (e.key === 'Enter') {
+          // Only Shift+Enter creates newline, all other combinations submit
+          if (e.shiftKey) {
+            // Allow default behavior (newline)
+            return;
+          }
+          // Plain Enter or Cmd/Ctrl/Alt+Enter submits
+          if (loading) return;
           e.preventDefault();
           sendMessage(message);
           setMessage('');

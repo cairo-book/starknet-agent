@@ -75,7 +75,7 @@ const styles = {
       'prose-pre:overflow-x-auto prose-pre:scrollbar-thin prose-pre:scrollbar-thumb-gray-400 prose-pre:scrollbar-track-gray-200',
       'dark:prose-pre:scrollbar-thumb-gray-600 dark:prose-pre:scrollbar-track-gray-800',
     ),
-    user: 'prose-headings:text-black dark:prose-headings:text-white prose-p:text-black dark:prose-p:text-white',
+    user: 'prose-headings:text-black dark:prose-headings:text-white prose-p:text-black dark:prose-p:text-white whitespace-pre-wrap',
   },
   sources: {
     container: 'mt-2 transition-all',

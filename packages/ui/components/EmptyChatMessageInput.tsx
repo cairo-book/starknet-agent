@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import TextareaAutosize from 'react-textarea-autosize';
 
 const EmptyChatMessageInput = ({
   sendMessage,
@@ -27,13 +28,23 @@ const EmptyChatMessageInput = ({
   return (
     <form
       onSubmit={(e) => {
+        // Always prevent default form submission/navigation
         e.preventDefault();
+        // For plain Enter or submit button click, send. Keyboard modifiers handled via onKeyDown
+        if (message.trim().length === 0) return;
         sendMessage(message);
         setMessage('');
       }}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter') {
+          // Only Shift+Enter creates newline, all other combinations submit
+          if (e.shiftKey) {
+            // Allow default behavior (newline)
+            return;
+          }
+          // Plain Enter or Cmd/Ctrl/Alt+Enter submits
           e.preventDefault();
+          if (message.trim().length === 0) return;
           sendMessage(message);
           setMessage('');
         }
@@ -41,13 +52,13 @@ const EmptyChatMessageInput = ({
       className="w-full"
     >
       <div className="flex flex-col bg-light-secondary dark:bg-dark-secondary px-3 sm:px-4 md:px-5 pt-3 sm:pt-4 md:pt-5 pb-2 rounded-lg w-full">
-        <input
-          ref={inputRef as any}
-          type="text"
+        <TextareaAutosize
+          ref={inputRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Ask anything..."
-          className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-base sm:text-lg text-black dark:text-white resize-none focus:outline-none w-full py-2 sm:py-3"
+          className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-base sm:text-lg text-black dark:text-white resize-none focus:outline-none w-full py-2 sm:py-3 max-h-48"
+          minRows={1}
         />
         <div className="flex flex-row items-center justify-end mt-3 sm:mt-4">
           <button

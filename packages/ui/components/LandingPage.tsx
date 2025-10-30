@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, ChevronDown, Copy, Check } from 'lucide-react';
 import { Popover, Transition } from '@headlessui/react';
 import { useTheme } from 'next-themes';
+import TextareaAutosize from 'react-textarea-autosize';
 import {
   MCP_CLIENTS,
   generateMCPDeepLink,
@@ -66,9 +67,16 @@ const LandingPage = () => {
     e.preventDefault();
     if (prompt.trim()) {
       setIsTransitioning(true);
-      // Navigate to chat route with prompt as query parameter
+      // Create a chat id and pass the initial message via sessionStorage
       setTimeout(() => {
-        router.push(`/chat?q=${encodeURIComponent(prompt)}`);
+        const id =
+          globalThis.crypto && 'randomUUID' in globalThis.crypto
+            ? (globalThis.crypto as Crypto).randomUUID()
+            : Math.random().toString(36).slice(2);
+        try {
+          sessionStorage.setItem(`pendingPrompt:${id}`, prompt);
+        } catch {}
+        router.push(`/c/${id}`);
       }, 150);
     }
   };
@@ -79,6 +87,15 @@ const LandingPage = () => {
     // Navigate to chat route after a short delay for smooth transition
     setTimeout(() => {
       router.push('/chat');
+    }, 150);
+  };
+
+  const handleHistoryClick = () => {
+    // Trigger fade out animation before navigation
+    setIsTransitioning(true);
+    // Navigate to history route after a short delay for smooth transition
+    setTimeout(() => {
+      router.push('/history');
     }, 150);
   };
 
@@ -179,6 +196,12 @@ const LandingPage = () => {
             Chat
           </button>
           <button
+            onClick={handleHistoryClick}
+            className="text-black dark:text-white font-medium text-base sm:text-2xl hover:scale-105 transition-transform duration-200"
+          >
+            History
+          </button>
+          <button
             onClick={handleMCPClick}
             className="text-black dark:text-white font-medium text-base sm:text-2xl hover:scale-105 transition-transform duration-200"
           >
@@ -253,15 +276,31 @@ const LandingPage = () => {
                       : 'opacity-100 translate-x-0 h-auto'
                   }`}
                 >
-                  <form onSubmit={handleSubmit} className="w-full">
-                    <input
-                      type="text"
+                  <form
+                    onSubmit={handleSubmit}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        // Only Shift+Enter creates newline, all other combinations submit
+                        if (e.shiftKey) {
+                          // Allow default behavior (newline)
+                          return;
+                        }
+                        // Plain Enter or Cmd/Ctrl/Alt+Enter submits
+                        e.preventDefault();
+                        if (prompt.trim().length === 0 || isTransitioning) return;
+                        handleSubmit(e);
+                      }
+                    }}
+                    className="w-full"
+                  >
+                    <TextareaAutosize
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder="Ask anything..."
-                      className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-base sm:text-lg text-black dark:text-white resize-none focus:outline-none w-full py-2 sm:py-3"
+                      className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-base sm:text-lg text-black dark:text-white resize-none focus:outline-none w-full py-2 sm:py-3 max-h-48"
                       autoFocus={!showMCPConfig}
                       disabled={isTransitioning}
+                      minRows={1}
                     />
                     <div className="flex flex-row items-center justify-end mt-3 sm:mt-4 relative z-50">
                       <button

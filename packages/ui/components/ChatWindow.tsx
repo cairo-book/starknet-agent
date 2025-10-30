@@ -7,7 +7,7 @@ import Navbar from './Navbar';
 import Chat from './Chat';
 import crypto from 'crypto';
 import { toast } from 'sonner';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
 import {
   trackConversationStart,
@@ -119,9 +119,19 @@ const ChatWindow = ({
   initialMessage?: string;
   onBack?: () => void;
 }) => {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const initialMessage =
+  // Capture initial message from URL only once on first render
+  const initialMessageFromParams =
     initialMessageProp || searchParams.get('prompt') || searchParams.get('q');
+  const [pendingInitialMessage, setPendingInitialMessage] = useState<
+    string | null
+  >(null);
+  useEffect(() => {
+    setPendingInitialMessage(initialMessageFromParams || null);
+    // We intentionally run once to capture the initial params before any route change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [chatId, setChatId] = useState<string | undefined>(id);
   const [newChatCreated, setNewChatCreated] = useState(false);
@@ -163,6 +173,13 @@ const ChatWindow = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // When a new chat is created (no id prop passed), navigate to /c/<chatId> without full reload
+  useEffect(() => {
+    if (!id && chatId) {
+      router.replace(`/c/${chatId}`);
+    }
+  }, [id, chatId, router]);
 
   useEffect(() => {
     // Initialize PostHog user feedback stats when the component mounts
@@ -541,25 +558,8 @@ const ChatWindow = ({
 
       setLoading(false);
 
-      const humanMessage: Message = {
-        content: message,
-        messageId: messageId,
-        chatId: chatId!,
-        role: 'user',
-        createdAt: new Date(),
-      };
-      const assistantMessage: Message = {
-        content: recievedMessage,
-        messageId: assistantMessageId,
-        chatId: chatId!,
-        role: 'assistant',
-        createdAt: new Date(),
-      };
-      saveMessagesToLocalStorage(chatId!, [
-        ...messages,
-        humanMessage,
-        assistantMessage,
-      ]);
+      // Persist full message state (including sources/thinking) instead of rebuilding
+      saveMessagesToLocalStorage(chatId!, messagesRef.current);
 
       const lastMsg = messagesRef.current[messagesRef.current.length - 1];
 
@@ -603,12 +603,28 @@ const ChatWindow = ({
     sendMessage(message.content);
   };
 
+  // Auto-send initial message captured from params (if any)
   useEffect(() => {
-    if (isReady && initialMessage) {
-      sendMessage(initialMessage);
+    if (isReady && pendingInitialMessage) {
+      const msg = pendingInitialMessage;
+      setPendingInitialMessage(null);
+      sendMessage(msg);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReady, initialMessage]);
+  }, [isReady, pendingInitialMessage]);
+
+  // If landing page stored a pending prompt in sessionStorage for this chat, send it
+  useEffect(() => {
+    if (isReady && chatId && !pendingInitialMessage) {
+      try {
+        const key = `pendingPrompt:${chatId}`;
+        const stored = sessionStorage.getItem(key);
+        if (stored && stored.trim()) {
+          sessionStorage.removeItem(key);
+          sendMessage(stored);
+        }
+      } catch {}
+    }
+  }, [isReady, chatId, pendingInitialMessage]);
 
   if (hasError) {
     toast.error('Failed to connect to the server. Please try again later.');
