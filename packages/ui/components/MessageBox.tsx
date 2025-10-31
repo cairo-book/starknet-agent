@@ -809,11 +809,76 @@ const MessageBox = ({
         del: ({ children }) => (
           <del>{renderChildrenWithInlineMath(children, !contentReady)}</del>
         ),
-        a: ({ children, ...props }) => (
-          <a {...props}>
-            {renderChildrenWithInlineMath(children, !contentReady)}
-          </a>
-        ),
+        a: ({ children, ...props }) => {
+          const href: string = (props as any)?.href || '';
+          const classNameProp: string | undefined = (props as any)?.className;
+
+          // Keep pre-processed numeric source chips ([1]) as-is
+          const isPreprocessedCitation = Boolean(
+            classNameProp &&
+              /bg-light-secondary|dark:bg-dark-secondary/.test(classNameProp),
+          );
+
+          // Only style http(s) external links as pills
+          const isExternal = /^https?:\/\//i.test(href);
+
+          if (!isExternal || isPreprocessedCitation) {
+            return (
+              <a {...(props as any)}>
+                {renderChildrenWithInlineMath(children, !contentReady)}
+              </a>
+            );
+          }
+
+          // Derive a compact label: prefer child text if short and meaningful; otherwise hostname
+          const childrenArray = React.Children.toArray(children);
+          const rawText = childrenArray
+            .map((c) => (typeof c === 'string' ? c : ''))
+            .join('')
+            .trim();
+
+          let hostname = '';
+          try {
+            const u = new URL(href);
+            hostname = u.hostname.replace(/^www\./i, '').toLowerCase();
+          } catch (_) {
+            hostname = href.replace(/^https?:\/\//i, '');
+          }
+
+          const useHostname =
+            !rawText ||
+            rawText.length > 40 ||
+            /^https?:\/\//i.test(rawText) ||
+            rawText === href;
+
+          const label = useHostname ? hostname : rawText;
+
+          const pillClasses = cn(
+            // Base pill look
+            'inline-flex items-center rounded-full px-2 py-0.5 align-middle whitespace-nowrap no-underline',
+            // Colors
+            'bg-light-secondary text-gray-700 border border-light-200',
+            'dark:bg-dark-secondary dark:text-gray-200 dark:border-dark-200',
+            // Sizing/spacing
+            'text-[11px] sm:text-xs leading-4 mx-[2px]',
+            // Hover/transition
+            'transition-colors hover:bg-light-200 dark:hover:bg-dark-200',
+          );
+
+          return (
+            <a
+              {...(props as any)}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(pillClasses, classNameProp)}
+              data-source-pill
+              aria-label={`Open source: ${label}`}
+            >
+              {label}
+            </a>
+          );
+        },
         // Add other text-bearing elements as needed: blockquote, table cells (th, td), etc.
       },
     }),
