@@ -558,26 +558,52 @@ const ChatWindow = ({
 
       setLoading(false);
 
-      // Persist full message state (including sources/thinking) instead of rebuilding
-      saveMessagesToLocalStorage(chatId!, messagesRef.current);
+      // After the stream completes, attach suggestions if available,
+      // then persist the finalized message state atomically.
+      let updatedMessages = messagesRef.current;
+      let didAttachSuggestions = false;
 
-      const lastMsg = messagesRef.current[messagesRef.current.length - 1];
+      const lastMsg = updatedMessages[updatedMessages.length - 1];
 
+      try {
+        if (
+          lastMsg &&
+          lastMsg.role === 'assistant' &&
+          lastMsg.sources &&
+          lastMsg.sources.length > 0 &&
+          !lastMsg.suggestions
+        ) {
+          const suggestions = await getSuggestions(updatedMessages);
+          // Update UI by merging suggestions onto the latest state to avoid overwriting content
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.messageId === lastMsg.messageId
+                ? { ...msg, suggestions }
+                : msg,
+            ),
+          );
+          didAttachSuggestions = true;
+        }
+      } catch (e) {
+        // If suggestions fail, proceed to save the answer + sources only.
+        // This avoids losing the conversation while still aiming for atomicity when possible.
+      }
+
+      // Give React a tick to flush the latest state updates (content/sources/suggestions)
+      await new Promise((r) => setTimeout(r, 0));
+      updatedMessages = messagesRef.current;
+
+      // Save only when we have a concrete assistant reply (avoid saving partial states)
+      const finalAssistant = updatedMessages
+        .slice()
+        .reverse()
+        .find((m) => m.role === 'assistant');
       if (
-        lastMsg.role === 'assistant' &&
-        lastMsg.sources &&
-        lastMsg.sources.length > 0 &&
-        !lastMsg.suggestions
+        finalAssistant &&
+        finalAssistant.content &&
+        finalAssistant.content.length > 0
       ) {
-        const suggestions = await getSuggestions(messagesRef.current);
-        setMessages((prev) =>
-          prev.map((msg) => {
-            if (msg.messageId === lastMsg.messageId) {
-              return { ...msg, suggestions: suggestions };
-            }
-            return msg;
-          }),
-        );
+        saveMessagesToLocalStorage(chatId!, updatedMessages);
       }
     } catch (error) {
       console.error('Error sending message:', error);

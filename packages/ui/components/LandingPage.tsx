@@ -287,7 +287,8 @@ const LandingPage = () => {
                         }
                         // Plain Enter or Cmd/Ctrl/Alt+Enter submits
                         e.preventDefault();
-                        if (prompt.trim().length === 0 || isTransitioning) return;
+                        if (prompt.trim().length === 0 || isTransitioning)
+                          return;
                         handleSubmit(e);
                       }
                     }}
