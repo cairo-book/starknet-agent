@@ -254,6 +254,7 @@ const ChatWindow = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-conversation-id': chatId,
           },
           body: JSON.stringify({
             messages: messagesPayload,
