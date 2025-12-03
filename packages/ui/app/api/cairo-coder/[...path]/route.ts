@@ -31,6 +31,7 @@ function buildUpstreamHeaders(req: NextRequest): HeadersInit {
     'accept-encoding',
     'user-agent',
     'x-conversation-id',
+    'x-user-id',
   ];
   forwardHeaders.forEach((h) => {
     const v = req.headers.get(h);

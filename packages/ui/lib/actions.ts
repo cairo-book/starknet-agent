@@ -1,13 +1,15 @@
 import { Message } from '@/components/ChatWindow';
+import { getUserId } from '@/lib/userId';
 
-export const getSuggestions = async (chatHisory: Message[]) => {
+export const getSuggestions = async (chatHistory: Message[]) => {
   const res = await fetch(`/api/cairo-coder/v1/suggestions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'x-user-id': getUserId(),
     },
     body: JSON.stringify({
-      chat_history: chatHisory,
+      chat_history: chatHistory,
     }),
   });
 

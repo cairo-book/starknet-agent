@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
+import { getUserId } from '@/lib/userId';
 import {
   trackConversationStart,
   trackUserMessage,
@@ -255,6 +256,7 @@ const ChatWindow = ({
           headers: {
             'Content-Type': 'application/json',
             'x-conversation-id': chatId,
+            'x-user-id': getUserId(),
           },
           body: JSON.stringify({
             messages: messagesPayload,
